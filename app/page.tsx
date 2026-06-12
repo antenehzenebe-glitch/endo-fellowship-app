@@ -18,13 +18,14 @@ export default function Home() {
         <div className="space-y-3">
           <a
             href="/login"
-            className="block w-full px-6 py-3 bg-[#0066CC] text-white font-semibold rounded-lg hover:bg-[#0052A3] active:bg-[#003D7A] transition-colors"
+            className="block w-full px-6 py-3.5 bg-[#0066CC] text-white font-semibold rounded-lg hover:bg-[#0052A3] active:bg-[#003D7A] transition-colors text-base"
           >
-            Sign in to continue
+            Sign in with email
           </a>
           
           <p className="text-sm text-gray-500">
-            For Howard University Hospital Endocrinology fellows, attendings, and program leadership.
+            Secure passwordless login for Howard University Hospital
+            <br />Endocrinology fellows, attendings, and leadership.
           </p>
         </div>
 
