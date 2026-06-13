@@ -53,10 +53,12 @@ function ErrorPanel({ what }: { what: string }) {
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams?: { view?: string | string[] }
+  // Next 15: searchParams is a Promise and must be awaited.
+  searchParams?: Promise<{ view?: string | string[] }>
 }) {
   const profile = await requireStaff()
-  const view: View = normalizeView(searchParams?.view) ?? defaultViewForRole(profile.role)
+  const sp = (await searchParams) ?? {}
+  const view: View = normalizeView(sp.view) ?? defaultViewForRole(profile.role)
 
   let body: ReactNode
   try {
