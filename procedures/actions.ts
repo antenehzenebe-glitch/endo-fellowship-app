@@ -4,7 +4,6 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import type { ProcedureOutcome, ProcedureType } from '@/lib/supabase/database.types'
 
-const PROCEDURE_TYPES: readonly ProcedureType[] = ['FNA', 'THYROID_US', 'CGM_INTERP']
 const OUTCOMES: readonly ProcedureOutcome[] = ['successful', 'learning', 'incomplete']
 
 export type LogProcedureState = {
@@ -36,8 +35,10 @@ export async function logProcedure(
     return { error: 'Your session expired. Sign in again to log this procedure.', success: false }
   }
 
+  // Procedure codes are catalog-driven (public.procedure_types); the FK on
+  // procedure_logs rejects anything not in the catalog.
   const procedureType = formData.get('procedure_type')
-  if (typeof procedureType !== 'string' || !PROCEDURE_TYPES.includes(procedureType as ProcedureType)) {
+  if (typeof procedureType !== 'string' || procedureType === '') {
     return { error: 'Choose a procedure type.', success: false }
   }
 
@@ -77,8 +78,12 @@ export async function logProcedure(
   })
 
   if (error) {
+    // 23503 = FK violation: the code is not in the procedure catalog.
     return {
-      error: 'Could not save the procedure. Check your connection and try again.',
+      error:
+        error.code === '23503'
+          ? 'That procedure type is not in the program catalog. Refresh the page and choose again.'
+          : 'Could not save the procedure. Check your connection and try again.',
       success: false,
     }
   }

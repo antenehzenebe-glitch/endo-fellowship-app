@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import ProcedureLogForm from '@/procedures/ProcedureLogForm'
 import RecentProcedures from '@/procedures/RecentProcedures'
 import SignOutButton from '@/components/SignOutButton'
-import { EVALUATOR_ROLES, type ProcedureType } from '@/lib/supabase/database.types'
+import { EVALUATOR_ROLES } from '@/lib/supabase/database.types'
 
 // Mobile Procedure Logger — the fellow's home screen. One thumb, one minute.
 export default async function LogPage() {
@@ -13,8 +13,13 @@ export default async function LogPage() {
 
   const supabase = await createClient()
 
-  const [{ data: logs }, { data: targets }, { data: allLogs }, { data: evaluators }] =
-    await Promise.all([
+  const [
+    { data: logs },
+    { data: targets },
+    { data: allLogs },
+    { data: evaluators },
+    { data: catalog },
+  ] = await Promise.all([
       supabase
         .from('procedure_logs')
         .select('*')
@@ -30,13 +35,20 @@ export default async function LogPage() {
         .in('role', [...EVALUATOR_ROLES])
         .eq('is_active', true)
         .order('full_name'),
+      supabase
+        .from('procedure_types')
+        .select('code, label')
+        .eq('is_active', true)
+        .order('sort_order'),
     ])
 
-  const countsByType = { FNA: 0, THYROID_US: 0, CGM_INTERP: 0 } satisfies Record<
-    ProcedureType,
-    number
-  >
-  for (const row of allLogs ?? []) countsByType[row.procedure_type] += 1
+  const countsByType: Record<string, number> = {}
+  for (const row of allLogs ?? [])
+    countsByType[row.procedure_type] = (countsByType[row.procedure_type] ?? 0) + 1
+
+  const procedureTypes = catalog ?? []
+  const procedureLabels: Record<string, string> = {}
+  for (const t of procedureTypes) procedureLabels[t.code] = t.label
 
   const attendings = (evaluators ?? []).map((e) => ({ id: e.id, full_name: e.full_name }))
   const attendingNames: Record<string, string> = {}
@@ -62,13 +74,14 @@ export default async function LogPage() {
           aria-label="New procedure entry"
           className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm mb-8"
         >
-          <ProcedureLogForm attendings={attendings} today={today} />
+          <ProcedureLogForm attendings={attendings} procedureTypes={procedureTypes} today={today} />
         </section>
 
         <RecentProcedures
           logs={logs ?? []}
           targets={targets ?? []}
           countsByType={countsByType}
+          procedureLabels={procedureLabels}
           attendingNames={attendingNames}
         />
       </div>

@@ -34,7 +34,10 @@ export type UserRole =
 
 export type PgyLevel = 'PGY-4' | 'PGY-5'
 
-export type ProcedureType = 'FNA' | 'THYROID_US' | 'CGM_INTERP'
+// Procedure codes are catalog-driven (public.procedure_types) so the APD can
+// add or retire procedures without a schema migration. Labels come from the
+// catalog's `label` column — do not hard-code display names in the app.
+export type ProcedureType = string
 
 export type ProcedureOutcome = 'successful' | 'learning' | 'incomplete'
 
@@ -82,12 +85,6 @@ export const STAFF_ROLES = ['pd', 'apd', 'coordinator', 'admin'] as const satisf
 // Roles that may author evaluations (mirror of public.is_evaluator()).
 export const EVALUATOR_ROLES = ['attending', 'pd', 'apd', 'coordinator', 'admin'] as const satisfies readonly UserRole[]
 
-// Human-readable labels for the short procedure codes.
-export const PROCEDURE_LABELS: Record<ProcedureType, string> = {
-  FNA: 'Thyroid FNA',
-  THYROID_US: 'Thyroid Ultrasound',
-  CGM_INTERP: 'CGM Interpretation',
-}
 
 // ---------------------------------------------------------------------------
 // Table row models (type aliases — see header note)
@@ -118,6 +115,15 @@ export type ProcedureLog = {
 export type ProcedureTarget = {
   procedure_type: ProcedureType
   min_total: number
+  updated_at: string
+}
+
+export type ProcedureTypeRow = {
+  code: string
+  label: string
+  is_active: boolean
+  sort_order: number
+  created_at: string
   updated_at: string
 }
 
@@ -261,6 +267,12 @@ export type Database = {
           supervising_attending_id?: string | null
           notes?: string | null
         }
+        Relationships: []
+      }
+      procedure_types: {
+        Row: ProcedureTypeRow
+        Insert: { code: string; label: string; is_active?: boolean; sort_order?: number }
+        Update: { label?: string; is_active?: boolean; sort_order?: number }
         Relationships: []
       }
       procedure_targets: {
@@ -435,7 +447,6 @@ export type Database = {
     Enums: {
       user_role: UserRole
       pgy_level: PgyLevel
-      procedure_type: ProcedureType
       procedure_outcome: ProcedureOutcome
       task_status: TaskStatus
       acgme_competency: AcgmeCompetency

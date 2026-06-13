@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { requireProfile } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import SignOutButton from '@/components/SignOutButton'
-import { PROCEDURE_LABELS, type ProcedureType } from '@/lib/supabase/database.types'
+
 
 const ROLE_LABELS: Record<string, string> = {
   fellow: 'Fellow',
@@ -22,7 +22,7 @@ export default async function DashboardPage() {
 
   const supabase = await createClient()
 
-  const [{ data: fellows }, { data: targets }, { data: logRows }] = await Promise.all([
+  const [{ data: fellows }, { data: targets }, { data: logRows }, { data: catalog }] = await Promise.all([
     supabase
       .from('profiles')
       .select('id, full_name, pgy_level, is_active')
@@ -31,10 +31,15 @@ export default async function DashboardPage() {
       .order('full_name'),
     supabase.from('procedure_targets').select('*').order('procedure_type'),
     supabase.from('procedure_logs').select('fellow_id, procedure_type'),
+    supabase.from('procedure_types').select('code, label').order('sort_order'),
   ])
 
-  // counts[fellow_id][procedure_type]
-  const counts: Record<string, Partial<Record<ProcedureType, number>>> = {}
+  const procedureLabels: Record<string, string> = {}
+  for (const t of catalog ?? []) procedureLabels[t.code] = t.label
+  const labelFor = (code: string) => procedureLabels[code] ?? code
+
+  // counts[fellow_id][procedure_code]
+  const counts: Record<string, Record<string, number>> = {}
   for (const row of logRows ?? []) {
     const perFellow = (counts[row.fellow_id] ??= {})
     perFellow[row.procedure_type] = (perFellow[row.procedure_type] ?? 0) + 1
@@ -74,7 +79,7 @@ export default async function DashboardPage() {
                       const met = t.min_total > 0 ? c >= t.min_total : true
                       return (
                         <li key={t.procedure_type} className="flex justify-between text-sm">
-                          <span className="text-gray-700">{PROCEDURE_LABELS[t.procedure_type]}</span>
+                          <span className="text-gray-700">{labelFor(t.procedure_type)}</span>
                           <span
                             className={`font-medium ${met ? 'text-green-700' : 'text-orange-700'}`}
                           >

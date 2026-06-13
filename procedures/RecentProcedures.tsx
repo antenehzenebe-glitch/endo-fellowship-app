@@ -1,14 +1,10 @@
-import {
-  PROCEDURE_LABELS,
-  type ProcedureLog,
-  type ProcedureTarget,
-  type ProcedureType,
-} from '@/lib/supabase/database.types'
+import type { ProcedureLog, ProcedureTarget } from '@/lib/supabase/database.types'
 
 interface RecentProceduresProps {
   logs: ProcedureLog[]
   targets: ProcedureTarget[]
-  countsByType: Record<ProcedureType, number>
+  countsByType: Record<string, number>
+  procedureLabels: Record<string, string> // code -> label, from the catalog
   attendingNames: Record<string, string>
 }
 
@@ -34,8 +30,10 @@ export default function RecentProcedures({
   logs,
   targets,
   countsByType,
+  procedureLabels,
   attendingNames,
 }: RecentProceduresProps) {
+  const labelFor = (code: string) => procedureLabels[code] ?? code
   return (
     <div className="space-y-8">
       {targets.length > 0 && (
@@ -52,7 +50,7 @@ export default function RecentProcedures({
                 <li key={t.procedure_type} className="p-4 border border-gray-200 rounded-lg bg-white">
                   <div className="flex justify-between items-baseline mb-2 gap-2">
                     <span className="font-semibold text-sm">
-                      {PROCEDURE_LABELS[t.procedure_type]}
+                      {labelFor(t.procedure_type)}
                     </span>
                     <span
                       className={`text-xs font-medium px-2 py-1 rounded-full ${
@@ -67,7 +65,7 @@ export default function RecentProcedures({
                     aria-valuenow={count}
                     aria-valuemin={0}
                     aria-valuemax={t.min_total}
-                    aria-label={`${PROCEDURE_LABELS[t.procedure_type]}: ${count} of ${t.min_total} minimum`}
+                    aria-label={`${labelFor(t.procedure_type)}: ${count} of ${t.min_total} minimum`}
                     className="h-2 w-full bg-gray-100 rounded-full overflow-hidden"
                   >
                     <div
@@ -104,7 +102,7 @@ export default function RecentProcedures({
                 <li key={log.id} className="p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
                   <div className="flex justify-between items-start gap-2 mb-1">
                     <h3 className="font-semibold text-base">
-                      {PROCEDURE_LABELS[log.procedure_type]}
+                      {labelFor(log.procedure_type)}
                     </h3>
                     <span className={`shrink-0 px-2 py-1 text-xs rounded font-medium ${badge.className}`}>
                       {badge.label}

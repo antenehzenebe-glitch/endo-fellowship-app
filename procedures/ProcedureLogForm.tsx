@@ -2,19 +2,22 @@
 
 import { useActionState } from 'react'
 import { logProcedure, type LogProcedureState } from '@/procedures/actions'
-import { PROCEDURE_LABELS, type ProcedureType } from '@/lib/supabase/database.types'
 
 interface AttendingOption {
   id: string
   full_name: string
 }
 
-interface ProcedureLogFormProps {
-  attendings: AttendingOption[]
-  today: string // YYYY-MM-DD, computed server-side
+interface ProcedureOption {
+  code: string
+  label: string
 }
 
-const PROCEDURE_OPTIONS: ProcedureType[] = ['FNA', 'THYROID_US', 'CGM_INTERP']
+interface ProcedureLogFormProps {
+  attendings: AttendingOption[]
+  procedureTypes: ProcedureOption[] // active catalog rows, APD-managed
+  today: string // YYYY-MM-DD, computed server-side
+}
 
 const OUTCOME_OPTIONS = [
   { value: 'successful', label: 'Successful' },
@@ -25,7 +28,7 @@ const OUTCOME_OPTIONS = [
 const INITIAL_STATE: LogProcedureState = { error: null, success: false }
 
 // Rapid mobile entry between patients: five fields, native inputs, one screen.
-export default function ProcedureLogForm({ attendings, today }: ProcedureLogFormProps) {
+export default function ProcedureLogForm({ attendings, procedureTypes, today }: ProcedureLogFormProps) {
   const [state, formAction, pending] = useActionState(logProcedure, INITIAL_STATE)
 
   return (
@@ -44,9 +47,9 @@ export default function ProcedureLogForm({ attendings, today }: ProcedureLogForm
           <option value="" disabled>
             Choose a procedure…
           </option>
-          {PROCEDURE_OPTIONS.map((p) => (
-            <option key={p} value={p}>
-              {PROCEDURE_LABELS[p]}
+          {procedureTypes.map((p) => (
+            <option key={p.code} value={p.code}>
+              {p.label}
             </option>
           ))}
         </select>
