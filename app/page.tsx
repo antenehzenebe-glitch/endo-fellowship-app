@@ -1,15 +1,29 @@
 // app/page.tsx
-// Root is a pure role router. Middleware already redirects unauthenticated
-// requests to /login, so anyone reaching here is signed in: send them to their
-// home (staff → /dashboard, fellow → /log). An authenticated user with no
-// profile (edge case) is bounced to /login.
-import { redirect } from 'next/navigation'
-import { getProfile, roleHome } from '@/lib/auth'
+// Public front door for the program.
+//  • Signed-in users are sent to their hub (staff -> /dashboard, fellow -> /log).
+//  • Everyone else sees the recruiting landing page.
+//
+// NOTE: this assumes lib/auth.ts exports `getProfile()` returning the user's
+// profile (or null when not signed in). If your helper differs, adjust the import.
+import { redirect } from 'next/navigation';
+import { getProfile } from '@/lib/auth';
+import Landing from '@/components/Landing';
 
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
+
+const STAFF_ROLES = ['pd', 'apd', 'coordinator', 'admin'];
 
 export default async function Home() {
-  const profile = await getProfile()
-  if (!profile) redirect('/login')
-  redirect(roleHome(profile.role))
+  let profile: { role?: string } | null = null;
+  try {
+    profile = await getProfile();
+  } catch {
+    profile = null;
+  }
+
+  if (profile?.role) {
+    redirect(STAFF_ROLES.includes(profile.role) ? '/dashboard' : '/log');
+  }
+
+  return <Landing />;
 }
