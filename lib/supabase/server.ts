@@ -2,6 +2,8 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from './database.types'
 
+// Server-side Supabase client. Runs with the signed-in user's JWT — every
+// query goes through Row Level Security. Never import a service-role key here.
 export async function createClient() {
   const cookieStore = await cookies()
 
@@ -19,9 +21,8 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            // Called from a Server Component — safe to ignore because the
+            // middleware refreshes sessions.
           }
         },
       },

@@ -1,15 +1,20 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss'
 
 const config: Config = {
   content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    // Routes + shared components + feature folders. New feature folders
+    // (evaluations/, resources/, dashboard/) must be added here or Tailwind
+    // will purge their classes in production builds.
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './procedures/**/*.{js,ts,jsx,tsx,mdx}',
+    './evaluations/**/*.{js,ts,jsx,tsx,mdx}',
+    './resources/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
       colors: {
-        // Howard Blue primary from DESIGN.md
+        // Howard Blue primary per DESIGN.md
         primary: {
           DEFAULT: '#0066CC',
           50: '#E6F0FF',
@@ -25,5 +30,5 @@ const config: Config = {
     },
   },
   plugins: [],
-};
-export default config;
+}
+export default config

@@ -1,19 +1,29 @@
 # Howard Endocrinology Fellowship App
 
-A lightweight, mobile-responsive web application designed to track ACGME-required metrics, scholarly activities, and procedural competence for the two-year (PGY-4 and PGY-5) Endocrinology, Diabetes, and Metabolism fellowship program at Howard University Hospital.
+A lightweight, mobile-responsive internal tool for the Howard University Hospital
+Endocrinology, Diabetes & Metabolism fellowship (PGY-4 / PGY-5): program
+evaluations, fellow progress tracking, and education & policy materials in one
+place.
 
-### 🛑 Architectural Scope & Exclusions
-To prevent redundant data entry and mitigate accreditation risk, **this system strictly excludes duty hours, generic rotation scheduling, and vacation tracking.** Those institutional compliance metrics remain managed by the hospital's enterprise Residency Management System (RMS). This application functions exclusively as a highly targeted, subspecialty-specific academic and clinical companion.
+**Source of truth:** [`ARCHITECTURE.md`](./ARCHITECTURE.md) · AI rules:
+[`CLAUDE.md`](./CLAUDE.md) · Visual system: [`DESIGN.md`](./DESIGN.md) · Setup:
+[`SETUP.md`](./SETUP.md)
 
-### ⚙️ Technical Stack
-* **Frontend:** Next.js (App Router), React, TypeScript
-* **Styling:** Tailwind CSS
-* **Backend & Auth:** Supabase (PostgreSQL, Row Level Security)
-* **Environment:** GitHub Codespaces
-* **Deployment:** Netlify
+### 🛑 Scope & exclusions
+Not a replacement for New Innovations or any institutional/ACGME system — this is
+the program's day-to-day working copy. **Strictly excludes** duty hours, rotation
+scheduling, and vacation tracking (those stay in the institutional RMS).
 
-### 📊 Core Modules
-1. **Procedure Logs:** Rapid mobile-entry for subspecialty procedures (e.g., FNA, Thyroid Ultrasound, CGM Interpretation).
-2. **Milestone Evaluations:** Attending evaluations dynamically linked to current ACGME sub-competencies.
-3. **Scholarly Tracking:** Separation of longitudinal QI projects and deliverable academic activities (abstracts, internal lectures).
-4. **Graduation Readiness:** APD dashboard tracking longitudinal ITE scores, procedural minimums, and onboarding compliance.
+### 🔒 Privacy
+**No PHI, by design.** No patient identifiers exist anywhere in the schema; the
+protected data is fellow educational records, isolated with Postgres Row Level
+Security.
+
+### ⚙️ Stack
+Next.js (App Router) · TypeScript (strict) · Tailwind CSS · Supabase (Postgres,
+RLS, Storage) · GitHub Codespaces · Netlify
+
+### 📊 Three pillars
+1. **Progress tracking** — de-identified procedure logs vs. program minimums, ITE scores, scholarly activity
+2. **Evaluations** — ACGME milestone assessments + assignable evaluation forms
+3. **Materials** — education & policy library with read acknowledgments
