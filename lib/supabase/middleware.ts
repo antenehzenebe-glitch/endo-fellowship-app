@@ -32,7 +32,9 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const path = request.nextUrl.pathname
-  const isPublic = path.startsWith('/login') || path.startsWith('/auth')
+  // Public: the landing page (exact '/'), sign-in, and the auth callback routes.
+  // Everything else requires a session.
+  const isPublic = path === '/' || path.startsWith('/login') || path.startsWith('/auth')
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone()
