@@ -1,110 +1,124 @@
-import { redirect } from 'next/navigation'
-import { requireProfile } from '@/lib/auth'
-import { createClient } from '@/lib/supabase/server'
+// app/dashboard/page.tsx
+// Staff dashboard. One route, three role-aware "centers" selected by ?view=:
+//   readiness  → APD command center (graduation readiness)
+//   program    → PD program oversight (evaluation completion + readiness)
+//   operations → coordinator worklist (chase outstanding items)
+// Staff-gated; each role lands on its own center by default but may switch tabs.
+import type { ReactNode } from 'react'
+import Link from 'next/link'
+import { requireStaff } from '@/lib/auth'
+import type { UserRole } from '@/lib/auth'
+import {
+  getCoordinatorWorklist,
+  getReadinessOverview,
+} from '@/dashboard/queries'
+import CommandCenter from '@/dashboard/CommandCenter'
+import PdCenter from '@/dashboard/PdCenter'
+import CoordinatorCenter from '@/dashboard/CoordinatorCenter'
 import SignOutButton from '@/components/SignOutButton'
 
+export const dynamic = 'force-dynamic'
 
-const ROLE_LABELS: Record<string, string> = {
-  fellow: 'Fellow',
-  attending: 'Attending',
-  pd: 'Program Director',
-  apd: 'Associate Program Director',
-  coordinator: 'Coordinator',
-  admin: 'Admin',
+type View = 'readiness' | 'program' | 'operations'
+
+const TABS: { view: View; label: string }[] = [
+  { view: 'readiness', label: 'Readiness' },
+  { view: 'program', label: 'Program' },
+  { view: 'operations', label: 'Operations' },
+]
+
+function defaultViewForRole(role: UserRole): View {
+  if (role === 'coordinator') return 'operations'
+  if (role === 'pd') return 'program'
+  return 'readiness' // apd, admin
 }
 
-// Staff landing. Attendings see it too (their evaluation queue will live here).
-// Fellows are routed to /log instead. RLS scopes every query: staff see all
-// fellows' logs, attendings see only logs they supervised.
-export default async function DashboardPage() {
-  const profile = await requireProfile()
-  if (profile.role === 'fellow') redirect('/log')
+function normalizeView(value: string | string[] | undefined): View | null {
+  const v = Array.isArray(value) ? value[0] : value
+  return v === 'readiness' || v === 'program' || v === 'operations' ? v : null
+}
 
-  const supabase = await createClient()
+function ErrorPanel({ what }: { what: string }) {
+  return (
+    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+      <h2 className="font-semibold text-red-900 mb-1">Couldn&apos;t load {what}</h2>
+      <p className="text-sm text-red-700">
+        The data didn&apos;t come back. Refresh the page; if it keeps failing, the
+        database connection may be down.
+      </p>
+    </div>
+  )
+}
 
-  const [{ data: fellows }, { data: targets }, { data: logRows }, { data: catalog }] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('id, full_name, pgy_level, is_active')
-      .eq('role', 'fellow')
-      .eq('is_active', true)
-      .order('full_name'),
-    supabase.from('procedure_targets').select('*').order('procedure_type'),
-    supabase.from('procedure_logs').select('fellow_id, procedure_type'),
-    supabase.from('procedure_types').select('code, label').order('sort_order'),
-  ])
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: { view?: string | string[] }
+}) {
+  const profile = await requireStaff()
+  const view: View = normalizeView(searchParams?.view) ?? defaultViewForRole(profile.role)
 
-  const procedureLabels: Record<string, string> = {}
-  for (const t of catalog ?? []) procedureLabels[t.code] = t.label
-  const labelFor = (code: string) => procedureLabels[code] ?? code
-
-  // counts[fellow_id][procedure_code]
-  const counts: Record<string, Record<string, number>> = {}
-  for (const row of logRows ?? []) {
-    const perFellow = (counts[row.fellow_id] ??= {})
-    perFellow[row.procedure_type] = (perFellow[row.procedure_type] ?? 0) + 1
+  let body: ReactNode
+  try {
+    if (view === 'operations') {
+      const worklist = await getCoordinatorWorklist()
+      body = <CoordinatorCenter worklist={worklist} />
+    } else if (view === 'program') {
+      const overview = await getReadinessOverview()
+      body = <PdCenter overview={overview} />
+    } else {
+      const overview = await getReadinessOverview()
+      body = <CommandCenter overview={overview} />
+    }
+  } catch {
+    body = <ErrorPanel what="the dashboard" />
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        <header className="flex justify-between items-center mb-8 gap-2">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Program dashboard</h1>
-            <p className="text-sm text-gray-600">
-              {profile.full_name} • {ROLE_LABELS[profile.role] ?? profile.role}
-            </p>
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="py-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#0066CC] text-white shrink-0">
+                <span className="text-sm font-bold">HE</span>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 leading-tight">
+                  Program Dashboard
+                </h1>
+                <p className="text-sm text-gray-500">
+                  {profile.full_name} · {profile.role.toUpperCase()}
+                </p>
+              </div>
+            </div>
+            <SignOutButton />
           </div>
-          <SignOutButton />
-        </header>
 
-        <section aria-labelledby="fellows-heading" className="mb-8">
-          <h2 id="fellows-heading" className="text-xl font-bold text-gray-900 mb-3">
-            Fellows — procedure progress
-          </h2>
-          {(fellows ?? []).length === 0 ? (
-            <div className="p-6 border border-dashed border-gray-300 rounded-lg text-center text-sm text-gray-600">
-              No fellows provisioned yet. Add them in Supabase → Authentication → invite, then
-              create their profile rows.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {(fellows ?? []).map((f) => (
-                <article key={f.id} className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
-                  <h3 className="font-semibold text-base mb-0.5">{f.full_name}</h3>
-                  <p className="text-sm text-gray-600 mb-3">{f.pgy_level ?? '—'}</p>
-                  <ul className="space-y-1.5">
-                    {(targets ?? []).map((t) => {
-                      const c = counts[f.id]?.[t.procedure_type] ?? 0
-                      const met = t.min_total > 0 ? c >= t.min_total : true
-                      return (
-                        <li key={t.procedure_type} className="flex justify-between text-sm">
-                          <span className="text-gray-700">{labelFor(t.procedure_type)}</span>
-                          <span
-                            className={`font-medium ${met ? 'text-green-700' : 'text-orange-700'}`}
-                          >
-                            {c} / {t.min_total} {met ? '✓' : ''}
-                          </span>
-                        </li>
-                      )
-                    })}
-                    {(targets ?? []).length === 0 && (
-                      <li className="text-sm text-gray-500">
-                        No minimums set yet (procedure_targets is empty).
-                      </li>
-                    )}
-                  </ul>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+          {/* View tabs (links, not client state) */}
+          <nav aria-label="Dashboard views" className="flex gap-1 -mb-px">
+            {TABS.map((tab) => {
+              const active = tab.view === view
+              return (
+                <Link
+                  key={tab.view}
+                  href={`/dashboard?view=${tab.view}`}
+                  aria-current={active ? 'page' : undefined}
+                  className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                    active
+                      ? 'border-[#0066CC] text-[#0066CC]'
+                      : 'border-transparent text-gray-500 hover:text-gray-800'
+                  }`}
+                >
+                  {tab.label}
+                </Link>
+              )
+            })}
+          </nav>
+        </div>
+      </header>
 
-        <p className="text-sm text-gray-500">
-          Coming next: evaluation assignment, milestone trends, ITE scores, and the materials
-          library.
-        </p>
-      </div>
-    </main>
+      <main className="max-w-6xl mx-auto px-4 py-6 sm:px-6">{body}</main>
+    </div>
   )
 }

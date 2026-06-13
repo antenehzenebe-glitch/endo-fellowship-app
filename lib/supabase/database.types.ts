@@ -1,17 +1,13 @@
-// =============================================================================
-// Database types — HUH Endocrinology Fellowship App
-// Matches supabase/migrations/0001_initial_schema.sql exactly (deployed 2026-06-12).
+// =====================================================
+// Howard Endocrinology Fellowship App — Database Types
+// GENERATED from the live schema (Supabase project xousmzkftledlkwtpavb).
+// Regenerate with:  npx supabase gen types typescript --project-id xousmzkftledlkwtpavb
 //
-// ⚠️ IMPORTANT: every model here is declared with `type`, NOT `interface`.
-// @supabase/postgrest-js requires each table's Row type to satisfy
-// `Record<string, unknown>`. TypeScript interfaces do NOT implicitly satisfy
-// that constraint, which silently degrades the entire typed client to `never`.
-// Keep these as type aliases. (Documented project learning — do not "clean up".)
-//
-// If the schema changes: add a numbered migration AND update this file in the
-// same PR. You can also regenerate with:
-//   npx supabase gen types typescript --project-id xousmzkftledlkwtpavb
-// =============================================================================
+// NOTE: Uses `type Database = { ... }` (not `interface`). This is required —
+// @supabase/postgrest-js needs each Row to satisfy Record<string, unknown>,
+// which `interface` does not implicitly do, silently degrading the whole typed
+// client to `never`. Keep these as `type` aliases.
+// =====================================================
 
 export type Json =
   | string
@@ -21,440 +17,753 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-// ---------------------------------------------------------------------------
-// Enums (mirror public.* enum types)
-// ---------------------------------------------------------------------------
-export type UserRole =
-  | 'fellow'
-  | 'attending'
-  | 'pd'
-  | 'apd'
-  | 'coordinator'
-  | 'admin'
-
-export type PgyLevel = 'PGY-4' | 'PGY-5'
-
-// Procedure codes are catalog-driven (public.procedure_types) so the APD can
-// add or retire procedures without a schema migration. Labels come from the
-// catalog's `label` column — do not hard-code display names in the app.
-export type ProcedureType = string
-
-export type ProcedureOutcome = 'successful' | 'learning' | 'incomplete'
-
-export type TaskStatus = 'pending' | 'in_progress' | 'completed'
-
-export type AcgmeCompetency =
-  | 'patient_care'
-  | 'medical_knowledge'
-  | 'interpersonal_communication'
-  | 'professionalism'
-  | 'systems_based_practice'
-  | 'practice_based_learning'
-  | 'personal_improvement'
-
-export type EvaluationType =
-  | 'faculty_of_fellow'
-  | 'fellow_of_faculty'
-  | 'rotation'
-  | 'self'
-  | '360'
-  | 'program'
-
-export type ResourceCategory =
-  | 'policy'
-  | 'curriculum'
-  | 'didactic'
-  | 'onboarding'
-  | 'board_prep'
-  | 'form'
-  | 'other'
-
-export type ScholarlyType =
-  | 'qi_project'
-  | 'abstract'
-  | 'publication'
-  | 'poster'
-  | 'lecture'
-  | 'presentation'
-  | 'other'
-
-export type ScholarlyStatus = 'planned' | 'in_progress' | 'completed'
-
-// Roles with program-wide access (mirror of public.is_staff()).
-export const STAFF_ROLES = ['pd', 'apd', 'coordinator', 'admin'] as const satisfies readonly UserRole[]
-// Roles that may author evaluations (mirror of public.is_evaluator()).
-export const EVALUATOR_ROLES = ['attending', 'pd', 'apd', 'coordinator', 'admin'] as const satisfies readonly UserRole[]
-
-
-// ---------------------------------------------------------------------------
-// Table row models (type aliases — see header note)
-// ---------------------------------------------------------------------------
-export type Profile = {
-  id: string
-  role: UserRole
-  full_name: string
-  email: string | null
-  pgy_level: PgyLevel | null
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
-
-export type ProcedureLog = {
-  id: string
-  fellow_id: string
-  procedure_type: ProcedureType
-  date_performed: string // ISO date
-  outcome: ProcedureOutcome
-  supervising_attending_id: string | null
-  notes: string | null // teaching context only — never PHI
-  created_at: string
-  updated_at: string
-}
-
-export type ProcedureTarget = {
-  procedure_type: ProcedureType
-  min_total: number
-  updated_at: string
-}
-
-export type ProcedureTypeRow = {
-  code: string
-  label: string
-  is_active: boolean
-  sort_order: number
-  created_at: string
-  updated_at: string
-}
-
-export type IteScore = {
-  id: string
-  fellow_id: string
-  exam_year: number
-  percentile: number | null
-  scaled_score: number | null
-  notes: string | null
-  created_at: string
-}
-
-export type ScholarlyActivity = {
-  id: string
-  fellow_id: string
-  activity_type: ScholarlyType
-  title: string
-  status: ScholarlyStatus
-  started_on: string | null
-  completed_on: string | null
-  details: string | null
-  created_at: string
-  updated_at: string
-}
-
-export type MilestoneAssessment = {
-  id: string
-  fellow_id: string
-  attending_id: string
-  competency: AcgmeCompetency
-  sub_competency: string | null
-  level: number // ACGME 1.0–5.0, half-steps (DB-enforced)
-  comments: string | null
-  assessment_date: string
-  academic_year: string | null
-  created_at: string
-  updated_at: string
-}
-
-export type EvaluationForm = {
-  id: string
-  name: string
-  description: string | null
-  type: EvaluationType
-  questions: Json
-  is_active: boolean
-  created_by: string | null
-  created_at: string
-  updated_at: string
-}
-
-export type Evaluation = {
-  id: string
-  form_id: string
-  evaluator_id: string
-  subject_id: string | null
-  period_label: string | null
-  status: TaskStatus
-  responses: Json
-  due_date: string | null
-  completed_at: string | null
-  created_at: string
-  updated_at: string
-}
-
-export type Resource = {
-  id: string
-  title: string
-  description: string | null
-  category: ResourceCategory
-  storage_path: string | null
-  external_url: string | null
-  file_type: string | null
-  requires_ack: boolean
-  is_active: boolean
-  uploaded_by: string | null
-  created_at: string
-  updated_at: string
-}
-
-export type ResourceAcknowledgment = {
-  id: string
-  resource_id: string
-  fellow_id: string
-  acknowledged_at: string
-}
-
-export type OnboardingTask = {
-  id: string
-  fellow_id: string
-  task_name: string
-  description: string | null
-  status: TaskStatus
-  due_date: string | null
-  completed_at: string | null
-  created_at: string
-  updated_at: string
-}
-
-// ---------------------------------------------------------------------------
-// Supabase Database shape
-// ---------------------------------------------------------------------------
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
-      profiles: {
-        Row: Profile
-        Insert: {
-          id: string
-          role?: UserRole
-          full_name: string
-          email?: string | null
-          pgy_level?: PgyLevel | null
-          is_active?: boolean
-        }
-        Update: {
-          role?: UserRole
-          full_name?: string
-          email?: string | null
-          pgy_level?: PgyLevel | null
-          is_active?: boolean
-        }
-        Relationships: []
-      }
-      procedure_logs: {
-        Row: ProcedureLog
-        Insert: {
-          id?: string
-          fellow_id: string
-          procedure_type: ProcedureType
-          date_performed: string
-          outcome?: ProcedureOutcome
-          supervising_attending_id?: string | null
-          notes?: string | null
-        }
-        Update: {
-          procedure_type?: ProcedureType
-          date_performed?: string
-          outcome?: ProcedureOutcome
-          supervising_attending_id?: string | null
-          notes?: string | null
-        }
-        Relationships: []
-      }
-      procedure_types: {
-        Row: ProcedureTypeRow
-        Insert: { code: string; label: string; is_active?: boolean; sort_order?: number }
-        Update: { label?: string; is_active?: boolean; sort_order?: number }
-        Relationships: []
-      }
-      procedure_targets: {
-        Row: ProcedureTarget
-        Insert: { procedure_type: ProcedureType; min_total: number }
-        Update: { min_total?: number }
-        Relationships: []
-      }
-      ite_scores: {
-        Row: IteScore
-        Insert: {
-          id?: string
-          fellow_id: string
-          exam_year: number
-          percentile?: number | null
-          scaled_score?: number | null
-          notes?: string | null
-        }
-        Update: {
-          exam_year?: number
-          percentile?: number | null
-          scaled_score?: number | null
-          notes?: string | null
-        }
-        Relationships: []
-      }
-      scholarly_activities: {
-        Row: ScholarlyActivity
-        Insert: {
-          id?: string
-          fellow_id: string
-          activity_type: ScholarlyType
-          title: string
-          status?: ScholarlyStatus
-          started_on?: string | null
-          completed_on?: string | null
-          details?: string | null
-        }
-        Update: {
-          activity_type?: ScholarlyType
-          title?: string
-          status?: ScholarlyStatus
-          started_on?: string | null
-          completed_on?: string | null
-          details?: string | null
-        }
-        Relationships: []
-      }
-      milestone_assessments: {
-        Row: MilestoneAssessment
-        Insert: {
-          id?: string
-          fellow_id: string
-          attending_id: string
-          competency: AcgmeCompetency
-          sub_competency?: string | null
-          level: number
-          comments?: string | null
-          assessment_date?: string
-          academic_year?: string | null
-        }
-        Update: {
-          competency?: AcgmeCompetency
-          sub_competency?: string | null
-          level?: number
-          comments?: string | null
-          assessment_date?: string
-          academic_year?: string | null
-        }
-        Relationships: []
-      }
       evaluation_forms: {
-        Row: EvaluationForm
-        Insert: {
-          id?: string
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
           name: string
-          description?: string | null
-          type: EvaluationType
-          questions?: Json
-          is_active?: boolean
+          questions: Json
+          type: Database["public"]["Enums"]["evaluation_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
           created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          questions?: Json
+          type: Database["public"]["Enums"]["evaluation_type"]
+          updated_at?: string
         }
         Update: {
-          name?: string
+          created_at?: string
+          created_by?: string | null
           description?: string | null
-          type?: EvaluationType
-          questions?: Json
+          id?: string
           is_active?: boolean
+          name?: string
+          questions?: Json
+          type?: Database["public"]["Enums"]["evaluation_type"]
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_forms_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       evaluations: {
-        Row: Evaluation
-        Insert: {
-          id?: string
-          form_id: string
+        Row: {
+          completed_at: string | null
+          created_at: string
+          due_date: string | null
           evaluator_id: string
-          subject_id?: string | null
-          period_label?: string | null
-          status?: TaskStatus
-          responses?: Json
-          due_date?: string | null
+          form_id: string
+          id: string
+          period_label: string | null
+          responses: Json
+          status: Database["public"]["Enums"]["task_status"]
+          subject_id: string | null
+          updated_at: string
+        }
+        Insert: {
           completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          evaluator_id: string
+          form_id: string
+          id?: string
+          period_label?: string | null
+          responses?: Json
+          status?: Database["public"]["Enums"]["task_status"]
+          subject_id?: string | null
+          updated_at?: string
         }
         Update: {
-          period_label?: string | null
-          status?: TaskStatus
-          responses?: Json
-          due_date?: string | null
           completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          evaluator_id?: string
+          form_id?: string
+          id?: string
+          period_label?: string | null
+          responses?: Json
+          status?: Database["public"]["Enums"]["task_status"]
+          subject_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluations_evaluator_id_fkey"
+            columns: ["evaluator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluations_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluations_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ite_scores: {
+        Row: {
+          created_at: string
+          exam_year: number
+          fellow_id: string
+          id: string
+          notes: string | null
+          percentile: number | null
+          scaled_score: number | null
+        }
+        Insert: {
+          created_at?: string
+          exam_year: number
+          fellow_id: string
+          id?: string
+          notes?: string | null
+          percentile?: number | null
+          scaled_score?: number | null
+        }
+        Update: {
+          created_at?: string
+          exam_year?: number
+          fellow_id?: string
+          id?: string
+          notes?: string | null
+          percentile?: number | null
+          scaled_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ite_scores_fellow_id_fkey"
+            columns: ["fellow_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milestone_assessments: {
+        Row: {
+          academic_year: string | null
+          assessment_date: string
+          attending_id: string
+          comments: string | null
+          competency: Database["public"]["Enums"]["acgme_competency"]
+          created_at: string
+          fellow_id: string
+          id: string
+          level: number
+          sub_competency: string | null
+          updated_at: string
+        }
+        Insert: {
+          academic_year?: string | null
+          assessment_date?: string
+          attending_id: string
+          comments?: string | null
+          competency: Database["public"]["Enums"]["acgme_competency"]
+          created_at?: string
+          fellow_id: string
+          id?: string
+          level: number
+          sub_competency?: string | null
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string | null
+          assessment_date?: string
+          attending_id?: string
+          comments?: string | null
+          competency?: Database["public"]["Enums"]["acgme_competency"]
+          created_at?: string
+          fellow_id?: string
+          id?: string
+          level?: number
+          sub_competency?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestone_assessments_attending_id_fkey"
+            columns: ["attending_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "milestone_assessments_fellow_id_fkey"
+            columns: ["fellow_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          fellow_id: string
+          id: string
+          status: Database["public"]["Enums"]["task_status"]
+          task_name: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          fellow_id: string
+          id?: string
+          status?: Database["public"]["Enums"]["task_status"]
+          task_name: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          fellow_id?: string
+          id?: string
+          status?: Database["public"]["Enums"]["task_status"]
+          task_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_tasks_fellow_id_fkey"
+            columns: ["fellow_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      procedure_logs: {
+        Row: {
+          created_at: string
+          date_performed: string
+          fellow_id: string
+          id: string
+          notes: string | null
+          outcome: Database["public"]["Enums"]["procedure_outcome"]
+          procedure_type: string
+          supervising_attending_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_performed: string
+          fellow_id: string
+          id?: string
+          notes?: string | null
+          outcome?: Database["public"]["Enums"]["procedure_outcome"]
+          procedure_type: string
+          supervising_attending_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_performed?: string
+          fellow_id?: string
+          id?: string
+          notes?: string | null
+          outcome?: Database["public"]["Enums"]["procedure_outcome"]
+          procedure_type?: string
+          supervising_attending_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procedure_logs_fellow_id_fkey"
+            columns: ["fellow_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_logs_supervising_attending_id_fkey"
+            columns: ["supervising_attending_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_logs_type_fk"
+            columns: ["procedure_type"]
+            isOneToOne: false
+            referencedRelation: "procedure_types"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      procedure_targets: {
+        Row: {
+          min_total: number
+          procedure_type: string
+          updated_at: string
+        }
+        Insert: {
+          min_total: number
+          procedure_type: string
+          updated_at?: string
+        }
+        Update: {
+          min_total?: number
+          procedure_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procedure_targets_type_fk"
+            columns: ["procedure_type"]
+            isOneToOne: true
+            referencedRelation: "procedure_types"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      procedure_types: {
+        Row: {
+          code: string
+          created_at: string
+          is_active: boolean
+          label: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
-      resources: {
-        Row: Resource
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          is_active: boolean
+          pgy_level: Database["public"]["Enums"]["pgy_level"] | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
         Insert: {
-          id?: string
-          title: string
-          description?: string | null
-          category?: ResourceCategory
-          storage_path?: string | null
-          external_url?: string | null
-          file_type?: string | null
-          requires_ack?: boolean
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id: string
           is_active?: boolean
-          uploaded_by?: string | null
+          pgy_level?: Database["public"]["Enums"]["pgy_level"] | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
         }
         Update: {
-          title?: string
-          description?: string | null
-          category?: ResourceCategory
-          storage_path?: string | null
-          external_url?: string | null
-          file_type?: string | null
-          requires_ack?: boolean
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
           is_active?: boolean
+          pgy_level?: Database["public"]["Enums"]["pgy_level"] | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
         }
         Relationships: []
       }
       resource_acknowledgments: {
-        Row: ResourceAcknowledgment
-        Insert: { id?: string; resource_id: string; fellow_id: string; acknowledged_at?: string }
-        Update: Record<string, never>
-        Relationships: []
-      }
-      onboarding_tasks: {
-        Row: OnboardingTask
-        Insert: {
-          id?: string
+        Row: {
+          acknowledged_at: string
           fellow_id: string
-          task_name: string
-          description?: string | null
-          status?: TaskStatus
-          due_date?: string | null
-          completed_at?: string | null
+          id: string
+          resource_id: string
+        }
+        Insert: {
+          acknowledged_at?: string
+          fellow_id: string
+          id?: string
+          resource_id: string
         }
         Update: {
-          task_name?: string
-          description?: string | null
-          status?: TaskStatus
-          due_date?: string | null
-          completed_at?: string | null
+          acknowledged_at?: string
+          fellow_id?: string
+          id?: string
+          resource_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "resource_acknowledgments_fellow_id_fkey"
+            columns: ["fellow_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resource_acknowledgments_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resources: {
+        Row: {
+          category: Database["public"]["Enums"]["resource_category"]
+          created_at: string
+          description: string | null
+          external_url: string | null
+          file_type: string | null
+          id: string
+          is_active: boolean
+          requires_ack: boolean
+          storage_path: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["resource_category"]
+          created_at?: string
+          description?: string | null
+          external_url?: string | null
+          file_type?: string | null
+          id?: string
+          is_active?: boolean
+          requires_ack?: boolean
+          storage_path?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["resource_category"]
+          created_at?: string
+          description?: string | null
+          external_url?: string | null
+          file_type?: string | null
+          id?: string
+          is_active?: boolean
+          requires_ack?: boolean
+          storage_path?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scholarly_activities: {
+        Row: {
+          activity_type: Database["public"]["Enums"]["scholarly_type"]
+          completed_on: string | null
+          created_at: string
+          details: string | null
+          fellow_id: string
+          id: string
+          started_on: string | null
+          status: Database["public"]["Enums"]["scholarly_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          activity_type: Database["public"]["Enums"]["scholarly_type"]
+          completed_on?: string | null
+          created_at?: string
+          details?: string | null
+          fellow_id: string
+          id?: string
+          started_on?: string | null
+          status?: Database["public"]["Enums"]["scholarly_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          activity_type?: Database["public"]["Enums"]["scholarly_type"]
+          completed_on?: string | null
+          created_at?: string
+          details?: string | null
+          fellow_id?: string
+          id?: string
+          started_on?: string | null
+          status?: Database["public"]["Enums"]["scholarly_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scholarly_activities_fellow_id_fkey"
+            columns: ["fellow_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
-    Views: { [_ in never]: never }
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
-      is_staff: { Args: Record<string, never>; Returns: boolean }
-      is_evaluator: { Args: Record<string, never>; Returns: boolean }
+      is_evaluator: { Args: never; Returns: boolean }
+      is_staff: { Args: never; Returns: boolean }
     }
     Enums: {
-      user_role: UserRole
-      pgy_level: PgyLevel
-      procedure_outcome: ProcedureOutcome
-      task_status: TaskStatus
-      acgme_competency: AcgmeCompetency
-      evaluation_type: EvaluationType
-      resource_category: ResourceCategory
-      scholarly_type: ScholarlyType
-      scholarly_status: ScholarlyStatus
+      acgme_competency:
+        | "patient_care"
+        | "medical_knowledge"
+        | "interpersonal_communication"
+        | "professionalism"
+        | "systems_based_practice"
+        | "practice_based_learning"
+        | "personal_improvement"
+      evaluation_type:
+        | "faculty_of_fellow"
+        | "fellow_of_faculty"
+        | "rotation"
+        | "self"
+        | "360"
+        | "program"
+      pgy_level: "PGY-4" | "PGY-5"
+      procedure_outcome: "successful" | "learning" | "incomplete"
+      resource_category:
+        | "policy"
+        | "curriculum"
+        | "didactic"
+        | "onboarding"
+        | "board_prep"
+        | "form"
+        | "other"
+      scholarly_status: "planned" | "in_progress" | "completed"
+      scholarly_type:
+        | "qi_project"
+        | "abstract"
+        | "publication"
+        | "poster"
+        | "lecture"
+        | "presentation"
+        | "other"
+      task_status: "pending" | "in_progress" | "completed"
+      user_role: "fellow" | "attending" | "pd" | "apd" | "coordinator" | "admin"
     }
-    CompositeTypes: { [_ in never]: never }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      acgme_competency: [
+        "patient_care",
+        "medical_knowledge",
+        "interpersonal_communication",
+        "professionalism",
+        "systems_based_practice",
+        "practice_based_learning",
+        "personal_improvement",
+      ],
+      evaluation_type: [
+        "faculty_of_fellow",
+        "fellow_of_faculty",
+        "rotation",
+        "self",
+        "360",
+        "program",
+      ],
+      pgy_level: ["PGY-4", "PGY-5"],
+      procedure_outcome: ["successful", "learning", "incomplete"],
+      resource_category: [
+        "policy",
+        "curriculum",
+        "didactic",
+        "onboarding",
+        "board_prep",
+        "form",
+        "other",
+      ],
+      scholarly_status: ["planned", "in_progress", "completed"],
+      scholarly_type: [
+        "qi_project",
+        "abstract",
+        "publication",
+        "poster",
+        "lecture",
+        "presentation",
+        "other",
+      ],
+      task_status: ["pending", "in_progress", "completed"],
+      user_role: ["fellow", "attending", "pd", "apd", "coordinator", "admin"],
+    },
+  },
+} as const
