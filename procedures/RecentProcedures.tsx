@@ -1,118 +1,177 @@
-import type { ProcedureLog, ProcedureTarget } from '@/lib/supabase/database.types'
+// procedures/RecentProcedures.tsx
+// Two read views for the fellow: progress toward program minimums, and a recent
+// list. Delete uses the server action with a small inline confirm. Dates are
+// formatted deterministically (no locale calls) to avoid hydration drift.
+'use client'
 
-interface RecentProceduresProps {
-  logs: ProcedureLog[]
-  targets: ProcedureTarget[]
-  countsByType: Record<string, number>
-  procedureLabels: Record<string, string> // code -> label, from the catalog
-  attendingNames: Record<string, string>
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { deleteProcedure, type ProcedureOutcome } from '@/procedures/actions'
+
+export type Progress = { code: string; label: string; done: number; min: number }
+export type RecentLog = {
+  id: string
+  label: string
+  date_performed: string // 'YYYY-MM-DD'
+  outcome: ProcedureOutcome
+  attendingName: string | null
 }
 
-const OUTCOME_BADGES: Record<ProcedureLog['outcome'], { label: string; className: string }> = {
-  successful: { label: '✓ Successful', className: 'bg-green-100 text-green-800' },
-  learning: { label: '◐ Learning', className: 'bg-orange-100 text-orange-800' },
-  incomplete: { label: '✕ Incomplete', className: 'bg-gray-100 text-gray-800' },
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+function formatDate(ymd: string): string {
+  const [y, m, d] = ymd.split('-').map(Number)
+  if (!y || !m || !d) return ymd
+  return `${MONTHS[m - 1]} ${d}, ${y}`
 }
 
-function formatDate(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+const OUTCOME_BADGE: Record<ProcedureOutcome, { label: string; cls: string; dot: string }> = {
+  successful: { label: 'Successful', cls: 'bg-green-100 text-green-800', dot: 'bg-green-600' },
+  learning: { label: 'Learning', cls: 'bg-blue-100 text-blue-800', dot: 'bg-blue-600' },
+  incomplete: { label: 'Incomplete', cls: 'bg-orange-100 text-orange-800', dot: 'bg-orange-600' },
 }
 
-// Progress toward program minimums (ACGME graduation readiness: counts here
-// are compared against APD-set `procedure_targets`), plus the fellow's most
-// recent entries. Status uses text + symbol, never color alone (DESIGN.md).
-export default function RecentProcedures({
-  logs,
-  targets,
-  countsByType,
-  procedureLabels,
-  attendingNames,
-}: RecentProceduresProps) {
-  const labelFor = (code: string) => procedureLabels[code] ?? code
+function ProgressRow({ p }: { p: Progress }) {
+  const met = p.min > 0 && p.done >= p.min
+  const pct = p.min > 0 ? Math.min(100, Math.round((p.done / p.min) * 100)) : 0
   return (
-    <div className="space-y-8">
-      {targets.length > 0 && (
-        <section aria-labelledby="progress-heading">
-          <h2 id="progress-heading" className="text-xl font-bold text-gray-900 mb-3">
-            Progress vs. minimums
-          </h2>
-          <ul className="space-y-3">
-            {targets.map((t) => {
-              const count = countsByType[t.procedure_type] ?? 0
-              const met = t.min_total > 0 ? count >= t.min_total : true
-              const pct = t.min_total > 0 ? Math.min(100, Math.round((count / t.min_total) * 100)) : 100
-              return (
-                <li key={t.procedure_type} className="p-4 border border-gray-200 rounded-lg bg-white">
-                  <div className="flex justify-between items-baseline mb-2 gap-2">
-                    <span className="font-semibold text-sm">
-                      {labelFor(t.procedure_type)}
-                    </span>
-                    <span
-                      className={`text-xs font-medium px-2 py-1 rounded-full ${
-                        met ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
-                      }`}
-                    >
-                      {count} / {t.min_total} {met ? '✓ met' : 'to go'}
-                    </span>
-                  </div>
-                  <div
-                    role="progressbar"
-                    aria-valuenow={count}
-                    aria-valuemin={0}
-                    aria-valuemax={t.min_total}
-                    aria-label={`${labelFor(t.procedure_type)}: ${count} of ${t.min_total} minimum`}
-                    className="h-2 w-full bg-gray-100 rounded-full overflow-hidden"
-                  >
-                    <div
-                      className={`h-full rounded-full ${met ? 'bg-green-500' : 'bg-primary-600'}`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        </section>
+    <div>
+      <div className="flex items-baseline justify-between mb-1">
+        <span className="text-sm font-medium text-gray-800">{p.label}</span>
+        <span className="text-sm text-gray-600">
+          {p.min > 0 ? (
+            <>
+              {p.done}/{p.min}{' '}
+              {met ? (
+                <span className="text-green-700 font-semibold">✓ met</span>
+              ) : (
+                <span className="text-gray-500">to go</span>
+              )}
+            </>
+          ) : (
+            <>{p.done} logged</>
+          )}
+        </span>
+      </div>
+      {p.min > 0 && (
+        <div
+          className="h-2 w-full rounded-full bg-gray-200 overflow-hidden"
+          role="progressbar"
+          aria-valuenow={p.done}
+          aria-valuemin={0}
+          aria-valuemax={p.min}
+          aria-label={`${p.label}: ${p.done} of ${p.min}`}
+        >
+          <div
+            className={`h-full rounded-full ${met ? 'bg-green-500' : 'bg-[#0066CC]'}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
       )}
+    </div>
+  )
+}
 
-      <section aria-labelledby="recent-heading">
-        <h2 id="recent-heading" className="text-xl font-bold text-gray-900 mb-3">
-          Recent entries
-        </h2>
-        {logs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-gray-300 rounded-lg">
-            <h3 className="font-semibold text-gray-900 mb-1">No procedures logged yet</h3>
-            <p className="text-sm text-gray-600">
-              Your first entry above starts your count toward the program minimums.
-            </p>
+export function RecentProcedures({
+  progress,
+  logs,
+}: {
+  progress: Progress[]
+  logs: RecentLog[]
+}) {
+  const router = useRouter()
+  const [pending, startTransition] = useTransition()
+  const [confirmId, setConfirmId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  function onDelete(id: string) {
+    setError(null)
+    startTransition(async () => {
+      const result = await deleteProcedure(id)
+      if (result.ok) {
+        setConfirmId(null)
+        router.refresh()
+      } else {
+        setError(result.error)
+      }
+    })
+  }
+
+  return (
+    <div className="space-y-4">
+      <section className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
+        <h2 className="font-semibold text-gray-900 mb-4">Progress toward minimums</h2>
+        <div className="space-y-4">
+          {progress.map((p) => (
+            <ProgressRow key={p.code} p={p} />
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
+        <h2 className="font-semibold text-gray-900 mb-3">Recent procedures</h2>
+
+        {error && (
+          <div role="alert" className="mb-3 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700">
+            {error}
           </div>
+        )}
+
+        {logs.length === 0 ? (
+          <p className="text-sm text-gray-600">
+            No procedures logged yet. Use the form above to add your first.
+          </p>
         ) : (
-          <ul className="space-y-3">
+          <ul className="divide-y divide-gray-100">
             {logs.map((log) => {
-              const badge = OUTCOME_BADGES[log.outcome]
-              const attending = log.supervising_attending_id
-                ? attendingNames[log.supervising_attending_id]
-                : null
+              const badge = OUTCOME_BADGE[log.outcome]
+              const confirming = confirmId === log.id
               return (
-                <li key={log.id} className="p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
-                  <div className="flex justify-between items-start gap-2 mb-1">
-                    <h3 className="font-semibold text-base">
-                      {labelFor(log.procedure_type)}
-                    </h3>
-                    <span className={`shrink-0 px-2 py-1 text-xs rounded font-medium ${badge.className}`}>
-                      {badge.label}
-                    </span>
+                <li key={log.id} className="py-3 first:pt-0 last:pb-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-900">{log.label}</p>
+                      <p className="text-sm text-gray-600">
+                        {formatDate(log.date_performed)}
+                        {log.attendingName ? ` • ${log.attendingName}` : ''}
+                      </p>
+                      <span
+                        className={`mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${badge.cls}`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} aria-hidden="true" />
+                        {badge.label}
+                      </span>
+                    </div>
+
+                    {confirming ? (
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => onDelete(log.id)}
+                          disabled={pending}
+                          className="px-3 py-1.5 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600 disabled:opacity-60"
+                        >
+                          {pending ? 'Deleting…' : 'Delete'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmId(null)}
+                          disabled={pending}
+                          className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmId(log.id)}
+                        className="shrink-0 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-900"
+                        aria-label={`Delete ${log.label} on ${formatDate(log.date_performed)}`}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-600">
-                    {formatDate(log.date_performed)}
-                    {attending ? ` • ${attending}` : ''}
-                  </p>
-                  {log.notes && <p className="mt-2 text-sm text-gray-700">{log.notes}</p>}
                 </li>
               )
             })}
