@@ -607,4 +607,20 @@ const CSS = `
 .hu-land footer .line{display:block;margin:3px 0;font-size:.93rem}
 .hu-land footer .motto{font-style:italic;color:#9fc0dd}
 .hu-land .foot-bottom{border-top:1px solid rgba(255,255,255,.12);margin-top:30px;padding-top:18px;font-size:.78rem;letter-spacing:.02em;display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between}
+
+/* ─── Hierarchy tune-up (screenshots 1–4) ─── */
+.hu-land .topbar-inner{min-height:76px}
+.hu-land .brand-mark{width:56px;height:56px}
+.hu-land .brand b{font-size:1.22rem}
+.hu-land .brand span{font-size:.74rem}
+.hu-land .hero .eyebrow{font-size:.86rem;letter-spacing:.16em;color:#bcd6ee}
+.hu-land .tabsbar{top:75px;box-shadow:0 6px 14px rgba(4,38,63,.06)}
+.hu-land .tab{font-size:1.02rem;color:var(--ink);padding:18px 20px;border-bottom-width:4px}
+.hu-land .tab:hover{color:var(--blue);background:rgba(0,58,99,.04)}
+.hu-land .tab[aria-selected="true"]{background:rgba(229,25,55,.05)}
+.hu-land .hero-meta{font-size:.9rem;font-weight:600;color:rgba(255,255,255,.85)}
+.hu-land .sub-row h3,
+.hu-land .subhead{font-size:1.6rem;position:relative;padding-left:16px}
+.hu-land .sub-row h3::before,
+.hu-land .subhead::before{content:"";position:absolute;left:0;top:.16em;bottom:.16em;width:5px;border-radius:3px;background:var(--red)}
 `;
