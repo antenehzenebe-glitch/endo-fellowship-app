@@ -180,6 +180,15 @@ export default function Landing() {
           <div className="grid grid-3">
             <article className="card person">
               <div className="headshot lead">
+                <span className="ph">GN</span>
+              </div>
+              <div>
+                <div className="name">Dr. Gail Nunlee-Bland</div>
+                <div className="role">Chief, Endocrinology, Diabetes &amp; Metabolism</div>
+              </div>
+            </article>
+            <article className="card person">
+              <div className="headshot lead">
                 <span className="ph">WO</span>
               </div>
               <div>
@@ -324,6 +333,7 @@ export default function Landing() {
             Leadership
           </h3>
           <div className="grid">
+            <Person initials="GN" lead name="Dr. Gail Nunlee-Bland" role="Chief, Endocrinology, Diabetes & Metabolism" focus="Director, Diabetes Treatment Center · Pediatric endocrinology" />
             <Person initials="WO" lead name="Dr. Wolali Odonkor" role="Program Director" focus="[Focus area]" />
             <Person
               initials="AZ"
@@ -348,7 +358,6 @@ export default function Landing() {
 
           <h3 className="subhead">Faculty</h3>
           <div className="grid">
-            <Person initials="GN" name="Dr. Gail Nunlee-Bland" role="Attending" focus="[Focus area]" />
             <Person initials="VG" name="Dr. Vijay Ganta" role="Attending" focus="[Focus area]" />
             <Person initials="PT" name="Dr. Parisa Takalloo" role="Attending" focus="[Focus area]" />
           </div>
