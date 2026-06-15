@@ -48,7 +48,17 @@ export type ReadinessOverview = {
   evaluationsCompleted: number
   evaluationsTotal: number
 }
-
+// Expected fraction of each cumulative procedure minimum a fellow should have
+// reached *by their PGY level* — used only to set readiness status, never the
+// progress bars (those always show progress toward the full minimum). Graduating
+// fellows are held to the full target; first-years are given the year to reach it.
+// Tune freely: e.g. set 'PGY-4' to 0.4 to make first-years start flagging at ~40%.
+const EXPECTED_PROCEDURE_FRACTION: Record<'PGY-4' | 'PGY-5', number> = {
+  'PGY-4': 0,
+  'PGY-5': 1,
+}
+// Unknown PGY → conservative: hold to the full minimum so gaps aren't hidden.
+const DEFAULT_EXPECTED_FRACTION = 1
 export async function getReadinessOverview(): Promise<ReadinessOverview> {
   const supabase = await createClient()
 
@@ -126,9 +136,19 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
       ).length,
       min: minByType.get(t.code) ?? 0,
     }))
+    // Pace readiness to the fellow's year: graduating fellows (PGY-5) are held
+    // to the full minimum; first-years (PGY-4) are given the year to get there,
+    // so procedures stay informational until then. The bars still show progress
+    // toward the full minimum — only status/blockers are paced.
+    const expectedFraction =
+      fellow.pgy_level === 'PGY-4' || fellow.pgy_level === 'PGY-5'
+        ? EXPECTED_PROCEDURE_FRACTION[fellow.pgy_level]
+        : DEFAULT_EXPECTED_FRACTION
     const withTarget = procedures.filter((p) => p.min > 0)
     const proceduresMet = withTarget.filter((p) => p.done >= p.min).length
-    const proceduresBehind = withTarget.length - proceduresMet
+    const proceduresBehindPace = withTarget.filter(
+      (p) => p.done < Math.ceil(p.min * expectedFraction),
+    ).length
 
     // ITE: most recent exam year on record.
     const fellowIte = ite
@@ -162,9 +182,10 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
 
     // Human-readable blockers (thresholds are placeholders the APD can tune).
     const blockers: string[] = []
-    if (proceduresBehind > 0) {
+    if (proceduresBehindPace > 0) {
+      const paceLabel = expectedFraction < 1 ? 'behind pace' : 'below minimum'
       blockers.push(
-        `${proceduresBehind} procedure ${proceduresBehind === 1 ? 'type' : 'types'} below minimum`,
+        `${proceduresBehindPace} procedure ${proceduresBehindPace === 1 ? 'type' : 'types'} ${paceLabel}`,
       )
     }
     if (onboardingIncomplete) {
@@ -177,7 +198,7 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
     }
 
     let status: ReadinessStatus = 'on_track'
-    if (proceduresBehind >= 3) status = 'behind'
+    if (proceduresBehindPace >= 3) status = 'behind'
     else if (blockers.length > 0) status = 'at_risk'
 
     return {
