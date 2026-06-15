@@ -82,9 +82,11 @@ export default async function DashboardPage({
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="py-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#0066CC] text-white shrink-0">
-                <span className="text-sm font-bold">HE</span>
-              </div>
+              <img
+                src="/logo.png"
+                alt=""
+                className="w-10 h-10 shrink-0 object-contain"
+              />
               <div>
                 <h1 className="text-xl font-bold text-gray-900 leading-tight">
                   Program Dashboard
