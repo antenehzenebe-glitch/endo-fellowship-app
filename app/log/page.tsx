@@ -47,9 +47,11 @@ export default async function LoggerPage() {
     <header className="bg-white border-b border-gray-200">
       <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#0066CC] text-white shrink-0">
-            <span className="text-sm font-bold">HE</span>
-          </div>
+         <img
+            src="/logo.png"
+            alt=""
+            className="w-10 h-10 shrink-0 object-contain"
+          />
           <div>
             <h1 className="text-lg font-bold text-gray-900 leading-tight">Hi, {firstName}</h1>
             <p className="text-sm text-gray-500">{profile.pgy_level ?? 'Fellow'}</p>
