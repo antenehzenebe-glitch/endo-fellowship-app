@@ -12,8 +12,8 @@ Three jobs: run evaluations, track fellow progress, hold education/policy materi
 ## Hard rules
 1. **No PHI, ever.** No patient name / MRN / DOB columns or values. Procedure notes are teaching context only. This keeps us out of HIPAA scope — don't break it.
 2. **Never bypass RLS.** Use the authenticated Supabase client; let row-level security do the filtering. No service-role key in app code, no raw-SQL endpoints. The first APD is the only manually-seeded row.
-3. **TypeScript strict, no `any`.** Use the generated/maintained types in `src/lib/database.types.ts`. Models align 1:1 with the schema.
-4. **Feature folders.** `src/procedures/`, `src/evaluations/`, `src/resources/`, `src/dashboard/`. Routes in `src/app/`. UI components, server actions, and types stay with their feature.
+3. **TypeScript strict, no `any`.** Use the generated/maintained types in `lib/supabase/database.types.ts` — declared as `type` aliases, never `interface` (an `interface` doesn't satisfy `Record<string, unknown>`, which silently degrades the Supabase typed client to `never`). Models align 1:1 with the schema.
+4. **Feature folders.** `procedures/`, `evaluations/`, `resources/`, `dashboard/` at the repo root (no `src/`). Routes in `app/`. UI components, server actions, and types stay with their feature.
 5. **Mobile-first, accessible.** Two real surfaces: fellow-on-phone, staff-on-desktop. 320px works; 44×44px touch targets; semantic HTML + labels; never color-only status. Follow DESIGN.md tokens.
 6. **Honest errors.** User-facing messages are specific and actionable, not "something went wrong."
 
@@ -21,7 +21,7 @@ Three jobs: run evaluations, track fellow progress, hold education/policy materi
 - **Fellows** — own their procedures/scholarly work; complete assigned evals; read materials.
 - **Attendings** — author evaluations & milestone assessments.
 - **Staff** = `pd | apd | coordinator | admin` — provision accounts, manage materials, see across the program.
-Helpers: `is_staff()`, `is_evaluator()` in SQL; `STAFF_ROLES`, `roleHome()` in `src/lib/auth.ts`.
+Helpers: `is_staff()`, `is_evaluator()` in SQL; `STAFF_ROLES`, `roleHome()` in `lib/auth.ts`.
 
 ## ACGME notes
 - Procedures map to program minimums (`procedure_targets`). Document the minimum in a comment when relevant.
