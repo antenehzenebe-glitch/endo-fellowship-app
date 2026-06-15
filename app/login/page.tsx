@@ -56,9 +56,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-white p-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#0066CC] text-white mb-4">
-            <span className="text-2xl font-bold">HE</span>
-          </div>
+          <img
+            src="/logo.png"
+            alt=""
+            className="block w-16 h-16 mx-auto mb-4 object-contain"
+          />
           <h1 className="text-2xl font-bold text-gray-900">Howard Endo Fellowship</h1>
           <p className="text-gray-600 mt-1 text-sm">
             Sign in with your work email
