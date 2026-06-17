@@ -1,4 +1,93 @@
-# Development Session Log — Howard Endocrinology Fellowship App
+# Session Log — 2026-06-17 (evening wrap)
+
+Continues the day's earlier entries (account provisioning, the four-feature UI
+build, the Netlify build fix). This session focused on the onboarding checklist
+and its two-group data model, a duplicate-account cleanup, and landing-page
+media placeholders.
+
+---
+
+## Done this session
+
+### 1. Account cleanup — Dr. Nunlee-Bland duplicate
+- Two auth accounts existed: `gnunleebland@howard.edu` (no hyphen, which held the
+  admin/Chief role) and a newer `gnunlee-bland@howard.edu` (hyphenated, correct).
+- Moved the **admin/Chief** role onto the hyphenated account and removed the stale
+  profile from the non-hyphenated one (0 data attached — clean migration).
+- Old non-hyphenated auth user deleted from the Supabase Dashboard.
+- Result: a single Gail profile — `admin`, `gnunlee-bland@howard.edu`, active. She
+  signs in with the **hyphenated** email.
+
+### 2. Onboarding / Checklist feature (NEW)
+- New route **`/onboarding`**, role-aware:
+  - **Fellows** see their own checklist and tap items to mark them complete
+    (optimistic save; RLS-scoped to self).
+  - **Staff** (APD / PD / coordinator / admin) see a read-only progress overview
+    of every fellow.
+- New files: `app/onboarding/page.tsx`, `app/onboarding/OnboardingChecklist.tsx`.
+- Navigation: the fellow `/log` header gained a nav row (Logger · Checklist ·
+  Materials · Password); the staff dashboard header gained an **Onboarding** link.
+
+### 3. Onboarding data model — two groups (DB)
+- Added a **`category`** column to `public.onboarding_tasks`
+  (`'onboarding' | 'training'`, CHECK constraint, default `'onboarding'`).
+  Existing 18 rows backfilled to `'training'`.
+- Migration recorded: `supabase/migrations/0006_onboarding_categories.sql`
+  (schema only; the per-fellow seed was applied live).
+- **Institutional Onboarding** (9 items) — seeded for the **incoming PGY-4
+  (Folake Adeleye) only**: credentialing & privileging · occupational-health
+  clearance · EMR access (Cerner/Epic) · compliance modules (HIPAA, etc.) · DC
+  license + DEA · New Innovations / ACGME account · ID badge & parking · BLS/ACLS
+  · orientation day.
+- **Training & Development Milestones** (6 items) — the original list, for all
+  three fellows: confirm profile & access · baseline ITE · log first procedure ·
+  acknowledge policies · goal-setting meeting · scholarly proposal.
+- Live counts verified: Folake = 9 onboarding + 6 training; Beg & Khan (PGY-5) =
+  6 training each.
+
+### 4. Landing page — Watch tab placeholders (NEW)
+- Added two media placeholder sections to the public landing page's **Watch** tab:
+  **Fellows in action** and **Wellness** (three tiles each, ready to swap for
+  photos or video embeds). No CSS changes.
+
+---
+
+## Current state
+- App live; 9 profiles provisioned with correct roles.
+- Onboarding checklist live with two clearly-labeled groups.
+- Landing page Watch / People / Policies tabs still hold placeholders awaiting
+  real content.
+
+---
+
+## Next steps / backlog
+- **Landing-page content:** paste real video embeds (YouTube/Vimeo) into the Watch
+  tiles; add Fellows-in-action & Wellness photos; fill coordinator name + email;
+  real fellow names + PGY; link the ACGME Endocrinology program-requirements PDF;
+  EAP / counseling contact; fellow handbook, milestones guide, GME policy links;
+  Pediatric Endocrinology elective card.
+- **Invite the team (8):** accounts + passwords are already set — they sign in and
+  change their password at `/account`.
+- **Evaluations:** create actual mid-/end-year review instances (the tab is
+  structural; 0 evaluation rows today).
+- **Custom SMTP:** only if magic-link / self-serve password reset is wanted.
+- **`/admin` (DB-backed):** manage people + materials without code edits.
+- **Materials:** upload onboarding documents/forms (resources, category
+  `onboarding`); acknowledgment flow for `requires_ack`.
+- **Per-year onboarding:** seed both groups for each new incoming fellow.
+- **Optional:** rename "Training & Development Milestones" if desired; role-label
+  flip `apd` → `admin` (no functional change).
+
+---
+
+## Tech notes
+- DB changes applied live via Supabase MCP; migration files committed for the record.
+- `onboarding_tasks` queries use `.returns<OnbRow[]>()` because the generated
+  `database.types.ts` does not yet include the new `category` column — regenerate
+  the types when convenient.
+- Code ships via Codespaces paste-scripts → `git push` → Netlify. GitHub MCP is
+  read-only in this setup; auth-user creation/deletion is done in the Supabase
+  Dashboard, never via raw SQL.# Development Session Log — Howard Endocrinology Fellowship App
 
 > Paste this entry at the top of `Session_Log_and_Action_Plan.md`, directly under the title and above the June 17 (noon) entry.
 
