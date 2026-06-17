@@ -268,6 +268,44 @@ export default function Landing() {
               </div>
             ))}
           </div>
+          {/* FELLOWS IN ACTION — EDIT: swap each tile's .video-ph for a photo (<img src="/photos/x.jpg" alt="..."/>) or a video embed (iframe). */}
+          <h3 className="subhead">Fellows in action</h3>
+          <p style={{ color: '#6a808c', fontSize: '.98rem', margin: '0 0 14px', maxWidth: 680 }}>
+            Snapshots of training life — clinic and procedures, posters and conferences, teaching and community.
+          </p>
+          <div className="grid grid-3">
+            {['Clinic & procedures', 'Conferences & posters', 'Teaching & community'].map((l) => (
+              <div className="video16x9" key={l}>
+                <div className="video-ph">
+                  <span className="play" aria-hidden="true">
+                    <PlayIcon />
+                  </span>
+                  <span className="vlabel">{l}</span>
+                  <span className="vhint">EDIT: add photo or clip</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* WELLNESS — EDIT: swap each tile's .video-ph for a photo or a video embed (iframe). */}
+          <h3 className="subhead">Wellness</h3>
+          <p style={{ color: '#6a808c', fontSize: '.98rem', margin: '0 0 14px', maxWidth: 680 }}>
+            How the program looks after its people — retreats and socials, well-being and support, life in D.C.
+          </p>
+          <div className="grid grid-3">
+            {['Retreat & socials', 'Well-being & support', 'Life in D.C.'].map((l) => (
+              <div className="video16x9" key={l}>
+                <div className="video-ph">
+                  <span className="play" aria-hidden="true">
+                    <PlayIcon />
+                  </span>
+                  <span className="vlabel">{l}</span>
+                  <span className="vhint">EDIT: add photo or clip</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
         </section>
 
         {/* TRAINING */}
