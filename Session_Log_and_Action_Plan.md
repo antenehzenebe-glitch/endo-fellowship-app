@@ -1,4 +1,63 @@
-Development Session Log — Howard Endocrinology Fellowship App
+# Development Session Log — Howard Endocrinology Fellowship App
+
+> Paste this entry at the top of `Session_Log_and_Action_Plan.md`, directly under the title and above the June 17 (noon) entry.
+
+## June 17, 2026 (PM) — Whole team provisioned; evaluation summary + self‑service password change shipped; build fixed and live
+
+### 📌 Summary
+The big gate is cleared. All **8 remaining accounts** (which you created in the Supabase Dashboard with passwords) were **provisioned with roles + PGY** via SQL, matched by their real auth emails. Two corrections were applied vs. the staged plan: Dr. Nunlee‑Bland's email is **`gnunleebland@howard.edu`** (no hyphen) and her role is **`admin` (Chief)**, not `attending`. Seeded the 3 fellows' onboarding checklists (**18 tasks**). Added structured **mid‑year / end‑of‑year** support to evaluations and shipped a read‑only **Evaluation Summary** tab, a **self‑service `/account` password‑change** page, the **Howard navy header** on the staff‑facing pages, and **Materials / Password** nav links. The first build failed on a single **dropped `<a>` opening tag** in the materials page (lost in the commit), which was restored with a one‑character edit. Production is now **green and live**.
+
+### ✅ Accomplished
+1. **All 8 provisioned (roles + PGY, by email).** Final roster = **4 staff** (you `apd`, Odonkor `pd`, Guzman `coordinator`, Nunlee‑Bland `admin`), **2 attendings** (Ganta, Takalloo), **3 fellows** (Beg PGY‑5, Khan PGY‑5, Adeleye PGY‑4). All staff can now upload materials and see the program views. Seeded **18 onboarding tasks** (6 × 3 fellows).
+2. **Evaluation Summary (mid/end‑year).** New `eval_period` enum + `period` / `academic_year` columns + index on `public.evaluations` (migration `0005_eval_periods.sql`). New **Evaluations** tab on the dashboard renders a per‑fellow **Mid‑year / End‑of‑year** grid (read‑only; completed reviews populate automatically). Buckets by `period_label` convention; the `period` column is in place for future structured use.
+3. **Self‑service password change.** New `/account` page (new password + confirm; uses the user's own session via `supabase.auth.updateUser` — no service‑role key). **Password** + **Materials** links added to the dashboard header; **Password / Dashboard** links added to the materials header.
+4. **Howard color.** Dashboard + materials headers are now Howard **navy `#003a63`** with a **crimson `#c8102e`** band; tabs/links restyled for the dark header; `SignOutButton` gained an `onDark` variant. (Login page was already navy/crimson.)
+5. **Build fix.** The materials page (`app/resources/page.tsx`) lost its `<a` opening tag in the commit — orphaned attributes caused a JSX parse error that aborted the Next build. Restored the tag; redeploy is **green**.
+
+### 🧭 Decisions / clarifications
+- **Nunlee‑Bland = `admin` (Chief)**, email **`gnunleebland@howard.edu`**. The staged provisioning plan had `attending` + a hyphenated email — both wrong; corrected.
+- **GitHub MCP is read‑only here** — confirmed `403 Resource not accessible by integration` on write. Code changes land via your GitHub‑web / Codespaces commit; the assistant cannot push. DB changes go directly via Supabase MCP.
+- **Netlify deploys are API/manual‑triggered** — a GitHub push alone may not publish, and a **failed build keeps the previous deploy "current."** After committing, trigger a deploy (CLI `npx netlify deploy --build --prod`, or **Deploys → Trigger deploy → Deploy site**).
+- **Full‑file paste is fragile** — a lone short line (`<a`) was dropped on commit. Prefer minimal, surgical edits in the web/VS Code editor over re‑pasting whole files.
+- **Evaluation Summary is structural for now** (0 evaluation rows) — it lists each fellow's two checkpoints as "Not started." Creating the actual review instances (or a small eval‑creation action) is the next step to make it populate.
+- **Auth remains password‑primary**; SMTP/Resend stays off the critical path. Magic‑link "forgot password" needs SMTP and is not required to onboard the team.
+
+### 🔑 Verified state (end of session)
+- **DB** `xousmzkftledlkwtpavb` (Postgres 17): **9 profiles** (4 staff / 2 attending / 3 fellow), **18 onboarding tasks**, **0 evaluations**, **0 resources**. `evaluations` now has `period` (`eval_period`: `mid_year` / `end_of_year`) + `academic_year`. `resources` bucket private + all 4 storage RLS policies.
+- **Repo `main`:** commit **`2644859`** ("Update page.tsx" — the `<a>` fix) on top of the feature commit **`474a4d2`**.
+- **Netlify:** deploy **`6a32e258` `ready`/green**, published **18:08 UTC**, 53s build. Live at **https://endo-fellowship-app.netlify.app**.
+
+### 🚀 Plan of Action (next session)
+1. **Invite the 8 to sign in** — email + temp password → change at **Password** (`/account`). Roster + a forwardable message are in the appendix.
+2. **Populate the Evaluation Summary** — add a small staff action to create the mid‑year / end‑of‑year review instances per fellow (or seed them), so the tab shows real Pending → Completed instead of "Not started."
+3. **Custom SMTP** — only if you want magic‑link / forgot‑password emails (not needed for password sign‑in).
+4. **DB‑backed `/admin`** — manage people + materials content without code edits.
+5. **Logger header** — add Materials / Account links to the fellow `/log` page (currently only dashboard + materials carry them).
+6. **Materials acknowledgment** flow for `requires_ack` items; **landing page** edits (Pediatric Endocrinology elective card; wire the program‑materials placeholder links).
+7. Optional: flip your role label **`apd → admin`** (no functional change).
+
+### 📎 Appendix — invite reference (roster)
+
+| Name | Email | Role | Lands on |
+|---|---|---|---|
+| Wolali Odonkor | `wodonkor@howard.edu` | PD | Dashboard |
+| Gail Nunlee‑Bland | `gnunleebland@howard.edu` | Chief (admin) | Dashboard |
+| Vijaya Ganta | `vaganta@howard.edu` | Attending | (evaluator) |
+| Parisa Takalloo | `parisa.takalloo@howard.edu` | Attending | (evaluator) |
+| Jordy Guzman | `jguzman@huhosp.org` | Coordinator | Dashboard |
+| Sofia Beg | `sofia.beg@howard.edu` | Fellow (PGY‑5) | Procedure logger |
+| Rumana Khan | `rumana.khan@howard.edu` | Fellow (PGY‑5) | Procedure logger |
+| Folake Adeleye | `fadeleye@huhosp.org` | Fellow (PGY‑4) | Procedure logger |
+
+**Forwardable message (fill in the password):**
+
+> You've been added to the Howard Endocrinology Fellowship app.
+> Sign in: https://endo-fellowship-app.netlify.app
+> Email: _(your work email)_
+> Temporary password: _(the one I set)_
+> First thing: click **Password** (top right) and set your own.
+
+Forgot someone's password? Supabase → Authentication → Users → select the person → set a new password (or ask the assistant to set a temp one directly).Development Session Log — Howard Endocrinology Fellowship App
 
 Paste this entry at the top of Session_Log_and_Action_Plan.md, directly under the title and above the June 16 entry.
 
