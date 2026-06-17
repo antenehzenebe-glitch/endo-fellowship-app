@@ -4,6 +4,7 @@
 // minimums, and the attending roster, then hands serializable data to the
 // client form + recent list. Staff are routed to their dashboard.
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { requireProfile, isStaff } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import SignOutButton from '@/components/SignOutButton'
@@ -45,9 +46,9 @@ export default async function LoggerPage() {
 
   const Header = (
     <header className="bg-white border-b border-gray-200">
-      <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between gap-3">
+      <div className="max-w-md mx-auto px-4 pt-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-         <img
+          <img
             src="/logo.png"
             alt=""
             className="w-10 h-10 shrink-0 object-contain"
@@ -59,6 +60,12 @@ export default async function LoggerPage() {
         </div>
         <SignOutButton />
       </div>
+      <nav aria-label="Sections" className="max-w-md mx-auto px-2 pb-1 flex gap-1 overflow-x-auto">
+        <Link href="/log" aria-current="page" className="px-3 py-2 text-sm font-medium rounded-md text-[#003a63] bg-gray-100 whitespace-nowrap">Logger</Link>
+        <Link href="/onboarding" className="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors whitespace-nowrap">Checklist</Link>
+        <Link href="/resources" className="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors whitespace-nowrap">Materials</Link>
+        <Link href="/account" className="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors whitespace-nowrap">Password</Link>
+      </nav>
     </header>
   )
 
