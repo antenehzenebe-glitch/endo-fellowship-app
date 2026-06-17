@@ -61,7 +61,7 @@ export function ProcedureLogForm({
     })
   }
 
-  const field = 'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#0066CC]'
+  const field = 'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#003a63]'
   const labelCls = 'block text-sm font-semibold text-gray-800 mb-1.5'
 
   return (
@@ -173,7 +173,7 @@ export function ProcedureLogForm({
         type="submit"
         disabled={pending}
         aria-busy={pending}
-        className="w-full py-3 bg-[#0066CC] text-white font-semibold rounded-lg hover:bg-[#0052A3] active:bg-[#003D7A] disabled:opacity-60 transition-colors"
+        className="w-full py-3 bg-[#c8102e] text-white font-semibold rounded-lg hover:bg-[#a50e26] active:bg-[#a50e26] disabled:opacity-60 transition-colors"
       >
         {pending ? 'Saving…' : 'Log procedure'}
       </button>

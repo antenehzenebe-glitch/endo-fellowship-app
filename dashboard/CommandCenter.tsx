@@ -246,7 +246,7 @@ export function ProgramSummary({ overview }: { overview: ReadinessOverview }) {
 export function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-dashed border-gray-300 bg-white">
-      <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0066CC] flex items-center justify-center mb-4">
+      <div className="w-12 h-12 rounded-full bg-blue-50 text-[#003a63] flex items-center justify-center mb-4">
         <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
           <path d="M16 21v-2a4 4 0 0 0-8 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" strokeLinecap="round" strokeLinejoin="round" />
         </svg>

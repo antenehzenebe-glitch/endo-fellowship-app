@@ -62,7 +62,7 @@ function ProgressRow({ p }: { p: Progress }) {
           aria-label={`${p.label}: ${p.done} of ${p.min}`}
         >
           <div
-            className={`h-full rounded-full ${met ? 'bg-green-500' : 'bg-[#0066CC]'}`}
+            className={`h-full rounded-full ${met ? 'bg-green-500' : 'bg-[#003a63]'}`}
             style={{ width: `${pct}%` }}
           />
         </div>

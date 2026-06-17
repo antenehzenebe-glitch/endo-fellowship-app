@@ -100,7 +100,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your.name@howard.edu"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#0066CC]"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#003a63]"
                 required
               />
             </div>
@@ -109,7 +109,7 @@ export default function LoginPage() {
               type="submit"
               disabled={loading || !email}
               aria-busy={loading}
-              className="w-full py-3.5 bg-[#0066CC] text-white font-semibold rounded-lg hover:bg-[#0052A3] disabled:opacity-60 transition-colors"
+              className="w-full py-3.5 bg-[#003a63] text-white font-semibold rounded-lg hover:bg-[#04263f] disabled:opacity-60 transition-colors"
             >
               {loading ? 'Sending link…' : 'Send sign-in link'}
             </button>

@@ -110,7 +110,7 @@ export default async function DashboardPage({
                   aria-current={active ? 'page' : undefined}
                   className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                     active
-                      ? 'border-[#0066CC] text-[#0066CC]'
+                      ? 'border-[#c8102e] text-[#003a63]'
                       : 'border-transparent text-gray-500 hover:text-gray-800'
                   }`}
                 >

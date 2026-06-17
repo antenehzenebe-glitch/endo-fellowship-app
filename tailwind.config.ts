@@ -2,9 +2,6 @@ import type { Config } from 'tailwindcss'
 
 const config: Config = {
   content: [
-    // Routes + shared components + feature folders. New feature folders
-    // (evaluations/, resources/, dashboard/) must be added here or Tailwind
-    // will purge their classes in production builds.
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './procedures/**/*.{js,ts,jsx,tsx,mdx}',
@@ -14,15 +11,10 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Howard Blue primary per DESIGN.md
-        primary: {
-          DEFAULT: '#0066CC',
-          50: '#E6F0FF',
-          100: '#CCE0FF',
-          600: '#0066CC',
-          700: '#0052A3',
-          800: '#003D7A',
-        },
+        // Howard navy primary — matches the public landing page
+        primary: { DEFAULT: '#003a63', 50: '#eef2f6', 100: '#d6e1ec', 600: '#003a63', 700: '#04263f', 800: '#04263f' },
+        // Howard crimson accent
+        crimson: { DEFAULT: '#c8102e', 600: '#c8102e', 700: '#a50e26' },
         success: '#22C55E',
         warning: '#F97316',
         error: '#EF4444',

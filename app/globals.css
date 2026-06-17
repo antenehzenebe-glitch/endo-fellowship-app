@@ -22,6 +22,6 @@ input:not([type='checkbox']):not([type='radio']) {
 
 /* Howard Blue focus ring, visible for keyboard users */
 :focus-visible {
-  outline: 2px solid #0066cc;
+  outline: 2px solid #003a63;
   outline-offset: 2px;
 }
