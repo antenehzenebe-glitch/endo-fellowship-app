@@ -1,29 +1,30 @@
 // app/dashboard/page.tsx
-// Staff dashboard. One route, three role-aware "centers" selected by ?view=:
-//   readiness  → APD command center (graduation readiness)
-//   program    → PD program oversight (evaluation completion + readiness)
-//   operations → coordinator worklist (chase outstanding items)
+// Staff dashboard. One route, role-aware "centers" selected by ?view=:
+//   readiness   -> APD command center (graduation readiness)
+//   program     -> PD program oversight (evaluation completion + readiness)
+//   evaluations -> mid-year / end-of-year evaluation summary (all staff)
+//   operations  -> coordinator worklist (chase outstanding items)
 // Staff-gated; each role lands on its own center by default but may switch tabs.
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { requireStaff } from '@/lib/auth'
 import type { UserRole } from '@/lib/auth'
-import {
-  getCoordinatorWorklist,
-  getReadinessOverview,
-} from '@/dashboard/queries'
+import { getCoordinatorWorklist, getReadinessOverview } from '@/dashboard/queries'
+import { getEvalSummary } from '@/dashboard/evaluationSummary'
 import CommandCenter from '@/dashboard/CommandCenter'
 import PdCenter from '@/dashboard/PdCenter'
 import CoordinatorCenter from '@/dashboard/CoordinatorCenter'
+import EvalSummary from '@/dashboard/EvalSummary'
 import SignOutButton from '@/components/SignOutButton'
 
 export const dynamic = 'force-dynamic'
 
-type View = 'readiness' | 'program' | 'operations'
+type View = 'readiness' | 'program' | 'evaluations' | 'operations'
 
 const TABS: { view: View; label: string }[] = [
   { view: 'readiness', label: 'Readiness' },
   { view: 'program', label: 'Program' },
+  { view: 'evaluations', label: 'Evaluations' },
   { view: 'operations', label: 'Operations' },
 ]
 
@@ -35,7 +36,9 @@ function defaultViewForRole(role: UserRole): View {
 
 function normalizeView(value: string | string[] | undefined): View | null {
   const v = Array.isArray(value) ? value[0] : value
-  return v === 'readiness' || v === 'program' || v === 'operations' ? v : null
+  return v === 'readiness' || v === 'program' || v === 'evaluations' || v === 'operations'
+    ? v
+    : null
 }
 
 function ErrorPanel({ what }: { what: string }) {
@@ -53,7 +56,6 @@ function ErrorPanel({ what }: { what: string }) {
 export default async function DashboardPage({
   searchParams,
 }: {
-  // Next 15: searchParams is a Promise and must be awaited.
   searchParams?: Promise<{ view?: string | string[] }>
 }) {
   const profile = await requireStaff()
@@ -68,6 +70,9 @@ export default async function DashboardPage({
     } else if (view === 'program') {
       const overview = await getReadinessOverview()
       body = <PdCenter overview={overview} />
+    } else if (view === 'evaluations') {
+      const summary = await getEvalSummary()
+      body = <EvalSummary summary={summary} />
     } else {
       const overview = await getReadinessOverview()
       body = <CommandCenter overview={overview} />
@@ -78,28 +83,39 @@ export default async function DashboardPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-[#003a63] text-white border-b-4 border-[#c8102e]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="py-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <img
                 src="/logo.png"
                 alt=""
-                className="w-10 h-10 shrink-0 object-contain"
+                className="w-10 h-10 shrink-0 object-contain bg-white rounded p-0.5"
               />
               <div>
-                <h1 className="text-xl font-bold text-gray-900 leading-tight">
-                  Program Dashboard
-                </h1>
-                <p className="text-sm text-gray-500">
+                <h1 className="text-xl font-bold leading-tight">Program Dashboard</h1>
+                <p className="text-sm text-white/70">
                   {profile.full_name} · {profile.role.toUpperCase()}
                 </p>
               </div>
             </div>
-            <SignOutButton />
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Link
+                href="/resources"
+                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
+              >
+                Materials
+              </Link>
+              <Link
+                href="/account"
+                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
+              >
+                Password
+              </Link>
+              <SignOutButton variant="onDark" />
+            </div>
           </div>
 
-          {/* View tabs (links, not client state) */}
           <nav aria-label="Dashboard views" className="flex gap-1 -mb-px">
             {TABS.map((tab) => {
               const active = tab.view === view
@@ -110,8 +126,8 @@ export default async function DashboardPage({
                   aria-current={active ? 'page' : undefined}
                   className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                     active
-                      ? 'border-[#c8102e] text-[#003a63]'
-                      : 'border-transparent text-gray-500 hover:text-gray-800'
+                      ? 'border-white text-white'
+                      : 'border-transparent text-white/60 hover:text-white'
                   }`}
                 >
                   {tab.label}
