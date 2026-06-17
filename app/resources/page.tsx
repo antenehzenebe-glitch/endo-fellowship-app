@@ -121,7 +121,7 @@ export default async function ResourcesPage() {
                     <div className="flex-1" />
                   )}
                   {href ? (
-                    
+                    <a
                       href={href}
                       target="_blank"
                       rel="noopener"
