@@ -1,4 +1,4 @@
-''use client'
+'use client'
 
 // app/onboarding/OnboardingChecklist.tsx
 // A tappable checklist for one group of a fellow's tasks (Institutional
