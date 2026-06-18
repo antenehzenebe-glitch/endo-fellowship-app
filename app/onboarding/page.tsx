@@ -9,6 +9,7 @@ import { requireProfile, isStaff } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import SignOutButton from '@/components/SignOutButton'
 import OnboardingChecklist, { type OnboardingTask } from './OnboardingChecklist'
+import StaffOnboardingTabs from './StaffOnboardingTabs'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,7 +76,7 @@ export default async function OnboardingPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-[#003a63] text-white border-b-4 border-[#c8102e]">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6">
             <div className="py-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <img src="/logo.png" alt="" className="w-10 h-10 shrink-0 object-contain bg-white rounded p-0.5" />
@@ -92,62 +93,13 @@ export default async function OnboardingPage() {
           </div>
         </header>
 
-        <main className="max-w-3xl mx-auto px-4 py-6 sm:px-6 space-y-4">
+        <main className="max-w-4xl mx-auto px-4 py-6 sm:px-6 space-y-4">
           {loadError ? (
             <ErrorPanel />
           ) : fellows.length === 0 ? (
             <p className="text-sm text-gray-600">No active fellows yet.</p>
           ) : (
-            fellows.map((f) => {
-              const items = rows.filter((t) => t.fellow_id === f.id)
-              return (
-                <section key={f.id} className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
-                  <div className="flex items-center justify-between gap-3 mb-1">
-                    <h2 className="font-semibold text-gray-900">{f.full_name}</h2>
-                    <p className="text-xs text-gray-500">{f.pgy_level ?? 'Fellow'}</p>
-                  </div>
-
-                  {GROUPS.map((g) => {
-                    const gi = items.filter((t) => t.category === g.key)
-                    if (gi.length === 0) return null
-                    const done = gi.filter((t) => t.status === 'completed').length
-                    const total = gi.length
-                    const pct = total ? Math.round((done / total) * 100) : 0
-                    return (
-                      <div key={g.key} className="mt-4">
-                        <div className="flex items-center justify-between gap-3 mb-1">
-                          <h3 className="text-sm font-semibold text-[#003a63]">{g.label}</h3>
-                          <span className="text-sm font-medium text-gray-700">{done}/{total}</span>
-                        </div>
-                        <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden mb-3">
-                          <div className="h-full bg-[#003a63]" style={{ width: `${pct}%` }} />
-                        </div>
-                        <ul className="space-y-2">
-                          {gi.map((t) => {
-                            const completed = t.status === 'completed'
-                            return (
-                              <li key={t.id} className="flex items-start gap-2 text-sm">
-                                <span aria-hidden="true" className={completed ? 'text-green-600' : 'text-gray-300'}>
-                                  {completed ? '✓' : '○'}
-                                </span>
-                                <span className={completed ? 'text-gray-500 line-through' : 'text-gray-800'}>
-                                  {t.task_name}
-                                  {completed && t.completed_at ? (
-                                    <span className="ml-2 text-xs text-gray-400 no-underline">
-                                      {new Date(t.completed_at).toLocaleDateString()}
-                                    </span>
-                                  ) : null}
-                                </span>
-                              </li>
-                            )
-                          })}
-                        </ul>
-                      </div>
-                    )
-                  })}
-                </section>
-              )
-            })
+            <StaffOnboardingTabs fellows={fellows} rows={rows} />
           )}
         </main>
       </div>
