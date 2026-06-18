@@ -4,7 +4,7 @@
 // minimums, and the attending roster, then hands serializable data to the
 // client form + recent list. Staff are routed to their dashboard.
 import Link from 'next/link'
-import { requireProfile, isStaff } from '@/lib/auth'
+import { requireFellow } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import SignOutButton from '@/components/SignOutButton'
 import { ProcedureLogForm } from '@/procedures/ProcedureLogForm'
@@ -13,7 +13,6 @@ import { RecentProcedures, type Progress, type RecentLog } from '@/procedures/Re
 export const dynamic = 'force-dynamic'
 
 export default async function LoggerPage() {
-  import { requireFellow } from '@/lib/auth'
   const profile = await requireFellow()
 
   const supabase = await createClient()
