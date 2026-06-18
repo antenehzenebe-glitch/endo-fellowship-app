@@ -28,6 +28,16 @@ export type Emergency = {
   management: string[] // ordered steps
   followUp: string[] // disposition + after-care
   pearls: string[] // high-yield "don't miss / don't do" points
+  tables?: EmergencyTable[] // optional structured tables (severity grids, scoring scales)
+}
+
+// Optional structured table for an emergency (e.g. DKA severity grading or the
+// Burch–Wartofsky Point Scale). Rendered after the diagnosis section. `type` per CLAUDE.md.
+export type EmergencyTable = {
+  title: string
+  columns: string[]
+  rows: string[][]
+  note?: string
 }
 
 // Category → label + accessible color tokens (color is paired with a text
@@ -59,10 +69,11 @@ export const EMERGENCIES: Emergency[] = [
       'Volume depletion; tachycardia; altered mental status in severe cases.',
     ],
     diagnosis: [
-      'Glucose usually >250 mg/dL — but can be near-normal ("euglycemic DKA" with SGLT2 inhibitors, pregnancy, starvation).',
-      'Anion-gap metabolic acidosis: pH <7.30, HCO₃ <18 mEq/L, elevated anion gap.',
-      'Ketonemia (β-hydroxybutyrate preferred) and/or ketonuria.',
-      'Grade severity by pH/HCO₃ and mental status.',
+      '2024 ADA/EASD consensus — all three: (1) glucose ≥200 mg/dL OR a prior history of diabetes; (2) ketonemia β-hydroxybutyrate ≥3.0 mmol/L (or ketonuria ≥2+); (3) metabolic acidosis pH <7.3 and/or HCO₃ <18 mmol/L.',
+      'Anion gap was REMOVED from the diagnostic criteria in 2024 — no longer required to diagnose DKA (still useful for tracking resolution).',
+      'β-hydroxybutyrate is the preferred ketone measure and is used to follow the response to treatment.',
+      'The "or prior diabetes" glucose clause is what lets euglycemic DKA qualify — see the separate entry.',
+      'Grade severity (mild / moderate / severe) by β-OHB, pH, HCO₃, and mental status — see table below.',
     ],
     management: [
       'IV fluids first: isotonic saline for resuscitation (~1 L or 15–20 mL/kg in hour 1), then adjust tonicity to corrected Na and continue deficit replacement.',
@@ -81,6 +92,47 @@ export const EMERGENCIES: Emergency[] = [
     pearls: [
       'Never stop the insulin drip without SC overlap — the gap reopens.',
       'On an SGLT2 inhibitor? Check ketones even when glucose looks normal.',
+    ],
+    tables: [
+      {
+        title: 'DKA severity grading (2024 ADA/EASD)',
+        columns: ['Severity', 'β-OHB (mmol/L)', 'pH', 'HCO₃ (mmol/L)', 'Mental status', 'Typical setting'],
+        rows: [
+          ['Mild', '≤ 6', '> 7.25', '≥ 15', 'Alert', 'Ward / floor'],
+          ['Moderate', '≤ 6', '7.0–7.25', '10 to <15', 'Alert or drowsy', 'Step-down'],
+          ['Severe', '> 6', '< 7.0', '< 10', 'Stupor or coma', 'ICU'],
+        ],
+        note: 'Grade by the most severe parameter present — mental status or pH <7.0 alone can drive ICU placement.',
+      },
+    ],
+  },
+  {
+    id: 'euglycemic-dka',
+    name: 'Euglycemic DKA (euDKA)',
+    category: 'glucose',
+    summary: 'Ketoacidosis with near-normal glucose (often <200–250 mg/dL) — easy to miss; classically with SGLT2 inhibitors, pregnancy, or low carbohydrate intake.',
+    features: [
+      'The DKA picture — nausea/vomiting, abdominal pain, Kussmaul breathing, malaise — but the glucose is not strikingly high.',
+      'Risk context: SGLT2 inhibitor, pregnancy/lactation, reduced caloric or carbohydrate intake, alcohol, recent surgery or acute illness.',
+    ],
+    diagnosis: [
+      'Ketonemia (β-OHB ≥3.0 mmol/L) + acidosis (pH <7.3 and/or HCO₃ <18 mmol/L) with glucose <200–250 mg/dL.',
+      'Qualifies under the 2024 criteria through the "prior diabetes history" clause — a normal glucose does NOT rule out DKA.',
+      'Check β-hydroxybutyrate in any at-risk patient who is acidotic, whatever the glucose shows.',
+    ],
+    management: [
+      'Treat as DKA but give dextrose EARLY: start D5–D10 (often D10) with the insulin infusion so you can run insulin to clear ketones without dropping the glucose.',
+      'Insulin infusion to close the gap / clear ketonemia; IV fluids; potassium repletion and monitoring exactly as in DKA (hold insulin if K <3.3 mmol/L).',
+      'Stop the SGLT2 inhibitor; hold it during acute illness and ~3–4 days before elective surgery.',
+      'Continue insulin + dextrose until ketonemia and acidosis resolve; overlap SC insulin before stopping the drip.',
+    ],
+    followUp: [
+      'Counsel on SGLT2-inhibitor sick-day rules and perioperative holding; home ketone testing for high-risk patients.',
+      'Identify and address the trigger (illness, fasting, surgery, pregnancy).',
+    ],
+    pearls: [
+      'A "normal" glucose does not exclude DKA — check ketones in any acidotic at-risk patient.',
+      'Run insulin AND dextrose together; the dextrose is what lets you keep clearing ketones.',
     ],
   },
   {
@@ -158,8 +210,10 @@ export const EMERGENCIES: Emergency[] = [
     ],
     diagnosis: [
       'Clinical — treat first, confirm later.',
-      'Draw cortisol (± ACTH, aldosterone/renin) BEFORE steroids only if it will not delay care; a low cortisol supports the diagnosis.',
-      'Confirm later with cosyntropin stimulation once stable. If the diagnosis is uncertain and a stim test is planned, use dexamethasone in the interim (it does not cross-react with the cortisol assay).',
+      'Random (basal) cortisol: <3–5 µg/dL (<83–138 nmol/L) strongly supports adrenal insufficiency; >18 µg/dL (>500 nmol/L) makes it unlikely. Draw it (± ACTH, aldosterone/renin) BEFORE steroids only if that will not delay treatment.',
+      '250 µg cosyntropin (ACTH) stimulation test once stable: peak cortisol <18 µg/dL (<500 nmol/L) at 30–60 min confirms adrenal insufficiency.',
+      'Localize the lesion: primary AI → HIGH ACTH with hyperkalemia + hyponatremia; central (secondary) AI → low or inappropriately normal ACTH with normal potassium.',
+      'If a stim test is planned but you must treat now, bridge with dexamethasone (does not cross-react with the cortisol assay).',
     ],
     management: [
       'Hydrocortisone 100 mg IV immediately, then 50 mg IV q6h (or 200 mg/24h continuous) — do NOT wait for labs.',
@@ -207,6 +261,22 @@ export const EMERGENCIES: Emergency[] = [
     pearls: [
       'Order matters: thionamide BEFORE iodine.',
       'Avoid aspirin (raises free T4). Do not withhold β-blockade for tachyarrhythmia unless true cardiogenic shock.',
+    ],
+    tables: [
+      {
+        title: 'Burch–Wartofsky Point Scale (thyroid storm)',
+        columns: ['Parameter', 'Findings → points'],
+        rows: [
+          ['Temperature (°F)', '99–99.9 = 5 · 100–100.9 = 10 · 101–101.9 = 15 · 102–102.9 = 20 · 103–103.9 = 25 · ≥104 = 30'],
+          ['CNS effects', 'Absent = 0 · Mild/agitation = 10 · Moderate (delirium, psychosis, lethargy) = 20 · Severe (seizure, coma) = 30'],
+          ['GI–hepatic', 'Absent = 0 · Moderate (diarrhea, nausea/vomiting, abdominal pain) = 10 · Severe (unexplained jaundice) = 20'],
+          ['Heart rate (bpm)', '90–109 = 5 · 110–119 = 10 · 120–129 = 15 · 130–139 = 20 · ≥140 = 25'],
+          ['Heart failure', 'Absent = 0 · Mild (pedal edema) = 5 · Moderate (bibasilar rales) = 10 · Severe (pulmonary edema) = 15'],
+          ['Atrial fibrillation', 'Absent = 0 · Present = 10'],
+          ['Precipitant history', 'Absent = 0 · Present = 10'],
+        ],
+        note: 'Sum every category: ≥45 highly suggestive of thyroid storm · 25–44 impending storm · <25 unlikely.',
+      },
     ],
   },
   {

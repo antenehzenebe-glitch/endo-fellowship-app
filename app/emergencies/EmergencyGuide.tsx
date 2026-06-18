@@ -11,6 +11,7 @@ import {
   EMERGENCY_CATEGORIES,
   type Emergency,
   type EmergencyCategory,
+  type EmergencyTable,
 } from '@/lib/endocrine-emergencies'
 
 const NAVY = '#003a63'
@@ -49,6 +50,43 @@ function Section({ heading, items, accent }: { heading: string; items: string[];
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+/* ----------------------------------------------------------- table block -- */
+function TableBlock({ t }: { t: EmergencyTable }) {
+  return (
+    <div>
+      <h4 className="text-xs font-bold uppercase tracking-wide mb-1.5 text-gray-500">{t.title}</h4>
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="bg-gray-50 text-left">
+              {t.columns.map((c, i) => (
+                <th key={i} className="border-b border-gray-200 px-3 py-2 font-semibold text-gray-700 whitespace-nowrap">
+                  {c}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {t.rows.map((row, ri) => (
+              <tr key={ri} className={ri % 2 ? 'bg-gray-50/50' : 'bg-white'}>
+                {row.map((cell, ci) => (
+                  <td
+                    key={ci}
+                    className={`px-3 py-2 align-top text-gray-700 ${ci === 0 ? 'font-medium text-gray-900 whitespace-nowrap' : ''}`}
+                  >
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {t.note ? <p className="mt-1.5 text-xs leading-snug text-gray-500">{t.note}</p> : null}
     </div>
   )
 }
@@ -97,6 +135,9 @@ function EmergencyCard({
         <div id={panelId} role="region" aria-labelledby={btnId} className="border-t border-gray-100 px-4 pb-4 pt-3 space-y-4">
           <Section heading="Clinical features" items={e.features} />
           <Section heading="Diagnosis / key labs" items={e.diagnosis} />
+          {e.tables?.map((t, i) => (
+            <TableBlock key={i} t={t} />
+          ))}
           <Section heading="Management" items={e.management} accent />
           <Section heading="Disposition & follow-up" items={e.followUp} />
           {e.pearls.length > 0 ? (
@@ -144,6 +185,7 @@ export default function EmergencyGuide() {
         ...e.management,
         ...e.followUp,
         ...e.pearls,
+        ...(e.tables ?? []).flatMap((t) => [t.title, t.note ?? '', ...t.columns, ...t.rows.flat()]),
       ]
         .join(' ')
         .toLowerCase()

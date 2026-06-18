@@ -7,8 +7,7 @@ import Link from 'next/link'
 import { requireFellow } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import SignOutButton from '@/components/SignOutButton'
-import { ProcedureLogForm } from '@/procedures/ProcedureLogForm'
-import { RecentProcedures, type Progress, type RecentLog } from '@/procedures/RecentProcedures'
+import { ProcedureLogger, type Progress, type RecentLog } from '@/procedures/ProcedureLogger'
 
 export const dynamic = 'force-dynamic'
 
@@ -112,17 +111,13 @@ export default async function LoggerPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {Header}
-      <main className="max-w-md mx-auto px-4 py-6 space-y-4">
-        <section className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
-          <h2 className="font-semibold text-gray-900 mb-4">Log a procedure</h2>
-          <ProcedureLogForm
-            types={types.map((t) => ({ code: t.code, label: t.label }))}
-            attendings={attendings}
-            todayStr={new Date().toISOString().slice(0, 10)}
-          />
-        </section>
-
-        <RecentProcedures progress={progress} logs={recent} />
+      <main className="max-w-md mx-auto px-4 py-6">
+        <ProcedureLogger
+          progress={progress}
+          attendings={attendings}
+          logs={recent}
+          todayStr={new Date().toISOString().slice(0, 10)}
+        />
       </main>
     </div>
   )
