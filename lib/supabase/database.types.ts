@@ -1,14 +1,3 @@
-// =====================================================
-// Howard Endocrinology Fellowship App — Database Types
-// GENERATED from the live schema (Supabase project xousmzkftledlkwtpavb).
-// Regenerate with:  npx supabase gen types typescript --project-id xousmzkftledlkwtpavb
-//
-// NOTE: Uses `type Database = { ... }` (not `interface`). This is required —
-// @supabase/postgrest-js needs each Row to satisfy Record<string, unknown>,
-// which `interface` does not implicitly do, silently degrading the whole typed
-// client to `never`. Keep these as `type` aliases.
-// =====================================================
-
 export type Json =
   | string
   | number
@@ -71,12 +60,14 @@ export type Database = {
       }
       evaluations: {
         Row: {
+          academic_year: string | null
           completed_at: string | null
           created_at: string
           due_date: string | null
           evaluator_id: string
           form_id: string
           id: string
+          period: Database["public"]["Enums"]["eval_period"] | null
           period_label: string | null
           responses: Json
           status: Database["public"]["Enums"]["task_status"]
@@ -84,12 +75,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          academic_year?: string | null
           completed_at?: string | null
           created_at?: string
           due_date?: string | null
           evaluator_id: string
           form_id: string
           id?: string
+          period?: Database["public"]["Enums"]["eval_period"] | null
           period_label?: string | null
           responses?: Json
           status?: Database["public"]["Enums"]["task_status"]
@@ -97,12 +90,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          academic_year?: string | null
           completed_at?: string | null
           created_at?: string
           due_date?: string | null
           evaluator_id?: string
           form_id?: string
           id?: string
+          period?: Database["public"]["Enums"]["eval_period"] | null
           period_label?: string | null
           responses?: Json
           status?: Database["public"]["Enums"]["task_status"]
@@ -230,6 +225,7 @@ export type Database = {
       }
       onboarding_tasks: {
         Row: {
+          category: string
           completed_at: string | null
           created_at: string
           description: string | null
@@ -241,6 +237,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: string
           completed_at?: string | null
           created_at?: string
           description?: string | null
@@ -252,6 +249,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: string
           completed_at?: string | null
           created_at?: string
           description?: string | null
@@ -416,6 +414,38 @@ export type Database = {
         }
         Relationships: []
       }
+      program_schedule: {
+        Row: {
+          academic_year: string
+          config: Json
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          academic_year?: string
+          config?: Json
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          academic_year?: string
+          config?: Json
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_schedule_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resource_acknowledgments: {
         Row: {
           acknowledged_at: string
@@ -569,6 +599,7 @@ export type Database = {
         | "systems_based_practice"
         | "practice_based_learning"
         | "personal_improvement"
+      eval_period: "mid_year" | "end_of_year"
       evaluation_type:
         | "faculty_of_fellow"
         | "fellow_of_faculty"
@@ -733,6 +764,7 @@ export const Constants = {
         "practice_based_learning",
         "personal_improvement",
       ],
+      eval_period: ["mid_year", "end_of_year"],
       evaluation_type: [
         "faculty_of_fellow",
         "fellow_of_faculty",
