@@ -1,6 +1,43 @@
 # Development Session Log — Howard Endocrinology Fellowship App
 
+# Development Session Log — Howard Endocrinology Fellowship App
+
 > Paste this entry at the top of `Session_Log_and_Action_Plan.md`, directly under the title and above the June 17 entry.
+
+## June 18, 2026 — Program Schedule v2 shipped (block grid + monthly didactic calendar + coverage)
+
+### 📌 Summary
+A build-and-ship session against production. The `/schedule` route was rebuilt from a static config file into a **DB-backed, staff-editable program schedule** and shipped **live**, seeded with the program's **real data** transcribed from two paper sheets Dr. Z photographed. The schedule now models both artifacts faithfully: the **annual block grid** (attending-of-the-month + each fellow's rotation, free-text so "Vacation (19-30)" fits) and the **monthly didactic calendar** (dated sessions like Grand Rounds / Graduation, rendered as a real Mon–Fri grid) plus the **coverage footer** (consult attending/fellows, weekend coverage, procedure fellow). Migration **0006** applied cleanly and was verified. All six files reached `main` and the **Netlify deploy is green** (commit "Update actions.ts", `ready`, 55s, no errors). Most of the session's friction was **terminal paste corruption** in Codespaces (carriage-return mangling of multi-line pastes), resolved by committing the last file via the **GitHub web editor** — a reusable fallback when the terminal misbehaves.
+
+### ✅ Accomplished
+1. **Schedule v2 data model** (`lib/schedule.ts`, NEW). `type` aliases (never interface): `ScheduleWeekly`, `ScheduleFellow`, `ScheduleBlock` (now carries `attending` + free-text `assignments`), `CalendarSession`, `WeekendCoverage`, `MonthCoverage`, `ScheduleMonth`, `ScheduleConfig`, `SchedulePayload`. Helpers: `blockForDate`, `ymToLabel`, `pickMonth`, `monthGridWeeks` (Mon–Fri week builder), `asConfig` (robust normalizer with safe defaults so a malformed/older row never crashes the page).
+2. **Editor** (`app/schedule/ScheduleEditor.tsx`, NEW). Staff-only, 5 sections: weekly skeleton, **Fellows manager** (add/edit/remove name+PGY — lets the grid roll forward to a new class), rotation suggestions (datalist vocab), **annual block grid** (Attending column + free-text fellow cells with `list="rotation-suggestions"`; Generate/Add/Clear), and **Monthly Calendars** (month chips + `<input type=month>` add; per-month meta, dated sessions add/edit/remove, coverage fields + repeatable weekend rows). Wired to `saveSchedule` via `useTransition` + `router.refresh()`; dirty-tracking, Revert, Copy JSON.
+3. **Read-only view** (`app/schedule/ScheduleView.tsx`, NEW). Server component: current-block banner (with attending), the current month rendered as a **Mon–Fri calendar grid** with sessions placed by date and **today highlighted**, weekday recurring sub-row derived from the weekly skeleton, the **coverage footer**, the weekly skeleton, and the annual block grid (Attending column; current month row flagged).
+4. **Server action** (`app/schedule/actions.ts`, NEW). `'use server'` `saveSchedule(payload)` upserts `program_schedule` (id='current'); RLS (`is_staff()`) is the enforcer; no service-role key, no raw SQL; `config` cast through `unknown` to `Json`; `revalidatePath('/schedule')`.
+5. **Route** (`app/schedule/page.tsx`, OVERWRITE). `requireProfile()`; reads the row; computes **today (America/New_York)** server-side; staff → editor, everyone else → view; Howard navy/crimson header.
+6. **Types regen** (`lib/supabase/database.types.ts`, OVERWRITE) — includes `program_schedule` Row + `is_staff`/`is_evaluator` functions.
+7. **Migration 0006 applied + verified.** `apply_migration("0006_schedule_v2_reseed")` → reseeded singleton to `academic_year='2025-2026'`, version 2. Verified live: weekly 5, rotation vocab 13, fellows 3, blocks 12, months 1, June sessions 12, weekend rows 3, and today (2026-06-18) resolves to **current block "June" / attending "Dr. Takalloo"**.
+
+### 🧭 Decisions / clarifications
+- **Seeded AY 2025-2026, not 2026-2027.** Today is June 18, 2026 → AY2025-2026 is the **current** year (ends June 2026) and the June 2026 sheet is the **current month**, so the live data shows real content immediately. Schedule's `fellows` list (Beg/Khan/**Clarke**) is a **de-identified per-year display list, independent of the provisioned accounts** — Clarke graduates June 2026 and isn't in the 2026-2027 roster. Roll forward to 2026-2027 in-app via the Fellows manager.
+- **Transcription kept verbatim, two items to confirm on screen:** June 5 reads "**Mid-year** Evaluations & Grad Lunch" (June is year-*end*); the January attending shows "**Dr. Nunlee-Bland**" (paper sheet abbreviates "Dr. Bland"). Both are one-click edits in the editor.
+- **Terminal paste corruption is real in this Codespaces setup.** Multi-line heredoc pastes get carriage-return-mangled (lines overwrite each other) and can leave bash hung at a `>` continuation prompt. **Fallback that works: edit/commit the file in the GitHub web editor** (textarea handles multi-line correctly), then `git pull` in Codespaces to resync. The empty `actions.ts` → TS "is not a module" error was exactly this (file pushed empty); fixed via the web editor.
+- **Earlier schedule batch had never landed.** Verified against `main` before instructing: `lib/schedule.ts` / `ScheduleEditor` / `ScheduleView` / `actions.ts` were **new** files (only old `lib/schedule-config.ts` + `app/schedule/RotationSchedule.tsx` + a typo dup `RotationSchedul.tsx` existed). Corrected the create-vs-overwrite guidance accordingly.
+
+### 🔑 Verified state (end of session)
+- **Production DB** `xousmzkftledlkwtpavb` (org `wfjhqtkkjnftnfqijxlm`, Postgres 17). Migrations **0000–0006** applied; RLS on all tables. `program_schedule` singleton seeded with real AY2025-2026 data (v2).
+- **Repo `main`:** all 6 schedule files present and intact (key exports confirmed; line counts differ from local by exactly 1 = trailing-newline only, benign). Last commit "Update actions.ts". Orphaned/dead after this ship (safe to delete anytime): `lib/schedule-config.ts`, `app/schedule/RotationSchedule.tsx`, `app/schedule/RotationSchedul.tsx`.
+- **Netlify:** deploy `6a34634641d7470008888f69` = **`ready`/green**, production, published 21:30Z, 55s build, secret scan clean, Next handler + edge function deployed. Live at **https://endo-fellowship-app.netlify.app**.
+- **Codespaces is 1 commit behind** (the `actions.ts` fix was committed on GitHub's website) — run `git pull` next time before editing.
+
+### 🚀 Plan of Action (Next Session)
+1. **Eyeball `/schedule`** in production (staff = editor with all real data loaded). Optionally correct the two verbatim items (June 5 "Mid-year" → "End-of-year"; Jan attending label) directly in the editor and Save.
+2. **Build the attending evaluation queue** — the agreed next feature. The `/attending` faculty hub's **Evaluations card is currently stubbed** ("coming soon"); let attendings complete fellow milestone/rotation evaluations. (Evaluations is Pillar 2; forms/`evaluations`/`milestone_assessments` tables already exist.)
+3. **Carry-forward backlog (gated on Dr. Z):** real faculty/fellow photos + bios and a `/admin/roster` people layer; landing-page edits (Peds elective card under Dr. Nunlee-Bland; wire grayed placeholder LinkCards); resolve `.github/copilot-instructions.md` drift (canonical on `main` is authoritative — pasted copies reintroduce PHI/`interface`/scope regressions).
+
+### Carry-forward conventions (unchanged, do not violate)
+- NO PHI — de-identified educational records only. **`type` aliases, never `interface`** for Supabase models. **Three pillars** — progress tracking, evaluations, materials/resources (the schedule is a *reference display*, not duty hours / scheduling / vacation approval). **Never create `auth.users` via raw SQL** (Dashboard/Admin API only). SQL helpers `is_staff()` / `is_evaluator()` exist.
+- **Tooling:** GitHub MCP is **read-only** for this repo (writes 403) — code lands via Codespaces **or the GitHub web editor**; reliable for `get_file_contents`/listing. Supabase MCP can write: `list_projects` before `execute_sql` (no `description` param on `execute_sql`); use `apply_migration(name, project_id, query)` for DDL/data. esbuild check: `npx esbuild <file> --jsx=automatic --outfile=/dev/null` (no `--loader`). For paste-safe terminal writes use one-line base64 (`printf %s '<b64>' | base64 -d > file`) or the GitHub web editor.> Paste this entry at the top of `Session_Log_and_Action_Plan.md`, directly under the title and above the June 17 entry.
 
 ## June 18, 2026 — APD Command Center redesigned & shipped; onboarding tabs + landing premium pass delivered
 
