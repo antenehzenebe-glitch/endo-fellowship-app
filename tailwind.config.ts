@@ -4,6 +4,7 @@ const config: Config = {
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './dashboard/**/*.{js,ts,jsx,tsx,mdx}',
     './procedures/**/*.{js,ts,jsx,tsx,mdx}',
     './evaluations/**/*.{js,ts,jsx,tsx,mdx}',
     './resources/**/*.{js,ts,jsx,tsx,mdx}',
