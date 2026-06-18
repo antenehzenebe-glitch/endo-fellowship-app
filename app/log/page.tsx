@@ -3,7 +3,6 @@
 // the procedure menu, the fellow's own logs (RLS scopes to them), program
 // minimums, and the attending roster, then hands serializable data to the
 // client form + recent list. Staff are routed to their dashboard.
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { requireProfile, isStaff } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
@@ -14,8 +13,8 @@ import { RecentProcedures, type Progress, type RecentLog } from '@/procedures/Re
 export const dynamic = 'force-dynamic'
 
 export default async function LoggerPage() {
-  const profile = await requireProfile()
-  if (isStaff(profile.role)) redirect('/dashboard')
+  import { requireFellow } from '@/lib/auth'
+  const profile = await requireFellow()
 
   const supabase = await createClient()
 
