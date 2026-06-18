@@ -1,10 +1,14 @@
-'use client'
+''use client'
 
 // app/onboarding/OnboardingChecklist.tsx
 // A tappable checklist for one group of a fellow's tasks (Institutional
 // Onboarding or Training & Development). Each row toggles pending<->completed
 // against public.onboarding_tasks (RLS lets a fellow update own rows).
 // Optimistic UI; reverts on error.
+//
+// CHANGE (this revision): the progress bar now sits at the END of the checklist
+// (after the items) and shows a numeric "X% complete" label, with proper
+// progressbar semantics. The header keeps the count + tap hint only.
 import { useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -63,21 +67,20 @@ export default function OnboardingChecklist({
   if (total === 0) return null
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
+      {/* Header: title + count + tap hint (no bar here anymore) */}
       <section className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
         <div className="flex items-center justify-between gap-3 mb-1">
           <h2 className="font-semibold text-gray-900">{title}</h2>
           <span className="text-sm font-medium text-gray-700">{done}/{total}</span>
         </div>
         {subtitle ? <p className="text-sm text-gray-500">{subtitle}</p> : null}
-        <p className="text-xs text-gray-400 mt-1 mb-3">
+        <p className="text-xs text-gray-400 mt-1">
           Tap an item to mark it complete. {done === total ? 'All done!' : `${total - done} left.`}
         </p>
-        <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
-          <div className="h-full bg-[#003a63] transition-all" style={{ width: `${pct}%` }} />
-        </div>
       </section>
 
+      {/* Tasks */}
       <ul className="space-y-2">
         {tasks.map((task) => {
           const completed = task.status === 'completed'
@@ -124,6 +127,35 @@ export default function OnboardingChecklist({
           )
         })}
       </ul>
+
+      {/* Progress bar at the END — fills by percentage, with a numeric label. */}
+      <section className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
+        <div className="flex items-baseline justify-between gap-3 mb-2">
+          <span className="text-sm font-medium text-gray-700">Progress</span>
+          <span className="text-sm font-semibold tabular-nums text-[#003a63]">
+            {pct}% complete
+            <span className="ml-1 font-normal text-gray-400">({done}/{total})</span>
+          </span>
+        </div>
+        <div
+          className="h-3 w-full rounded-full bg-gray-100 overflow-hidden"
+          role="progressbar"
+          aria-label={`${title} progress`}
+          aria-valuenow={pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <div
+            className="h-full rounded-full bg-[#003a63] transition-[width] duration-500"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        {done === total ? (
+          <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-green-700">
+            <span aria-hidden="true">✓</span> All items complete.
+          </p>
+        ) : null}
+      </section>
 
       {error ? (
         <div role="alert" className="p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700">

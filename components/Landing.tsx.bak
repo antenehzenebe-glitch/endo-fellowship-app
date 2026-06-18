@@ -70,14 +70,6 @@ function toEmbed(src?: string): string | null {
   return s;
 }
 
-// A self-hosted video file (Supabase Storage, /public, or any direct URL) plays
-// in a native HTML5 <video>. Returns the URL if it looks like a video file, else null.
-function directVideo(src?: string): string | null {
-  const s = (src ?? '').trim();
-  if (!s) return null;
-  return /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(s) ? s : null;
-}
-
 export default function Landing() {
   const [active, setActive] = useState<TabId>('overview');
   const barRef = useRef<HTMLDivElement>(null);
@@ -635,23 +627,10 @@ function VideoTile({
   featured?: boolean;
 }) {
   const [playing, setPlaying] = useState(false);
-  const file = directVideo(src);              // self-hosted file?
-  const embed = file ? null : toEmbed(src);   // otherwise YouTube/Vimeo embed
-  const ready = Boolean(file || embed);       // is there anything to play?
-
+  const embed = toEmbed(src);
   return (
     <div className={'video16x9' + (featured ? ' video-featured' : '')}>
-      {file && playing ? (
-        <video
-          src={file}
-          title={label}
-          controls
-          autoPlay
-          playsInline
-          preload="metadata"
-          style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#000' }}
-        />
-      ) : embed && playing ? (
+      {embed && playing ? (
         <iframe
           src={embed + (embed.includes('?') ? '&' : '?') + 'autoplay=1'}
           title={label}
@@ -662,16 +641,16 @@ function VideoTile({
       ) : (
         <button
           type="button"
-          className={'video-ph' + (ready ? ' video-ready' : '')}
-          onClick={() => ready && setPlaying(true)}
-          disabled={!ready}
-          aria-label={ready ? 'Play video: ' + label : label + ' — video coming soon'}
+          className={'video-ph' + (embed ? ' video-ready' : '')}
+          onClick={() => embed && setPlaying(true)}
+          disabled={!embed}
+          aria-label={embed ? 'Play video: ' + label : label + ' — video coming soon'}
         >
           <span className="play" aria-hidden="true">
             <PlayIcon />
           </span>
           <span className="vlabel">{label}</span>
-          <span className="vhint">{ready ? 'Tap to play' : 'Video coming soon'}</span>
+          <span className="vhint">{embed ? 'Tap to play' : 'Video coming soon'}</span>
         </button>
       )}
     </div>

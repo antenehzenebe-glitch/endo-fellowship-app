@@ -64,8 +64,6 @@ export default async function LoggerPage() {
         <Link href="/log" aria-current="page" className="px-3 py-2 text-sm font-medium rounded-md text-[#003a63] bg-gray-100 whitespace-nowrap">Logger</Link>
         <Link href="/onboarding" className="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors whitespace-nowrap">Checklist</Link>
         <Link href="/resources" className="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors whitespace-nowrap">Materials</Link>
-        <Link href="/emergencies" className="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors whitespace-nowrap">Emergencies</Link>
-        <Link href="/schedule" className="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors whitespace-nowrap">Schedule</Link>
         <Link href="/account" className="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors whitespace-nowrap">Password</Link>
       </nav>
     </header>
