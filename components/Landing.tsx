@@ -25,6 +25,51 @@ const TABS: { id: TabId; label: string }[] = [
 const ERAS =
   'https://students-residents.aamc.org/applying-fellowships-eras/apply-fellowships-eras-system';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// EDIT HERE — VIDEOS. Paste a YouTube or Vimeo link to make a tile play.
+// Accepts:  https://youtu.be/ID   ·   https://www.youtube.com/watch?v=ID
+//           https://vimeo.com/ID  ·   or a full embed URL.
+// Leave '' (empty) and the tile shows a tasteful "Video coming soon" state.
+// ─────────────────────────────────────────────────────────────────────────────
+const VIDEOS = {
+  welcome: '',        // featured intro
+  leadership: '',     // a message from leadership
+  clinic: '',         // a day in clinic
+  fellows: '',        // hear from our fellows
+  inActionClinic: '', // clinic & procedures
+  inActionConf: '',   // conferences & posters
+  inActionTeach: '',  // teaching & community
+  wellRetreat: '',    // retreat & socials
+  wellSupport: '',    // well-being & support
+  wellDC: '',         // life in D.C.
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EDIT HERE — LINKS. Paste a URL to turn a "coming soon" resource into a live
+// link. Leave '' (empty) and the card stays a non-clickable placeholder.
+// ─────────────────────────────────────────────────────────────────────────────
+const LINKS = {
+  endoReq: '',     // ACGME Endocrinology, Diabetes & Metabolism program-requirements PDF
+  eap: '',         // Confidential counseling / EAP
+  wellness: '',    // Fellow wellness & time-away policy
+  handbook: '',    // Fellow handbook
+  milestones: '',  // Milestones & evaluation guide
+  gme: '',         // Howard GME office policies
+};
+
+// Normalize a pasted YouTube/Vimeo URL (or bare ID) into an embeddable URL.
+function toEmbed(src?: string): string | null {
+  const s = (src ?? '').trim();
+  if (!s) return null;
+  if (/\/embed\/|player\.vimeo\.com/.test(s)) return s; // already an embed URL
+  const yt = s.match(/(?:youtu\.be\/|[?&]v=)([\w-]{6,})/);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+  const vm = s.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vm) return `https://player.vimeo.com/video/${vm[1]}`;
+  if (/^[\w-]{6,}$/.test(s)) return `https://www.youtube.com/embed/${s}`; // bare YT id
+  return s;
+}
+
 export default function Landing() {
   const [active, setActive] = useState<TabId>('overview');
   const barRef = useRef<HTMLDivElement>(null);
@@ -54,9 +99,6 @@ export default function Landing() {
               <b>HUH Endocrinology</b>
               <span>Diabetes &amp; Metabolism Fellowship</span>
             </span>
-          </a>
-          <a className="btn btn-red" href="/login">
-            Sign in
           </a>
         </div>
       </header>
@@ -145,6 +187,7 @@ export default function Landing() {
           </div>
           <div className="grid cards-top">
             <div className="card">
+              <div className="ico"><IconBreadth /></div>
               <h3>Breadth of pathology</h3>
               <p>
                 High-volume diabetes and thyroid care plus pituitary, adrenal, gonadal, and
@@ -152,10 +195,12 @@ export default function Landing() {
               </p>
             </div>
             <div className="card">
+              <div className="ico"><IconUsers /></div>
               <h3>Close mentorship</h3>
               <p>A small class means you learn at the elbow of faculty — not buried in a large service.</p>
             </div>
             <div className="card">
+              <div className="ico"><IconCap /></div>
               <h3>Scholarship &amp; QI</h3>
               <p>
                 Protected time for quality-improvement and research, with mentorship toward
@@ -163,6 +208,7 @@ export default function Landing() {
               </p>
             </div>
             <div className="card">
+              <div className="ico red"><IconHeart /></div>
               <h3>A mission that matters</h3>
               <p>
                 Care for the communities most affected by endocrine disease, at a historic academic
@@ -242,68 +288,31 @@ export default function Landing() {
               around Howard University Hospital.
             </p>
           </div>
-          {/* EDIT: replace the .video-ph block with an embed, e.g.
-              <iframe src="https://www.youtube.com/embed/VIDEO_ID" title="Welcome"
-                      allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen loading="lazy" /> */}
-          <div className="video16x9 video-featured">
-            <div className="video-ph">
-              <span className="play" aria-hidden="true">
-                <PlayIcon />
-              </span>
-              <span className="vlabel">Welcome to the program</span>
-              <span className="vhint">EDIT: paste your main intro clip here.</span>
-            </div>
-          </div>
+          <VideoTile featured label="Welcome to the program" src={VIDEOS.welcome} />
           <div className="grid grid-3">
-            {['A message from leadership', 'A day in clinic', 'Hear from our fellows'].map((l) => (
-              <div className="video16x9" key={l}>
-                <div className="video-ph">
-                  <span className="play" aria-hidden="true">
-                    <PlayIcon />
-                  </span>
-                  <span className="vlabel">{l}</span>
-                  <span className="vhint">EDIT: add clip</span>
-                </div>
-              </div>
-            ))}
+            <VideoTile label="A message from leadership" src={VIDEOS.leadership} />
+            <VideoTile label="A day in clinic" src={VIDEOS.clinic} />
+            <VideoTile label="Hear from our fellows" src={VIDEOS.fellows} />
           </div>
-          {/* FELLOWS IN ACTION — EDIT: swap each tile's .video-ph for a photo (<img src="/photos/x.jpg" alt="..."/>) or a video embed (iframe). */}
+
           <h3 className="subhead">Fellows in action</h3>
           <p style={{ color: '#6a808c', fontSize: '.98rem', margin: '0 0 14px', maxWidth: 680 }}>
             Snapshots of training life — clinic and procedures, posters and conferences, teaching and community.
           </p>
           <div className="grid grid-3">
-            {['Clinic & procedures', 'Conferences & posters', 'Teaching & community'].map((l) => (
-              <div className="video16x9" key={l}>
-                <div className="video-ph">
-                  <span className="play" aria-hidden="true">
-                    <PlayIcon />
-                  </span>
-                  <span className="vlabel">{l}</span>
-                  <span className="vhint">EDIT: add photo or clip</span>
-                </div>
-              </div>
-            ))}
+            <VideoTile label="Clinic & procedures" src={VIDEOS.inActionClinic} />
+            <VideoTile label="Conferences & posters" src={VIDEOS.inActionConf} />
+            <VideoTile label="Teaching & community" src={VIDEOS.inActionTeach} />
           </div>
 
-          {/* WELLNESS — EDIT: swap each tile's .video-ph for a photo or a video embed (iframe). */}
           <h3 className="subhead">Wellness</h3>
           <p style={{ color: '#6a808c', fontSize: '.98rem', margin: '0 0 14px', maxWidth: 680 }}>
             How the program looks after its people — retreats and socials, well-being and support, life in D.C.
           </p>
           <div className="grid grid-3">
-            {['Retreat & socials', 'Well-being & support', 'Life in D.C.'].map((l) => (
-              <div className="video16x9" key={l}>
-                <div className="video-ph">
-                  <span className="play" aria-hidden="true">
-                    <PlayIcon />
-                  </span>
-                  <span className="vlabel">{l}</span>
-                  <span className="vhint">EDIT: add photo or clip</span>
-                </div>
-              </div>
-            ))}
+            <VideoTile label="Retreat & socials" src={VIDEOS.wellRetreat} />
+            <VideoTile label="Well-being & support" src={VIDEOS.wellSupport} />
+            <VideoTile label="Life in D.C." src={VIDEOS.wellDC} />
           </div>
 
         </section>
@@ -436,7 +445,7 @@ export default function Landing() {
               title="For Residents & Fellows"
               desc="Your rights, how to raise a concern, and support from the ACGME."
             />
-            <LinkCard todo title="Endo program requirements" desc="[EDIT: link the ACGME Endocrinology, Diabetes & Metabolism program-requirements PDF.]" />
+            <LinkCard href={LINKS.endoReq} title="Endo program requirements" desc="ACGME Endocrinology, Diabetes & Metabolism program requirements." />
           </div>
 
           <h3 className="subhead">Fellow well-being</h3>
@@ -446,15 +455,15 @@ export default function Landing() {
               title="ACGME Well-Being Resources"
               desc="Tools for burnout, mental health, and resilience — for individuals and programs."
             />
-            <LinkCard todo title="Confidential counseling / EAP" desc="[EDIT: Howard GME / employee assistance contact — 24/7 access.]" />
-            <LinkCard todo title="Fellow wellness & time-away" desc="[EDIT: program well-being policy + how to get covered.]" />
+            <LinkCard href={LINKS.eap} title="Confidential counseling / EAP" desc="Howard GME / employee assistance — confidential, 24/7." />
+            <LinkCard href={LINKS.wellness} title="Fellow wellness & time-away" desc="Program well-being policy and how to get covered." />
           </div>
 
           <h3 className="subhead">Program materials</h3>
           <div className="grid">
-            <LinkCard todo title="Fellow handbook" desc="[EDIT: link.]" />
-            <LinkCard todo title="Milestones & evaluation guide" desc="[EDIT: link.]" />
-            <LinkCard todo title="Howard GME office policies" desc="[EDIT: link.]" />
+            <LinkCard href={LINKS.handbook} title="Fellow handbook" desc="The program handbook for current fellows." />
+            <LinkCard href={LINKS.milestones} title="Milestones & evaluation guide" desc="How evaluations and ACGME milestones work here." />
+            <LinkCard href={LINKS.gme} title="Howard GME office policies" desc="Institutional graduate medical education policies." />
           </div>
         </section>
       </main>
@@ -514,6 +523,45 @@ function PlayIcon() {
   );
 }
 
+/* Feature-card icons (stroke = currentColor; tint set by .ico in CSS) */
+function IconBreadth() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3l9 5-9 5-9-5 9-5z" />
+      <path d="M3 13l9 5 9-5" />
+    </svg>
+  );
+}
+
+function IconUsers() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 20c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6" />
+      <path d="M16 4a3 3 0 0 1 0 6" />
+      <path d="M20.5 20c0-2.6-1.4-4.8-3.5-5.6" />
+    </svg>
+  );
+}
+
+function IconCap() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 4L2 9l10 5 10-5-10-5z" />
+      <path d="M6 11.5V16c0 1.2 2.7 3 6 3s6-1.8 6-3v-4.5" />
+      <path d="M22 9v5" />
+    </svg>
+  );
+}
+
+function IconHeart() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 20S3.5 15 3.5 8.8C3.5 6 5.6 4.3 8 4.3c1.7 0 3.1 1 4 2.2.9-1.2 2.3-2.2 4-2.2 2.4 0 4.5 1.7 4.5 4.5C20.5 15 12 20 12 20z" />
+    </svg>
+  );
+}
+
 function Person({
   initials,
   name,
@@ -548,19 +596,20 @@ function LinkCard({
   href,
   title,
   desc,
-  todo,
 }: {
   href?: string;
   title: string;
   desc: string;
-  todo?: boolean;
 }) {
+  const todo = !href || !href.trim();
   return (
     <a
       className={'card linkcard' + (todo ? ' todo' : '')}
-      href={href || '#'}
-      target={href ? '_blank' : undefined}
-      rel={href ? 'noopener' : undefined}
+      href={todo ? '#' : href}
+      target={todo ? undefined : '_blank'}
+      rel={todo ? undefined : 'noopener'}
+      aria-disabled={todo ? true : undefined}
+      onClick={todo ? (e) => e.preventDefault() : undefined}
     >
       <span className="lk-t">{title}</span>
       <span className="lk-d">{desc}</span>
@@ -568,8 +617,48 @@ function LinkCard({
   );
 }
 
+function VideoTile({
+  label,
+  src,
+  featured,
+}: {
+  label: string;
+  src?: string;
+  featured?: boolean;
+}) {
+  const [playing, setPlaying] = useState(false);
+  const embed = toEmbed(src);
+  return (
+    <div className={'video16x9' + (featured ? ' video-featured' : '')}>
+      {embed && playing ? (
+        <iframe
+          src={embed + (embed.includes('?') ? '&' : '?') + 'autoplay=1'}
+          title={label}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          loading="lazy"
+        />
+      ) : (
+        <button
+          type="button"
+          className={'video-ph' + (embed ? ' video-ready' : '')}
+          onClick={() => embed && setPlaying(true)}
+          disabled={!embed}
+          aria-label={embed ? 'Play video: ' + label : label + ' — video coming soon'}
+        >
+          <span className="play" aria-hidden="true">
+            <PlayIcon />
+          </span>
+          <span className="vlabel">{label}</span>
+          <span className="vhint">{embed ? 'Tap to play' : 'Video coming soon'}</span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:wght@500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&display=swap');
 .hu-land{--blue:#003a63;--blue-deep:#04263f;--blue-tint:#eef2f6;--red:#e51937;--red-btn:#c8102e;--red-ink:#b3142c;--gray:#6a808c;--ink:#16242f;--bg:#f6f8fa;--surface:#ffffff;--border:#e2e7ec;--shadow:0 1px 2px rgba(4,38,63,.05),0 10px 28px rgba(4,38,63,.07);background:var(--bg);color:var(--ink);font-family:"Open Sans",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
 .hu-land *{box-sizing:border-box}
 @media (prefers-reduced-motion:reduce){.hu-land{scroll-behavior:auto}.hu-land *{transition:none!important}}
@@ -670,4 +759,44 @@ const CSS = `
 .hu-land .subhead{font-size:1.6rem;position:relative;padding-left:16px}
 .hu-land .sub-row h3::before,
 .hu-land .subhead::before{content:"";position:absolute;left:0;top:.16em;bottom:.16em;width:5px;border-radius:3px;background:var(--red)}
+
+/* ─── Landing refinements (premium pass) ─── */
+/* softer card shadow */
+.hu-land{--shadow:0 1px 2px rgba(4,38,63,.04),0 8px 22px rgba(4,38,63,.06)}
+/* brand bar stays at the top but is NOT sticky -> it scrolls away instead of floating over the text */
+.hu-land .topbar{position:static;background:var(--surface)}
+/* with the header non-sticky, pin the section tabs to the very top */
+.hu-land .tabsbar{top:0}
+/* esteemed display serif for the big headings, tighter leading */
+.hu-land .hero h1{font-family:"Playfair Display","Source Serif 4",Georgia,serif;line-height:1.06;letter-spacing:-.012em}
+.hu-land .phead h2{font-family:"Playfair Display","Source Serif 4",Georgia,serif;line-height:1.1}
+/* Sign-in button: darker red + subtle lift on hover */
+.hu-land .btn-red{transition:background .15s,transform .15s,box-shadow .15s}
+.hu-land .btn-red:hover{background:#a50e26;transform:translateY(-1px);box-shadow:0 6px 16px rgba(200,16,46,.32)}
+/* hero emblem: drop the harsh glow for a soft, natural shadow */
+.hu-land .hero-emblem img{filter:drop-shadow(0 10px 22px rgba(0,0,0,.22))}
+/* let the Why-train-here prose breathe a little wider */
+.hu-land .prose p{max-width:760px}
+/* roomier, rounder feature cards */
+.hu-land .card{padding:28px;border-radius:16px}
+/* thematic icon chip atop a card */
+.hu-land .card .ico{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:var(--blue-tint);color:var(--blue);margin-bottom:15px}
+.hu-land .card .ico svg{width:24px;height:24px}
+.hu-land .card .ico.red{background:#fdecef;color:var(--red-ink)}
+/* leadership avatars: soft red tint, red initials, no harsh ring */
+.hu-land .headshot.lead{background:#fdecef;border-color:#f3c8ce;box-shadow:none}
+.hu-land .headshot.lead .ph{color:var(--red-ink)}
+/* people cards: centered, symmetrical (avatar over name/title) */
+.hu-land .person{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
+/* hero logo: it's a transparent PNG that disappears on navy -> seat it on a soft
+   white medallion (padded, gentle shadow) so it reads clearly, no harsh ring */
+.hu-land .hero-emblem{aspect-ratio:1;border-radius:50%;background:#fff;padding:26px;box-shadow:0 16px 40px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.6);width:clamp(180px,24vw,264px)}
+.hu-land .hero-emblem img{width:100%;height:100%;object-fit:contain;filter:none}
+@media (max-width:720px){.hu-land .hero-emblem{width:168px;padding:20px}}
+/* playable video tiles: the placeholder is now a real button */
+.hu-land button.video-ph{appearance:none;border:0;background:transparent;width:100%;height:100%;font:inherit;color:inherit;cursor:default}
+.hu-land button.video-ph.video-ready{cursor:pointer}
+.hu-land .video-ph .play{transition:transform .15s,box-shadow .15s}
+.hu-land button.video-ph.video-ready:hover .play{transform:scale(1.07);box-shadow:0 10px 26px rgba(4,38,63,.28)}
+.hu-land button.video-ph.video-ready:hover .vhint{color:var(--red-ink)}
 `;
