@@ -1,12 +1,3 @@
-// app/schedule/actions.ts
-// Server action for the staff-editable program schedule.
-//
-// RLS is the enforcer: program_schedule INSERT/UPDATE require public.is_staff(),
-// so a non-staff caller is rejected by the database even if they reach this
-// action. We attempt the upsert and surface any error. No service-role key, no
-// raw SQL. (See CLAUDE.md.)
-//
-// De-identified PROGRAM data only (rotation names, dates, times) — NO PHI.
 'use server'
 
 import { revalidatePath } from 'next/cache'
@@ -36,14 +27,10 @@ export async function saveSchedule(
     return { ok: false, error: 'Schedule data is missing or malformed.' }
   }
 
-  // Singleton row: id is always 'current'. RLS restricts writes to is_staff();
-  // a non-staff session that reaches here is rejected by the database.
   const { error } = await supabase.from('program_schedule').upsert(
     {
       id: 'current',
       academic_year,
-      // `config` is a JSONB column (typed Json); our structured ScheduleConfig
-      // is a valid JSON value at runtime, so cast through unknown for the types.
       config: payload.config as unknown as Json,
       updated_by: user.id,
       updated_at: new Date().toISOString(),
