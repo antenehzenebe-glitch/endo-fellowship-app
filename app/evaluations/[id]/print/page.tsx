@@ -144,6 +144,10 @@ export default async function EvalPrintPage({
               ? `Finalized ${pretty(ev.finalized_at)}.`
               : `Draft — last updated ${pretty(ev.updated_at)}.`}
           </p>
+          <p className="text-xs text-slate-400 mt-1">
+            This is the program&rsquo;s internal summary. The official ACGME evaluation of record is
+            completed in New Innovations.
+          </p>
         </article>
       </div>
     </div>
