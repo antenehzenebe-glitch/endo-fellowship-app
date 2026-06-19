@@ -36,7 +36,6 @@ export type FellowReadiness = {
   latestIte: { examYear: number; percentile: number | null } | null
   scholarlyCompleted: number
   scholarlyActive: number
-  openEvaluations: number // evaluations about this fellow not yet completed
   onboardingDone: number
   onboardingTotal: number
 }
@@ -44,9 +43,6 @@ export type FellowReadiness = {
 export type ReadinessOverview = {
   fellows: FellowReadiness[]
   procedureTypes: ProcedureProgress[] // program template (label + min), done=0
-  programOpenEvaluations: number
-  evaluationsCompleted: number
-  evaluationsTotal: number
 }
 // Expected fraction of each cumulative procedure minimum a fellow should have
 // reached *by their PGY level* — used only to set readiness status, never the
@@ -69,7 +65,6 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
     logsRes,
     iteRes,
     scholarlyRes,
-    evaluationsRes,
     onboardingRes,
   ] = await Promise.all([
     supabase
@@ -88,7 +83,6 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
     supabase.from('procedure_logs').select('fellow_id, procedure_type'),
     supabase.from('ite_scores').select('fellow_id, exam_year, percentile'),
     supabase.from('scholarly_activities').select('fellow_id, status'),
-    supabase.from('evaluations').select('subject_id, status'),
     supabase.from('onboarding_tasks').select('fellow_id, status'),
   ])
 
@@ -99,7 +93,6 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
     logsRes.error ||
     iteRes.error ||
     scholarlyRes.error ||
-    evaluationsRes.error ||
     onboardingRes.error
   if (firstError) {
     throw new Error(`Could not load the readiness overview: ${firstError.message}`)
@@ -111,7 +104,6 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
   const logs = logsRes.data ?? []
   const ite = iteRes.data ?? []
   const scholarly = scholarlyRes.data ?? []
-  const evaluations = evaluationsRes.data ?? []
   const onboarding = onboardingRes.data ?? []
 
   const minByType = new Map<string, number>(
@@ -168,11 +160,6 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
       (s) => s.status === 'in_progress' || s.status === 'planned',
     ).length
 
-    // Outstanding evaluations *about* this fellow.
-    const openEvaluations = evaluations.filter(
-      (e) => e.subject_id === fellow.id && e.status !== 'completed',
-    ).length
-
     // Onboarding checklist.
     const fellowTasks = onboarding.filter((o) => o.fellow_id === fellow.id)
     const onboardingTotal = fellowTasks.length
@@ -190,11 +177,6 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
     }
     if (onboardingIncomplete) {
       blockers.push(`${onboardingTotal - onboardingDone} onboarding tasks open`)
-    }
-    if (openEvaluations > 0) {
-      blockers.push(
-        `${openEvaluations} evaluation${openEvaluations === 1 ? '' : 's'} outstanding`,
-      )
     }
 
     let status: ReadinessStatus = 'on_track'
@@ -215,16 +197,12 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
       scholarlyActive,
       onboardingDone,
       onboardingTotal,
-      openEvaluations,
     }
   })
 
   return {
     fellows: fellowReadiness,
     procedureTypes: procedureTemplate,
-    programOpenEvaluations: evaluations.filter((e) => e.status !== 'completed').length,
-    evaluationsCompleted: evaluations.filter((e) => e.status === 'completed').length,
-    evaluationsTotal: evaluations.length,
   }
 }
 
