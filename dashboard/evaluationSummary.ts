@@ -1,13 +1,17 @@
 // dashboard/evaluationSummary.ts
 // Mid-year / end-of-year evaluation summary for the staff dashboard
 // (PD / APD / Chief). Read-only: for each active fellow, whether the two
-// semiannual reviews are done. RLS does the filtering (staff see all via the
-// is_staff() branch in the evaluations SELECT policy). Never bypass RLS.
+// semiannual program summaries have been finalized for the current academic
+// year. RLS does the filtering — PD / APD / Chief see every row via the
+// can_author_eval() branch of the fellow_evaluations SELECT policy; nobody
+// else can read this table. Never bypass RLS.
 //
-// Period bucketing keys off the evaluation's period_label by convention:
-//   "Mid-Year 2026-2027"    -> mid-year
-//   "End-of-Year 2026-2027" -> end-of-year
-// (A structured `period` enum column also exists on evaluations for future use.)
+// Source of truth: public.fellow_evaluations — the narrative summary the
+// PD / APD / Chief writes alongside the official New Innovations review.
+// A period counts as "completed" once at least one finalized (status = 'final')
+// summary exists for that fellow and period in the current academic year; a
+// saved draft with no finalized summary shows as in-progress; no row at all
+// shows as pending (rendered as null).
 import { createClient } from '@/lib/supabase/server'
 
 export type EvalCellStatus = 'completed' | 'in_progress' | 'pending'
@@ -30,15 +34,16 @@ export type EvalSummaryData = {
   academicYear: string
 }
 
-function bucketOf(label: string | null): 'mid' | 'end' | null {
-  const l = (label ?? '').toLowerCase()
-  if (l.includes('mid')) return 'mid'
-  if (l.includes('end') || l.includes('annual') || l.includes('final')) return 'end'
-  return null
+// Academic year runs July 1 → June 30, written as "YYYY-YYYY" (e.g. 2025-2026).
+// Must match the academic_year string the evaluation workspace writes.
+function currentAcademicYear(now = new Date()): string {
+  const startYear = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1
+  return `${startYear}-${startYear + 1}`
 }
 
 export async function getEvalSummary(): Promise<EvalSummaryData> {
   const supabase = await createClient()
+  const academicYear = currentAcademicYear()
 
   const [fellowsRes, evalsRes] = await Promise.all([
     supabase
@@ -49,8 +54,9 @@ export async function getEvalSummary(): Promise<EvalSummaryData> {
       .order('pgy_level', { ascending: true })
       .order('full_name', { ascending: true }),
     supabase
-      .from('evaluations')
-      .select('subject_id, status, period_label, completed_at'),
+      .from('fellow_evaluations')
+      .select('fellow_id, period, status, finalized_at, academic_year')
+      .eq('academic_year', academicYear),
   ])
 
   const firstError = fellowsRes.error || evalsRes.error
@@ -61,31 +67,25 @@ export async function getEvalSummary(): Promise<EvalSummaryData> {
   const fellows = fellowsRes.data ?? []
   const evals = evalsRes.data ?? []
 
-  function cellFor(subjectId: string, which: 'mid' | 'end'): EvalCell {
-    const rows = evals.filter(
-      (e) => e.subject_id === subjectId && bucketOf(e.period_label) === which,
-    )
+  // A period is "completed" if any finalized summary exists for it; otherwise
+  // "in_progress" if a draft exists; otherwise null (nothing written yet).
+  function cellFor(fellowId: string, which: 'mid_year' | 'end_of_year'): EvalCell {
+    const rows = evals.filter((e) => e.fellow_id === fellowId && e.period === which)
     if (rows.length === 0) return null
-    const completed = rows.find((r) => r.status === 'completed')
-    const chosen = completed ?? rows[0]
-    const status: EvalCellStatus =
-      chosen.status === 'completed'
-        ? 'completed'
-        : chosen.status === 'in_progress'
-          ? 'in_progress'
-          : 'pending'
-    return { status, completedAt: completed?.completed_at ?? null }
+    const finalized = rows.find((r) => r.status === 'final')
+    if (finalized) {
+      return { status: 'completed', completedAt: finalized.finalized_at ?? null }
+    }
+    return { status: 'in_progress', completedAt: null }
   }
 
   const rows: FellowEvalRow[] = fellows.map((f) => ({
     id: f.id,
     name: f.full_name,
     pgyLevel: f.pgy_level,
-    midYear: cellFor(f.id, 'mid'),
-    endOfYear: cellFor(f.id, 'end'),
+    midYear: cellFor(f.id, 'mid_year'),
+    endOfYear: cellFor(f.id, 'end_of_year'),
   }))
 
-  const now = new Date()
-  const startYear = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1
-  return { fellows: rows, academicYear: `${startYear}-${startYear + 1}` }
+  return { fellows: rows, academicYear }
 }
