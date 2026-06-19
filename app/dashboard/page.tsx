@@ -5,6 +5,9 @@
 //   evaluations -> mid-year / end-of-year evaluation summary (all staff)
 //   operations  -> coordinator worklist (chase outstanding items)
 // Staff-gated; each role lands on its own center by default but may switch tabs.
+//
+// Chrome only (restyle): sticky navy header + Howard-crimson "filled" active tab
+// with an icon per view. All data loading and routing below is unchanged.
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { requireStaff } from '@/lib/auth'
@@ -27,6 +30,36 @@ const TABS: { view: View; label: string }[] = [
   { view: 'evaluations', label: 'Evaluations' },
   { view: 'operations', label: 'Operations' },
 ]
+
+// Small inline icons (16px, stroke = currentColor) so the active/inactive
+// color is inherited from the tab.
+const TAB_ICONS: Record<View, ReactNode> = {
+  readiness: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M22 10 12 5 2 10l10 5 10-5Z" strokeLinejoin="round" />
+      <path d="M6 12v5c0 1.1 2.7 2.5 6 2.5s6-1.4 6-2.5v-5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  program: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M3 3v18h18" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 15v3M12 11v7M17 7v11" strokeLinecap="round" />
+    </svg>
+  ),
+  evaluations: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1Z" strokeLinejoin="round" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="m9 13 2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  operations: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M9 6h11M9 12h11M9 18h11" strokeLinecap="round" />
+      <path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+}
 
 function defaultViewForRole(role: UserRole): View {
   if (role === 'coordinator') return 'operations'
@@ -83,7 +116,7 @@ export default async function DashboardPage({
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="bg-[#003a63] text-white border-b-4 border-[#c8102e]">
+      <header className="sticky top-0 z-30 bg-[#003a63] text-white border-b-4 border-[#c8102e] shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="py-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -134,7 +167,7 @@ export default async function DashboardPage({
             </div>
           </div>
 
-          <nav aria-label="Dashboard views" className="flex gap-1 -mb-px">
+          <nav aria-label="Dashboard views" className="flex gap-1 pb-2 overflow-x-auto">
             {TABS.map((tab) => {
               const active = tab.view === view
               return (
@@ -142,12 +175,13 @@ export default async function DashboardPage({
                   key={tab.view}
                   href={`/dashboard?view=${tab.view}`}
                   aria-current={active ? 'page' : undefined}
-                  className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold rounded-lg whitespace-nowrap transition-colors ${
                     active
-                      ? 'border-white text-white'
-                      : 'border-transparent text-white/60 hover:text-white'
+                      ? 'bg-[#c8102e] text-white shadow-sm'
+                      : 'text-white/70 hover:text-white hover:bg-white/10'
                   }`}
                 >
+                  {TAB_ICONS[tab.view]}
                   {tab.label}
                 </Link>
               )
