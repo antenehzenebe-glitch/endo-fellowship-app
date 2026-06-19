@@ -1,5 +1,85 @@
 # Development Session Log — Howard Endocrinology Fellowship App
 
+> Paste this entry at the top of `Session_Log_and_Action_Plan.md`, directly under the title and above the June 17 entry.
+
+## June 19, 2026 — Evaluation feature re-scoped to a leadership summary, dashboards begin per-tab redesign, eval two-table disconnect fixed
+
+### 📌 Summary
+A design-and-ship session against production, in three movements. **(1)** Audited the real source of all four staff dashboard "centers" and found the core problem: the Readiness board was already strong, but every other surface read evaluation data from the **wrong (empty) table**, so the whole app felt gray and "nothing was tracking." **(2)** Re-scoped the evaluation feature: the formal ACGME milestone evaluation lives in **New Innovations** and this app must not duplicate it — so the eval feature becomes a **PD/APD/Chief-authored program summary** plus a "where the fellow stands" snapshot. Applied **migration 0009** to enforce that in the database (only PD/APD/Chief can author or see evaluations; each fellow sees only her own finalized summary; coordinator and attendings are excluded). **(3)** Began the per-dashboard visual redesign the user asked for ("from vertically scrolling to a different rearrangement for every dashboard, with color that directs the eye but not too much"): shipped the redesigned **Readiness board** and the restyled **dashboard tab-shell**, then fixed the **eval data wire** so finalized summaries will actually appear. Four production commits, **all Netlify deploys verified green**. Recovered cleanly from a mid-session file-paste mix-up. **9 accounts remain provisioned and live** from the prior session.
+
+### ✅ Accomplished
+1. **Full audit of the four staff dashboards (read real source, not memory).** Confirmed the APD **Readiness** center was actually well-built; the "everything's gray" feeling came from (a) color appearing only on *problems* and (b) the other three centers being flat. **Critical finding — the eval two-table disconnect:** all four dashboards read eval status from the **legacy `evaluations`** table (via `getEvalSummary`, `getReadinessOverview`, `getCoordinatorWorklist`), while the evaluation **workspace writes `fellow_evaluations`**. The two never meet → every dashboard showed "pending / 0% / none assigned" no matter what was written.
+2. **Migration `0009_eval_summary_leadership_visibility` applied + verified.** Narrowed `can_author_eval()` to **`('pd','apd','admin')`** (was attending+pd+apd+admin) and rewrote the `fellow_evaluations` SELECT and DELETE policies. **Net effect:** PD / APD / Chief author and see **all** evaluations; each **fellow** sees only her **own finalized** summary; **coordinator and attendings are excluded entirely**. (SQL recorded in the appendix.)
+3. **Readiness center redesigned → "readiness board" (live, green).** `dashboard/CommandCenter.tsx`, SHA **`8141b129`**. A navy-gradient health banner (on-track / at-risk / behind counts, colored only when a bucket is non-empty so "0 behind" stays calm), a 2-up card grid with status-colored left rails (green / amber / red), an SVG **procedure completion ring** per fellow with the per-procedure bars kept beneath, crimson PGY tags, and ITE / scholarly / onboarding mini-stats. **Evaluations removed from this view** (now their own tab). All exports preserved, no data-layer change.
+4. **Dashboard tab-shell restyled → wayfinding (live, green).** `app/dashboard/page.tsx`, SHA **`efa593e6`**. Chrome only — all data-loading and role-routing preserved verbatim. Header is now **sticky** (navy, crimson bottom border, shadow); the active tab is a **crimson-filled pill**, inactive tabs ghost; added **icons** per tab (graduation cap = Readiness, bar chart = Program, clipboard-check = Evaluations, checklist = Operations); tab bar scrolls horizontally on mobile.
+5. **Eval two-table disconnect fixed at the data layer (live, green).** `dashboard/evaluationSummary.ts`, SHA **`2860666b`**. Repointed `getEvalSummary` from the empty legacy `evaluations` table to **`fellow_evaluations`**, **preserving the exact output shape** so `EvalSummary.tsx` needs no change. Mapping: `status='final'` → completed, `status='draft'` → in-progress, no row → pending; scoped to the **current academic year**; a period counts as "done" once **≥1 finalized** summary exists for that fellow+period. The green `next` build proves the typed client (`database.types.ts`) already carries `fellow_evaluations` with the columns used.
+
+### 🧭 Decisions / clarifications
+- **The app does not reproduce the New Innovations evaluation.** Per the user (ACGME/GME mandate), the formal milestone evaluation is completed in New Innovations. This app's eval feature is the **program's own narrative summary** (communicating that the review happened) **+ a "where the fellow stands" snapshot** (procedures vs. minimums + onboarding). This is now both a product decision **and** a database guarantee (migration 0009).
+- **Chief (admin) is included with PD/APD** as an evaluation author and viewer (the user chose "add the Chief").
+- **Per-dashboard distinct layouts approved** (no more identical vertical stacks): **Readiness = card-grid board** (✅ shipped); **Program = scorecard + roster table** (pending); **Operations = kanban columns**, with the evaluations column **removed** (pending); **Evaluation Summary = fellows × periods matrix** (pending).
+- **Color language:** crimson-filled active tab + per-tab icons; status accents (green/amber/red) are **meaning-bearing only**; navy carries structure, crimson carries action. "Direct the eye, but not too much."
+- **`lib/evaluations.ts` is now out of sync with the DB** and must be fixed next: `canAuthorEval(role)` still allows `attending`, but migration 0009 removed attendings — so an attending can still *open* the workspace UI and will hit a permission error on **save**. (Listed in the plan.)
+- **Mid-session file-paste incident — recovered.** The redesigned `CommandCenter` code was briefly pasted **over** `app/evaluations/EvaluationWorkspace.tsx`; diagnosed by matching git blob SHAs, restored the correct workspace from history. `app/evaluations/EvaluationWorkspace.tsx` is back at SHA **`8228ec2e`**. (Reminder for handoffs: there are **two** confusingly-named folders — root **`dashboard/`** holds the center components/data layer; **`app/dashboard/`** holds only `page.tsx`. Always confirm the breadcrumb + first line of a file before committing.)
+
+### 🔑 Verified state (end of session)
+- **Production DB** `xousmzkftledlkwtpavb` (org `wfjhqtkkjnftnfqijxlm`, Postgres 17). **Migrations 0000–0009 applied; RLS on all tables.** `fellow_evaluations` policies (verified live): SELECT `can_author_eval() OR (fellow_id = auth.uid() AND status = 'final')`; INSERT/UPDATE `can_author_eval() AND evaluator_id = auth.uid()`; DELETE `can_author_eval()`. `can_author_eval()` = role in **('pd','apd','admin')**.
+- **Accounts:** all **9** roster accounts provisioned and live (from the prior session) — APD, PD, Chief (admin), 2 attendings, coordinator, 3 fellows.
+- **Repo:** `main` HEAD **`c2a188eb`**. Key file SHAs — `dashboard/CommandCenter.tsx` **`8141b129`**, `app/dashboard/page.tsx` **`efa593e6`**, `dashboard/evaluationSummary.ts` **`2860666b`**, `app/evaluations/EvaluationWorkspace.tsx` **`8228ec2e`**. Unchanged this session: `dashboard/queries.ts` `20e6bf89`, `PdCenter.tsx` `422ec064`, `CoordinatorCenter.tsx` `b4d9e786`, `EvalSummary.tsx` `e8698dfa`.
+- **Netlify:** current deploy **`6a34adbb`** (commit `c2a188eb`) — `state: ready`, `plugin_state: success`, `error_message: null`, secret scan 0. App live at **https://endo-fellowship-app.netlify.app**. (Three earlier deploys this session — Readiness, shell, recovery — also verified green.)
+
+### 🚀 Plan of Action (Next Session)
+1. **Finish the Evaluation Summary tab — redesign `EvalSummary.tsx` into the fellows × (Mid-year, End-of-year) matrix.** It now receives correct data (item 5), so this is the visual half: a colored grid (completed / in-progress / pending) with the standing line *"The official evaluation is completed in New Innovations; this is the program's summary."* Isolated from `queries.ts` — clean to ship.
+2. **Program tab (`PdCenter.tsx`) → scorecard + roster table.** Gauges across the top, one compact row per fellow beneath. Repoint or replace the "evaluation completion %" stat (touch `getReadinessOverview` in `dashboard/queries.ts` — move its eval bits to `fellow_evaluations` or drop them, since the Readiness board no longer renders them).
+3. **Operations tab (`CoordinatorCenter.tsx`) → kanban columns** (Onboarding · Acknowledgments · ITE side by side). **Remove the evaluations column** — the coordinator is excluded from evals by migration 0009 and can no longer SELECT `fellow_evaluations`; also drop `outstandingEvaluations` from `getCoordinatorWorklist`.
+4. **Eval-simplification cleanup:** fix `lib/evaluations.ts` `canAuthorEval(role)` → `['pd','apd','admin']` (currently allows `attending`, mismatched vs. the DB); relabel **"Fellow Evaluations" → "Evaluation Summary"** with the New-Innovations standing line on every eval screen; build the fellow's **"Where I Stand"** view (her procedures vs. minimums + onboarding + the PD's finalized summary); **remove the Evaluations card from the attending hub** (`app/attending/page.tsx`).
+5. **Program SHOWCASE / People layer** (user-flagged *very important* — distinct high-value workstream): public fellowship intro — overview, curriculum, faculty bios + **real photos**, fellow life, how to apply; an `/admin/roster` admin UI; `people` / `media` tables + a **public** Storage bucket for headshots. (Scraping Howard's site was declined on copyright/consent grounds; Dr. Z is collecting official photos.)
+6. **Then (user-sequenced):** video upload + file upload + linking for resources/materials. Email/SMTP remains available but **off the critical path** (password auth is live): Resend, sender `medboardpro.org` via Namecheap, dedicated `send.medboardpro.org` subdomain.
+
+### 🧹 Backlog (non-blocking)
+- **`.github/copilot-instructions.md` drift** — the pasted stale copy reintroduces PHI/PII framing, `interface`-for-models, and omits the Materials pillar. **Verify the current canonical SHA on `main` before acting** (prior notes cite both a commit `781de153` and a blob `badda1a9` — confirm which is live).
+- **Dead code safe to delete:** `lib/schedule-config.ts`, `app/schedule/RotationSchedule.tsx`, `RotationSchedul.tsx` (typo file).
+- **Defer:** retiring the legacy `evaluations` / `evaluation_forms` / `milestone_assessments` tables (now unused by the live Evaluation Summary path; leave until the Program/Operations readers are also repointed off them).
+
+### 📎 Appendix — migration 0009 (applied this session, recorded for traceability)
+
+```sql
+-- 0009_eval_summary_leadership_visibility
+-- Evaluation = a PD/APD/Chief-authored program summary (NOT a New Innovations
+-- replacement). Narrow authorship + visibility to the leadership trio.
+
+-- Authorship: only Program Director, APD, and Division Chief (admin).
+create or replace function public.can_author_eval()
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+      and role in ('pd', 'apd', 'admin')
+  );
+$$;
+
+-- SELECT: authors see all; a fellow sees only her own FINALIZED summary.
+drop policy if exists fellow_evaluations_select on public.fellow_evaluations;
+create policy fellow_evaluations_select on public.fellow_evaluations
+  for select
+  using (
+    public.can_author_eval()
+    or (fellow_id = auth.uid() and status = 'final')
+  );
+
+-- DELETE: authors only. (INSERT/UPDATE inherit the narrowed function via
+-- their existing WITH CHECK: can_author_eval() AND evaluator_id = auth.uid().)
+drop policy if exists fellow_evaluations_delete on public.fellow_evaluations;
+create policy fellow_evaluations_delete on public.fellow_evaluations
+  for delete
+  using (public.can_author_eval());
+```# Development Session Log — Howard Endocrinology Fellowship App
+
 # Development Session Log — Howard Endocrinology Fellowship App
 
 > Paste this entry at the top of `Session_Log_and_Action_Plan.md`, directly under the title and above the June 17 entry.
