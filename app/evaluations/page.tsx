@@ -52,7 +52,7 @@ export default async function EvaluationsPage() {
       <header className="bg-[#003a63] text-white border-b-4 border-[#c8102e]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-lg font-bold">Fellow Evaluations</h1>
+            <h1 className="text-lg font-bold">Evaluation Summary</h1>
             <p className="text-xs text-white/70">
               Endocrinology, Diabetes &amp; Metabolism Fellowship
             </p>
@@ -67,6 +67,10 @@ export default async function EvaluationsPage() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-6 sm:px-6">
+        <p className="mb-5 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+          <span className="font-semibold text-slate-800">Note:</span> The official evaluation is
+          completed in New Innovations; this is the program&rsquo;s summary.
+        </p>
         {author ? (
           <EvaluationWorkspace
             fellows={fellows.map((f) => ({ id: f.id, name: f.full_name, pgy: f.pgy_level }))}
