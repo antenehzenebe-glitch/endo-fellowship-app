@@ -1,71 +1,36 @@
 // dashboard/CoordinatorCenter.tsx
-// Program coordinator view: an operational worklist. Not analytics — a punch
-// list of what's outstanding and needs chasing (evaluations to collect,
-// onboarding to finish, required policies to acknowledge, ITE scores to enter).
+// Program coordinator view: an operational kanban — three side-by-side columns
+// of what still needs chasing (Onboarding · Acknowledgments · ITE). Evaluations
+// are intentionally absent: the coordinator is excluded from the evaluation
+// summary (it lives with PD/APD under the New Innovations model), so this view
+// never reads evaluation data.
+// Mobile-first: columns stack on phones, sit side-by-side from md up.
+// Color is paired with text labels (never color alone) per DESIGN.md / WCAG.
 import type { ReactNode } from 'react'
-import { StatChip } from '@/dashboard/CommandCenter'
-import type {
-  CoordinatorWorklist,
-  OutstandingEvaluation,
-} from '@/dashboard/queries'
+import type { CoordinatorWorklist } from '@/dashboard/queries'
 
-const MONTHS = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-]
-
-// Deterministic date formatting (no locale/timezone drift): 'YYYY-MM-DD' → 'Jun 5, 2026'.
-function formatDate(d: string | null): string {
-  if (!d) return 'No due date'
-  const [y, m, day] = d.split('-').map((n) => parseInt(n, 10))
-  if (!y || !m || !day) return d
-  return `${MONTHS[m - 1]} ${day}, ${y}`
-}
-
-const TODAY = new Date().toISOString().slice(0, 10)
-
-function EvalStatusBadge({ status }: { status: OutstandingEvaluation['status'] }) {
-  const isInProgress = status === 'in_progress'
+function Column({ title, count, children }: { title: string; count: number; children: ReactNode }) {
   return (
-    <span
-      className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-        isInProgress ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-700'
-      }`}
-    >
-      {isInProgress ? 'In progress' : 'Not started'}
-    </span>
-  )
-}
-
-function SectionCard({
-  title,
-  count,
-  children,
-}: {
-  title: string
-  count: number
-  children: ReactNode
-}) {
-  return (
-    <section
-      aria-label={title}
-      className="rounded-xl border border-gray-200 bg-white shadow-sm"
-    >
-      <header className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <h2 className="font-semibold text-gray-900">{title}</h2>
-        <span className="text-xs font-medium text-gray-500 tabular-nums">
-          {count} {count === 1 ? 'item' : 'items'}
+    <section aria-label={title} className="flex flex-col rounded-xl border border-gray-200 bg-gray-50/60">
+      <header className="flex items-center justify-between gap-2 border-b border-gray-200 px-4 py-3">
+        <h2 className="font-semibold text-[#003a63]">{title}</h2>
+        <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-[#003a63] px-2 py-0.5 text-xs font-bold text-white tabular-nums">
+          {count}
         </span>
       </header>
-      <div className="p-4">{children}</div>
+      <div className="flex-1 space-y-2 p-3">{children}</div>
     </section>
   )
 }
 
+function Card({ children }: { children: ReactNode }) {
+  return <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">{children}</div>
+}
+
 function AllClear({ message }: { message: string }) {
   return (
-    <p className="text-sm text-green-700 flex items-center gap-1.5">
-      <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+    <p className="flex items-center gap-1.5 px-1 py-2 text-sm text-green-700">
+      <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
         <path d="M3 8.5l3.5 3.5L13 5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       {message}
@@ -73,157 +38,78 @@ function AllClear({ message }: { message: string }) {
   )
 }
 
-export default function CoordinatorCenter({
-  worklist,
-}: {
-  worklist: CoordinatorWorklist
-}) {
-  const onboardingOpen = worklist.onboarding.reduce((sum, f) => sum + f.pending, 0)
-  const policiesAwaiting = worklist.requiredAcks.filter(
-    (r) => r.missingNames.length > 0,
-  ).length
-  const fellowsBehindOnboarding = worklist.onboarding.filter((f) => f.pending > 0)
+export default function CoordinatorCenter({ worklist }: { worklist: CoordinatorWorklist }) {
+  const onboardingBehind = worklist.onboarding.filter((f) => f.pending > 0)
+  const acksOutstanding = worklist.requiredAcks.filter((r) => r.missingNames.length > 0)
+  const noFellows = worklist.totalFellows === 0
 
   return (
-    <section aria-label="Operations worklist" className="space-y-6">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatChip
-          label="Open evaluations"
-          value={String(worklist.outstandingEvaluations.length)}
-          sub="to collect"
-        />
-        <StatChip
-          label="Onboarding tasks"
-          value={String(onboardingOpen)}
-          sub="still pending"
-        />
-        <StatChip
-          label="Policies awaiting"
-          value={String(policiesAwaiting)}
-          sub="not fully acknowledged"
-        />
-        <StatChip
-          label="ITE gaps"
-          value={String(worklist.missingIteNames.length)}
-          sub="no score on file"
-        />
-      </div>
+    <section aria-label="Operations worklist" className="space-y-4">
+      <p className="text-sm text-gray-600">
+        What needs chasing this week — onboarding to finish, policies to acknowledge, ITE scores to enter.
+      </p>
 
-      {/* Outstanding evaluations */}
-      <SectionCard
-        title="Outstanding evaluations"
-        count={worklist.outstandingEvaluations.length}
-      >
-        {worklist.outstandingEvaluations.length === 0 ? (
-          <AllClear message="All assigned evaluations are complete." />
-        ) : (
-          <ul className="divide-y divide-gray-100">
-            {worklist.outstandingEvaluations.map((e) => {
-              const overdue = e.dueDate !== null && e.dueDate < TODAY
-              return (
-                <li key={e.id} className="py-2.5 flex items-start justify-between gap-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:items-start">
+        {/* Onboarding */}
+        <Column title="Onboarding" count={onboardingBehind.length}>
+          {noFellows ? (
+            <p className="px-1 py-2 text-sm text-gray-500">No active fellows enrolled yet.</p>
+          ) : onboardingBehind.length === 0 ? (
+            <AllClear message="Every fellow's checklist is complete." />
+          ) : (
+            onboardingBehind.map((f) => (
+              <Card key={f.fellowId}>
+                <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900">
-                      {e.formName}
-                      {e.periodLabel ? (
-                        <span className="font-normal text-gray-500"> · {e.periodLabel}</span>
-                      ) : null}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {e.evaluatorName}
-                      <span className="text-gray-400"> evaluating </span>
-                      {e.subjectName ?? 'the program'}
-                    </p>
+                    <p className="truncate text-sm font-semibold text-gray-900">{f.fellowName}</p>
+                    <p className="text-xs text-gray-500">{f.pgyLevel ?? 'Fellow'}</p>
                   </div>
-                  <div className="text-right shrink-0">
-                    <EvalStatusBadge status={e.status} />
-                    <p
-                      className={`text-xs mt-1 ${overdue ? 'text-red-600 font-medium' : 'text-gray-500'}`}
-                    >
-                      {overdue ? 'Overdue · ' : ''}
-                      {formatDate(e.dueDate)}
-                    </p>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </SectionCard>
-
-      {/* Onboarding */}
-      <SectionCard title="Onboarding in progress" count={fellowsBehindOnboarding.length}>
-        {worklist.totalFellows === 0 ? (
-          <p className="text-sm text-gray-500">No active fellows enrolled yet.</p>
-        ) : fellowsBehindOnboarding.length === 0 ? (
-          <AllClear message="Every fellow's onboarding checklist is complete." />
-        ) : (
-          <ul className="divide-y divide-gray-100">
-            {fellowsBehindOnboarding.map((f) => (
-              <li key={f.fellowId} className="py-2.5 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{f.fellowName}</p>
-                  <p className="text-sm text-gray-500">{f.pgyLevel ?? 'Fellow'}</p>
+                  <span className="shrink-0 text-sm font-semibold text-orange-700 tabular-nums">
+                    {f.pending}/{f.total}
+                  </span>
                 </div>
-                <span className="text-sm text-orange-700 font-medium tabular-nums">
-                  {f.pending} of {f.total} open
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </SectionCard>
+              </Card>
+            ))
+          )}
+        </Column>
 
-      {/* Required acknowledgments */}
-      <SectionCard title="Required acknowledgments" count={worklist.requiredAcks.length}>
-        {worklist.requiredAcks.length === 0 ? (
-          <p className="text-sm text-gray-500">
-            No resources currently require acknowledgment.
-          </p>
-        ) : (
-          <ul className="divide-y divide-gray-100">
-            {worklist.requiredAcks.map((r) => {
-              const complete = r.missingNames.length === 0
-              return (
-                <li key={r.id} className="py-2.5">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-medium text-gray-900 min-w-0 truncate">
-                      {r.title}
-                    </p>
-                    <span
-                      className={`text-sm font-medium tabular-nums shrink-0 ${
-                        complete ? 'text-green-700' : 'text-orange-700'
-                      }`}
-                    >
-                      {r.acknowledged}/{r.totalFellows} acknowledged
-                    </span>
-                  </div>
-                  {!complete ? (
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Awaiting: {r.missingNames.join(', ')}
-                    </p>
-                  ) : null}
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </SectionCard>
+        {/* Acknowledgments */}
+        <Column title="Acknowledgments" count={acksOutstanding.length}>
+          {worklist.requiredAcks.length === 0 ? (
+            <p className="px-1 py-2 text-sm text-gray-500">No resources require acknowledgment.</p>
+          ) : acksOutstanding.length === 0 ? (
+            <AllClear message="All required acknowledgments are in." />
+          ) : (
+            acksOutstanding.map((r) => (
+              <Card key={r.id}>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="min-w-0 truncate text-sm font-semibold text-gray-900">{r.title}</p>
+                  <span className="shrink-0 text-sm font-semibold text-orange-700 tabular-nums">
+                    {r.acknowledged}/{r.totalFellows}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">Awaiting: {r.missingNames.join(', ')}</p>
+              </Card>
+            ))
+          )}
+        </Column>
 
-      {/* ITE gaps */}
-      <SectionCard title="ITE score gaps" count={worklist.missingIteNames.length}>
-        {worklist.totalFellows === 0 ? (
-          <p className="text-sm text-gray-500">No active fellows enrolled yet.</p>
-        ) : worklist.missingIteNames.length === 0 ? (
-          <AllClear message="Every active fellow has at least one ITE score on file." />
-        ) : (
-          <ul className="text-sm text-gray-700 space-y-1">
-            {worklist.missingIteNames.map((name) => (
-              <li key={name}>{name}</li>
-            ))}
-          </ul>
-        )}
-      </SectionCard>
+        {/* ITE */}
+        <Column title="ITE scores" count={worklist.missingIteNames.length}>
+          {noFellows ? (
+            <p className="px-1 py-2 text-sm text-gray-500">No active fellows enrolled yet.</p>
+          ) : worklist.missingIteNames.length === 0 ? (
+            <AllClear message="Every fellow has a score on file." />
+          ) : (
+            worklist.missingIteNames.map((name) => (
+              <Card key={name}>
+                <p className="text-sm font-medium text-gray-900">{name}</p>
+                <p className="text-xs text-gray-500">No ITE score on file</p>
+              </Card>
+            ))
+          )}
+        </Column>
+      </div>
     </section>
   )
 }

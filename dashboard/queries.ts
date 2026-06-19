@@ -209,16 +209,6 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
 // ---------------------------------------------------------------------------
 // Coordinator operations worklist — "what needs chasing this week"
 // ---------------------------------------------------------------------------
-export type OutstandingEvaluation = {
-  id: string
-  status: 'pending' | 'in_progress'
-  dueDate: string | null
-  periodLabel: string | null
-  evaluatorName: string
-  subjectName: string | null // null = program-level evaluation
-  formName: string
-}
-
 export type OnboardingProgress = {
   fellowId: string
   fellowName: string
@@ -236,7 +226,6 @@ export type RequiredAck = {
 }
 
 export type CoordinatorWorklist = {
-  outstandingEvaluations: OutstandingEvaluation[]
   onboarding: OnboardingProgress[]
   requiredAcks: RequiredAck[]
   missingIteNames: string[]
@@ -248,20 +237,12 @@ export async function getCoordinatorWorklist(): Promise<CoordinatorWorklist> {
 
   const [
     profilesRes,
-    evalsRes,
-    formsRes,
     onboardingRes,
     resourcesRes,
     acksRes,
     iteRes,
   ] = await Promise.all([
     supabase.from('profiles').select('id, full_name, role, pgy_level, is_active'),
-    supabase
-      .from('evaluations')
-      .select('id, status, due_date, period_label, evaluator_id, subject_id, form_id')
-      .neq('status', 'completed')
-      .order('due_date', { ascending: true, nullsFirst: false }),
-    supabase.from('evaluation_forms').select('id, name'),
     supabase.from('onboarding_tasks').select('fellow_id, status'),
     supabase
       .from('resources')
@@ -274,8 +255,6 @@ export async function getCoordinatorWorklist(): Promise<CoordinatorWorklist> {
 
   const firstError =
     profilesRes.error ||
-    evalsRes.error ||
-    formsRes.error ||
     onboardingRes.error ||
     resourcesRes.error ||
     acksRes.error ||
@@ -285,26 +264,12 @@ export async function getCoordinatorWorklist(): Promise<CoordinatorWorklist> {
   }
 
   const profiles = profilesRes.data ?? []
-  const evals = evalsRes.data ?? []
-  const forms = formsRes.data ?? []
   const onboarding = onboardingRes.data ?? []
   const resources = resourcesRes.data ?? []
   const acks = acksRes.data ?? []
   const ite = iteRes.data ?? []
 
-  const nameById = new Map(profiles.map((p) => [p.id, p.full_name]))
-  const formNameById = new Map(forms.map((f) => [f.id, f.name]))
   const activeFellows = profiles.filter((p) => p.role === 'fellow' && p.is_active)
-
-  const outstandingEvaluations: OutstandingEvaluation[] = evals.map((e) => ({
-    id: e.id,
-    status: e.status === 'in_progress' ? 'in_progress' : 'pending',
-    dueDate: e.due_date,
-    periodLabel: e.period_label,
-    evaluatorName: nameById.get(e.evaluator_id) ?? 'Unknown evaluator',
-    subjectName: e.subject_id ? (nameById.get(e.subject_id) ?? 'Unknown') : null,
-    formName: formNameById.get(e.form_id) ?? 'Evaluation',
-  }))
 
   const onboardingProgress: OnboardingProgress[] = activeFellows.map((f) => {
     const tasks = onboarding.filter((o) => o.fellow_id === f.id)
@@ -337,7 +302,6 @@ export async function getCoordinatorWorklist(): Promise<CoordinatorWorklist> {
     .map((f) => f.full_name)
 
   return {
-    outstandingEvaluations,
     onboarding: onboardingProgress,
     requiredAcks,
     missingIteNames,
