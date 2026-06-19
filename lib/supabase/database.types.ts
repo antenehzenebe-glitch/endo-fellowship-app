@@ -1,3 +1,8 @@
+// lib/supabase/database.types.ts
+// Generated from the live Supabase schema (the source of truth). Models use
+// `type` aliases — never `interface` — so they satisfy Record<string, unknown>
+// for the PostgREST typed client. Regenerate after any schema change; never
+// convert these to interfaces.
 export type Json =
   | string
   | number
@@ -122,6 +127,63 @@ export type Database = {
           {
             foreignKeyName: "evaluations_subject_id_fkey"
             columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fellow_evaluations: {
+        Row: {
+          academic_year: string
+          created_at: string
+          evaluator_id: string
+          fellow_id: string
+          finalized_at: string | null
+          id: string
+          narrative: string
+          overall_rating: string
+          period: Database["public"]["Enums"]["eval_period"]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          created_at?: string
+          evaluator_id: string
+          fellow_id: string
+          finalized_at?: string | null
+          id?: string
+          narrative: string
+          overall_rating: string
+          period: Database["public"]["Enums"]["eval_period"]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          created_at?: string
+          evaluator_id?: string
+          fellow_id?: string
+          finalized_at?: string | null
+          id?: string
+          narrative?: string
+          overall_rating?: string
+          period?: Database["public"]["Enums"]["eval_period"]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fellow_evaluations_evaluator_id_fkey"
+            columns: ["evaluator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fellow_evaluations_fellow_id_fkey"
+            columns: ["fellow_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -270,6 +332,62 @@ export type Database = {
           },
         ]
       }
+      people: {
+        Row: {
+          bio: string | null
+          category: string
+          created_at: string
+          credentials: string | null
+          email: string | null
+          full_name: string
+          id: string
+          is_published: boolean
+          photo_path: string | null
+          profile_id: string | null
+          role_title: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          category: string
+          created_at?: string
+          credentials?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          is_published?: boolean
+          photo_path?: string | null
+          profile_id?: string | null
+          role_title?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          category?: string
+          created_at?: string
+          credentials?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          is_published?: boolean
+          photo_path?: string | null
+          profile_id?: string | null
+          role_title?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "people_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       procedure_logs: {
         Row: {
           created_at: string
@@ -380,63 +498,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      fellow_evaluations: {
-        Row: {
-          academic_year: string
-          created_at: string
-          evaluator_id: string
-          fellow_id: string
-          finalized_at: string | null
-          id: string
-          narrative: string
-          overall_rating: string
-          period: Database["public"]["Enums"]["eval_period"]
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          academic_year: string
-          created_at?: string
-          evaluator_id: string
-          fellow_id: string
-          finalized_at?: string | null
-          id?: string
-          narrative: string
-          overall_rating: string
-          period: Database["public"]["Enums"]["eval_period"]
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          academic_year?: string
-          created_at?: string
-          evaluator_id?: string
-          fellow_id?: string
-          finalized_at?: string | null
-          id?: string
-          narrative?: string
-          overall_rating?: string
-          period?: Database["public"]["Enums"]["eval_period"]
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fellow_evaluations_evaluator_id_fkey"
-            columns: ["evaluator_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fellow_evaluations_fellow_id_fkey"
-            columns: ["fellow_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       profiles: {
         Row: {
@@ -644,7 +705,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_author_eval: { Args: never; Returns: boolean }
       is_evaluator: { Args: never; Returns: boolean }
+      is_fellow: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
     }
     Enums: {
@@ -696,7 +759,7 @@ type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
-export type Tables<
+export type Tables
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
@@ -725,7 +788,7 @@ export type Tables<
       : never
     : never
 
-export type TablesInsert<
+export type TablesInsert
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
@@ -750,7 +813,7 @@ export type TablesInsert<
       : never
     : never
 
-export type TablesUpdate<
+export type TablesUpdate
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
@@ -775,7 +838,7 @@ export type TablesUpdate<
       : never
     : never
 
-export type Enums<
+export type Enums
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
@@ -792,7 +855,7 @@ export type Enums<
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
-export type CompositeTypes<
+export type CompositeTypes
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
