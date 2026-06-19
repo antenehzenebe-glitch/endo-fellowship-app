@@ -381,6 +381,63 @@ export type Database = {
         }
         Relationships: []
       }
+      fellow_evaluations: {
+        Row: {
+          academic_year: string
+          created_at: string
+          evaluator_id: string
+          fellow_id: string
+          finalized_at: string | null
+          id: string
+          narrative: string
+          overall_rating: string
+          period: Database["public"]["Enums"]["eval_period"]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          created_at?: string
+          evaluator_id: string
+          fellow_id: string
+          finalized_at?: string | null
+          id?: string
+          narrative: string
+          overall_rating: string
+          period: Database["public"]["Enums"]["eval_period"]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          created_at?: string
+          evaluator_id?: string
+          fellow_id?: string
+          finalized_at?: string | null
+          id?: string
+          narrative?: string
+          overall_rating?: string
+          period?: Database["public"]["Enums"]["eval_period"]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fellow_evaluations_evaluator_id_fkey"
+            columns: ["evaluator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fellow_evaluations_fellow_id_fkey"
+            columns: ["fellow_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
