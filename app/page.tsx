@@ -1,12 +1,10 @@
 // app/page.tsx
-// Public front door for the program.
-//  • Signed-in users are sent to their hub (staff -> /dashboard, fellow -> /log).
-//  • Everyone else sees the recruiting landing page.
-//
-// NOTE: this assumes lib/auth.ts exports `getProfile()` returning the user's
-// profile (or null when not signed in). If your helper differs, adjust the import.
+// Public front door. Signed-in users go to their hub; everyone else gets the
+// recruiting landing — now rendered from the published public.people directory
+// (server-fetched) instead of a hardcoded roster.
 import { redirect } from 'next/navigation';
 import { getProfile } from '@/lib/auth';
+import { getPublishedPeople, groupDirectory } from '@/lib/people';
 import Landing from '@/components/Landing';
 
 export const dynamic = 'force-dynamic';
@@ -25,5 +23,6 @@ export default async function Home() {
     redirect(STAFF_ROLES.includes(profile.role) ? '/dashboard' : '/log');
   }
 
-  return <Landing />;
+  const groups = groupDirectory(await getPublishedPeople());
+  return <Landing groups={groups} />;
 }

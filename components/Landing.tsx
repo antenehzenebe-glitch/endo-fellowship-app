@@ -11,6 +11,7 @@
 //     for <img src="/photos/name.jpg" alt="Dr. ..." />.
 
 import { useRef, useState } from 'react';
+import type { DirectoryGroups, DirectoryPerson } from '@/lib/people';
 
 type TabId = 'overview' | 'watch' | 'training' | 'people' | 'policies';
 
@@ -78,7 +79,8 @@ function directVideo(src?: string): string | null {
   return /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(s) ? s : null;
 }
 
-export default function Landing() {
+export default function Landing({ groups }: { groups: DirectoryGroups }) {
+  const { leadership, faculty, fellows } = groups;
   const [active, setActive] = useState<TabId>('overview');
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -232,42 +234,9 @@ export default function Landing() {
             </button>
           </div>
           <div className="grid grid-3">
-            <article className="card person">
-              <div className="headshot lead">
-                <span className="ph">GN</span>
-              </div>
-              <div>
-                <div className="name">Dr. Gail Nunlee-Bland</div>
-                <div className="role">Chief, Endocrinology, Diabetes &amp; Metabolism</div>
-              </div>
-            </article>
-            <article className="card person">
-              <div className="headshot lead">
-                <span className="ph">WO</span>
-              </div>
-              <div>
-                <div className="name">Dr. Wolali Odonkor</div>
-                <div className="role">Program Director</div>
-              </div>
-            </article>
-            <article className="card person">
-              <div className="headshot lead">
-                <span className="ph">AZ</span>
-              </div>
-              <div>
-                <div className="name">Anteneh Zenebe, MD, FACE</div>
-                <div className="role">Associate Program Director</div>
-              </div>
-            </article>
-            <article className="card person">
-              <div className="headshot">
-                <span className="ph">PC</span>
-              </div>
-              <div>
-                <div className="name">[Program Coordinator]</div>
-                <div className="role">Program Coordinator</div>
-              </div>
-            </article>
+            {leadership.map((p) => (
+              <PersonCard key={p.id} person={p} lead={p.category === 'faculty'} />
+            ))}
           </div>
 
           <div className="band" style={{ marginTop: 46 }}>
@@ -382,47 +351,31 @@ export default function Landing() {
             <p className="eyebrow">Who you&apos;ll work with</p>
             <h2>Program leadership, faculty &amp; fellows.</h2>
           </div>
-          {/* ADD PHOTOS: drop files in /public/photos and swap <span className="ph">XX</span>
-              for <img src="/photos/name.jpg" alt="Dr. ..." /> */}
           <h3 className="subhead" style={{ marginTop: 0 }}>
             Leadership
           </h3>
           <div className="grid">
-            <Person initials="GN" lead name="Dr. Gail Nunlee-Bland" role="Chief, Endocrinology, Diabetes & Metabolism" focus="Director, Diabetes Treatment Center · Pediatric endocrinology" />
-            <Person initials="WO" lead name="Dr. Wolali Odonkor" role="Program Director" focus="[Focus area]" />
-            <Person
-              initials="AZ"
-              lead
-              name="Anteneh Zenebe, MD, FACE"
-              role="Associate Program Director"
-              focus="Endocrinology & medical education"
-            />
-            <article className="card person">
-              <div className="headshot">
-                <span className="ph">PC</span>
-              </div>
-              <div>
-                <div className="name">[Program Coordinator]</div>
-                <div className="role">Program Coordinator</div>
-                <div className="meta">
-                  <a href="mailto:coordinator@huhep.org">[coordinator@email]</a>
-                </div>
-              </div>
-            </article>
+            {leadership.map((p) => (
+              <PersonCard key={p.id} person={p} lead={p.category === 'faculty'} />
+            ))}
           </div>
 
           <h3 className="subhead">Faculty</h3>
           <div className="grid">
-            <Person initials="VG" name="Dr. Vijay Ganta" role="Attending" focus="[Focus area]" />
-            <Person initials="PT" name="Dr. Parisa Takalloo" role="Attending" focus="[Focus area]" />
+            {faculty.length > 0 ? (
+              faculty.map((p) => <PersonCard key={p.id} person={p} />)
+            ) : (
+              <p style={{ color: '#6a808c', margin: 0 }}>Faculty profiles coming soon.</p>
+            )}
           </div>
 
           <h3 className="subhead">Current fellows</h3>
           <div className="grid">
-            {/* EDIT: real fellow names + PGY */}
-            <Person initials="F1" name="[Fellow, MD]" pgy="PGY-4" focus="[Scholarly interest]" />
-            <Person initials="F2" name="[Fellow, MD]" pgy="PGY-4" focus="[Scholarly interest]" />
-            <Person initials="F3" name="[Fellow, MD]" pgy="PGY-5" focus="[Scholarly interest]" />
+            {fellows.length > 0 ? (
+              fellows.map((p) => <PersonCard key={p.id} person={p} />)
+            ) : (
+              <p style={{ color: '#6a808c', margin: 0 }}>Fellow profiles coming soon.</p>
+            )}
           </div>
         </section>
 
@@ -570,31 +523,31 @@ function IconHeart() {
   );
 }
 
-function Person({
-  initials,
-  name,
-  role,
-  focus,
-  pgy,
-  lead,
-}: {
-  initials: string;
-  name: string;
-  role?: string;
-  focus?: string;
-  pgy?: string;
-  lead?: boolean;
-}) {
+// Two initials from a display name (drops trailing credentials after a comma).
+function initialsOf(name: string): string {
+  const parts = name.replace(/,.*$/, '').trim().split(/\s+/).filter(Boolean);
+  const first = parts[0]?.[0] ?? '';
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+  return (first + last).toUpperCase();
+}
+
+// One roster card: uploaded headshot when present, else an initials placeholder.
+// `lead` adds the red leadership ring.
+function PersonCard({ person, lead }: { person: DirectoryPerson; lead?: boolean }) {
+  const name = person.fullName + (person.credentials ? `, ${person.credentials}` : '');
   return (
     <article className="card person">
       <div className={'headshot' + (lead ? ' lead' : '')}>
-        <span className="ph">{initials}</span>
+        {person.photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={person.photoUrl} alt={name} />
+        ) : (
+          <span className="ph">{initialsOf(person.fullName)}</span>
+        )}
       </div>
       <div>
         <div className="name">{name}</div>
-        {role ? <div className="role">{role}</div> : null}
-        {pgy ? <span className="pgy">{pgy}</span> : null}
-        {focus ? <div className="focus">{focus}</div> : null}
+        {person.roleTitle ? <div className="role">{person.roleTitle}</div> : null}
       </div>
     </article>
   );
