@@ -1,4 +1,50 @@
-# Development Session Log — Howard Endocrinology Fellowship App
+## Session — 2026-06-19  (commits 7d2cc1d7 → 6e17094f)
+
+### ✅ Shipped
+- **Endocrine Emergencies** — responsive card grid (full-width expand); enriched hypoglycemia
+  entry: DM/non-DM split, ADA L1/L2/L3 severity, Whipple's triad, 72h fast, critical-sample
+  interpretation table (insulin/C-peptide/proinsulin/β-OHB/post-glucagon Δ) w/ Endocrine Society
+  cutoffs. (7d2cc1d7)
+- **Dashboard eval rewiring → `fellow_evaluations`** — EvalSummary now a fellows×period **matrix**
+  (real table, colored status cells, icon+text); PdCenter **scorecard** (procedure mins / onboarding /
+  ITE / scholarly gauges + roster); CoordinatorCenter **3-col kanban** (onboarding · acks · ITE).
+  Legacy `evaluations`-table eval stats dropped from getReadinessOverview + getCoordinatorWorklist.
+  (b6662a49, a5064d64, 2ea1158b)
+- **canAuthorEval** fixed to PD/APD/admin only (matches DB `can_author_eval()`); attending hub
+  "Fellow Evaluations" card removed; orphaned schedule dead code deleted. (b6662a49, 521e652d)
+- **"Evaluation Summary" relabel + New Innovations standing line** on every eval surface — `/evaluations`
+  page (all roles), workspace (by inheritance), and a footnote on the printable letterhead. (62b0c186, 3bd4eb29)
+- **Shared `FellowNav`** (active-aware) extracted; fellow Evaluations link added (read-only finalized). (69e5618d)
+- **`/standing` "Where I stand"** — fellow read-only roll-up: procedures vs minimums, onboarding/milestone
+  progress, latest finalized eval; "Progress" nav link wired. (64b6ee48)
+- **People data layer (item 5)** — `public.people` (curated public bios, `is_published`, optional
+  `profile_id`; public-read-published + staff-write RLS; `set_updated_at` trigger) and public
+  **`people-photos`** Storage bucket (public read, staff-only writes). Applied via Supabase MCP, verified.
+- **Migrations + types hygiene** — backfilled `0007_scoped_schedule_editing`, `0008_fellow_evaluations`,
+  `0009_eval_summary_leadership_visibility` (exact applied SQL); recorded `0010_people_directory` /
+  `0011_people_photos_bucket`; regenerated `database.types.ts` (adds `people`, `is_fellow`). (2eb88924, 6e17094f)
+
+→ Build green throughout (last deploy `6a3570fe`, ready). DB verified. Original UX-audit backlog fully cleared.
+
+### 📌 Decisions / notes
+- `people` kept **separate from `profiles`** (marketing bios vs auth-linked operational rows).
+- Showcase narrative sections (overview/curriculum/fellow life/how-to-apply) will be **code-authored**
+  first (Dr. Z supplies copy) — no CMS table yet.
+- DB migration history (`schema_migrations`) is **source of truth**; repo migrations had fallen behind.
+- Codespaces gotcha: `cat > new/dir/file` needs `mkdir -p` first — a missing dir silently skips the
+  write and the chained `git add` then aborts staging everything.
+
+### 🧹 Open thread (carry to next session, #1)
+- **Migrations reconciliation:** repo `0005_eval_periods` / `0006_onboarding_categories` ≠ DB-tracked
+  `0005_program_schedule` / `0006_schedule_v2_reseed`, and `program_schedule`/`schedule_v2_reseed` are
+  absent from the repo — folder still can't rebuild the DB from scratch. Make `supabase/migrations/` a
+  faithful 1:1 mirror of `schema_migrations`. Documentation fix only; no DB changes.
+
+### 🚀 Next
+1. Migrations reconciliation (above).
+2. `/admin/roster` — staff UI to add people + upload headshots (types ready).
+3. Public Showcase pages (overview, curriculum, faculty bios + photos, fellow life, how-to-apply).
+- Dr. Z: gather consented faculty/fellow headshots for the bucket.# Development Session Log — Howard Endocrinology Fellowship App
 
 > Paste this entry at the top of `Session_Log_and_Action_Plan.md`, directly under the title and above the June 17 entry.
 
