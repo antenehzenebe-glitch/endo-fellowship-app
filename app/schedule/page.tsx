@@ -30,6 +30,9 @@ function todayInDC(): string {
 export default async function SchedulePage() {
   const profile = await requireProfile()
   const staff = isStaff(profile.role)
+  // Fellows on the Consult rotation maintain the monthly calendar, so they also
+  // get the editor — but structure-locked (the action limits them to months).
+  const canEditSchedule = staff || profile.role === 'fellow'
 
   const supabase = await createClient()
   const { data: row } = await supabase
@@ -74,6 +77,13 @@ export default async function SchedulePage() {
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
               <Link
+                href="/schedule/print"
+                className="px-3 py-2 text-sm font-medium rounded-md bg-[#c8102e] text-white hover:bg-[#a50d26] transition-colors"
+              >
+                <span aria-hidden="true">🖨</span>
+                <span className="hidden sm:inline"> Print / PDF</span>
+              </Link>
+              <Link
                 href={homeHref}
                 className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
               >
@@ -87,7 +97,7 @@ export default async function SchedulePage() {
 
       <main className="max-w-5xl mx-auto px-4 py-6 sm:px-6">
         <p className="sr-only">Signed in as {profile.full_name}</p>
-        {staff ? (
+        {canEditSchedule ? (
           <ScheduleEditor initial={initial} />
         ) : (
           <ScheduleView
