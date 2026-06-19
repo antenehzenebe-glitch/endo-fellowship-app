@@ -158,6 +158,12 @@ export default async function DashboardPage({
                 Schedule
               </Link>
               <Link
+                href="/admin/roster"
+                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
+              >
+                Roster
+              </Link>
+              <Link
                 href="/account"
                 className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
               >
