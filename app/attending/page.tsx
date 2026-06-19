@@ -113,20 +113,6 @@ export default async function AttendingHome() {
               </span>
             </Link>
           ))}
-
-          {/* Evaluations — live */}
-          <Link
-            href="/evaluations"
-            className="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-[#003a63]/30 transition-all"
-          >
-            <h3 className="font-semibold text-slate-900">Fellow Evaluations</h3>
-            <p className="text-sm text-slate-600 mt-1.5 leading-relaxed">
-              Write mid-year and end-of-year narrative evaluations for fellows, then print them for the record.
-            </p>
-            <span className="inline-flex items-center gap-1 text-sm font-medium text-[#003a63] mt-3 group-hover:gap-2 transition-all">
-              Open evaluations <span aria-hidden="true">→</span>
-            </span>
-          </Link>
         </div>
       </main>
     </div>
