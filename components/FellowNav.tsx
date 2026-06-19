@@ -10,6 +10,7 @@ type NavItem = { href: string; label: string }
 
 const ITEMS: NavItem[] = [
   { href: '/log', label: 'Logger' },
+  { href: '/standing', label: 'Progress' },
   { href: '/onboarding', label: 'Checklist' },
   { href: '/evaluations', label: 'Evaluations' },
   { href: '/resources', label: 'Materials' },
