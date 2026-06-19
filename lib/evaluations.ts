@@ -43,9 +43,10 @@ export function currentAcademicYear(d: Date = new Date()): string {
   return m >= 6 ? `${y}-${y + 1}` : `${y - 1}-${y}`
 }
 
-// Roles permitted to AUTHOR evaluations (mirror of DB can_author_eval()).
+// Roles permitted to AUTHOR evaluations — PD / APD / Chief (admin) only.
+// Mirrors DB can_author_eval(); attendings are intentionally excluded.
 export function canAuthorEval(role: string): boolean {
-  return ['attending', 'pd', 'apd', 'admin'].includes(role)
+  return ['pd', 'apd', 'admin'].includes(role)
 }
 
 // 'pgy_4' -> 'PGY-4'
