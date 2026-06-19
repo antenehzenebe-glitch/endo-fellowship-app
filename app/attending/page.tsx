@@ -114,19 +114,19 @@ export default async function AttendingHome() {
             </Link>
           ))}
 
-          {/* Evaluations: surface exists in the data model; attending-facing
-              completion flow is the next build. Shown but not yet linked. */}
-          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-slate-700">Fellow Evaluations</h3>
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
-                Coming soon
-              </span>
-            </div>
-            <p className="text-sm text-slate-500 mt-1.5 leading-relaxed">
-              Complete milestone assessments and rotation evaluations of fellows. Being wired up next.
+          {/* Evaluations — live */}
+          <Link
+            href="/evaluations"
+            className="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-[#003a63]/30 transition-all"
+          >
+            <h3 className="font-semibold text-slate-900">Fellow Evaluations</h3>
+            <p className="text-sm text-slate-600 mt-1.5 leading-relaxed">
+              Write mid-year and end-of-year narrative evaluations for fellows, then print them for the record.
             </p>
-          </div>
+            <span className="inline-flex items-center gap-1 text-sm font-medium text-[#003a63] mt-3 group-hover:gap-2 transition-all">
+              Open evaluations <span aria-hidden="true">→</span>
+            </span>
+          </Link>
         </div>
       </main>
     </div>
