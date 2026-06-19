@@ -106,7 +106,7 @@ function EmergencyCard({
   const btnId = `emrg-btn-${e.id}`
 
   return (
-    <article className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+    <article className={`rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden ${open ? 'sm:col-span-2 lg:col-span-3' : ''}`}>
       <h3>
         <button
           id={btnId}
@@ -300,7 +300,7 @@ export default function EmergencyGuide() {
           No emergencies match your search. Try a different term or clear the filter.
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 items-start">
           {filtered.map((e) => (
             <EmergencyCard key={e.id} e={e} open={openIds.has(e.id)} onToggle={() => toggle(e.id)} />
           ))}

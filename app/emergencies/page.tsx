@@ -20,7 +20,7 @@ export default async function EmergenciesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#003a63] text-white border-b-4 border-[#c8102e]">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="py-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <img src="/logo.png" alt="" className="w-10 h-10 shrink-0 object-contain bg-white rounded p-0.5" />
@@ -42,7 +42,7 @@ export default async function EmergenciesPage() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-6 sm:px-6">
+      <main className="max-w-5xl mx-auto px-4 py-6 sm:px-6">
         <p className="sr-only">Signed in as {profile.full_name}</p>
         <EmergencyGuide />
       </main>

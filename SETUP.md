@@ -96,7 +96,6 @@ Site configuration → Environment variables. Add the production URL to Supabase
 
 ```
 ARCHITECTURE.md / CLAUDE.md / SKILLS.md / SETUP.md     canonical docs
-.github/copilot-instructions.md                        Copilot working rules (self-contained)
 supabase/migrations/0000–0003                          applied migration record
 middleware.ts                                          session refresh + auth gate
 lib/supabase/{client,server,middleware}.ts             Supabase clients
