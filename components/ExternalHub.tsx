@@ -49,7 +49,7 @@ export default function ExternalHub({ includeSocieties = true }: { includeSociet
       </div>
 
       <div className="flex flex-wrap items-center gap-2 p-3">
-        
+        <a
           href={PROGRAM_SYSTEM.href}
           target="_blank"
           rel="noopener noreferrer"
@@ -63,7 +63,7 @@ export default function ExternalHub({ includeSocieties = true }: { includeSociet
 
         {includeSocieties
           ? SOCIETIES.map((s) => (
-              
+              <a
                 key={s.href}
                 href={s.href}
                 target="_blank"
