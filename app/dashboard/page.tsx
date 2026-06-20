@@ -20,6 +20,7 @@ import CoordinatorCenter from '@/dashboard/CoordinatorCenter'
 import EvalSummary from '@/dashboard/EvalSummary'
 import SignOutButton from '@/components/SignOutButton'
 import { NEW_INNOVATIONS_URL } from '@/lib/links'
+import ExternalHub from '@/components/ExternalHub'
 
 export const dynamic = 'force-dynamic'
 
@@ -209,7 +210,10 @@ export default async function DashboardPage({
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-6 sm:px-6">{body}</main>
+      <main className="max-w-6xl mx-auto px-4 py-6 sm:px-6">
+        {body}
+        <ExternalHub includeSocieties={profile.role !== 'coordinator'} />
+      </main>
     </div>
   )
 }
