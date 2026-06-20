@@ -453,7 +453,7 @@ export default function Landing({ groups }: { groups: DirectoryGroups }) {
                 Applications are accepted through ERAS ↗
               </a>
               <span className="line" style={{ color: 'rgba(255,255,255,.7)' }}>
-                Questions? <a href="mailto:coordinator@huhep.org">Email the program coordinator</a>
+                Questions? <a href="mailto:jguzman@huhosp.org">Email the program coordinator</a>
               </span>
             </div>
             <div>

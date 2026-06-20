@@ -341,6 +341,7 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          is_leadership: boolean
           is_published: boolean
           photo_path: string | null
           profile_id: string | null
@@ -356,6 +357,7 @@ export type Database = {
           email?: string | null
           full_name: string
           id?: string
+          is_leadership?: boolean
           is_published?: boolean
           photo_path?: string | null
           profile_id?: string | null
@@ -371,6 +373,7 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          is_leadership?: boolean
           is_published?: boolean
           photo_path?: string | null
           profile_id?: string | null
