@@ -265,7 +265,7 @@ export function FellowCard({ fellow }: { fellow: FellowReadiness }) {
       {/* Procedure breakdown (detail) */}
       <div className="px-5 pb-4">
         <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Procedures</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+        <div className="grid grid-cols-1 gap-y-2">
           {fellow.procedures.map((p) => (
             <ProcedureBar key={p.code} p={p} />
           ))}
@@ -327,7 +327,7 @@ export default function CommandCenter({ overview }: { overview: ReadinessOvervie
       {overview.fellows.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {overview.fellows.map((fellow) => (
             <FellowCard key={fellow.id} fellow={fellow} />
           ))}
