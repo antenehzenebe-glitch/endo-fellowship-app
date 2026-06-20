@@ -1,10 +1,11 @@
 'use client'
 
 // Shared fellow-facing section nav. Client component so it can highlight the
-// active tab via usePathname() — every fellow page renders <FellowNav/> instead
-// of duplicating the link bar.
+// active tab via usePathname(). New Innovations is appended as an outbound link
+// (opens in a new tab) so the fellow's GME system of record is one tap away.
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { NEW_INNOVATIONS_URL } from '@/lib/links'
 
 type NavItem = { href: string; label: string }
 
@@ -22,10 +23,7 @@ const ITEMS: NavItem[] = [
 export default function FellowNav() {
   const pathname = usePathname()
   return (
-    <nav
-      aria-label="Sections"
-      className="max-w-md mx-auto px-2 pb-1 flex gap-1 overflow-x-auto"
-    >
+    <nav aria-label="Sections" className="max-w-md mx-auto px-2 pb-1 flex gap-1 overflow-x-auto">
       {ITEMS.map((item) => {
         const active = pathname === item.href || pathname.startsWith(item.href + '/')
         return (
@@ -43,6 +41,18 @@ export default function FellowNav() {
           </Link>
         )
       })}
+      <a
+        href={NEW_INNOVATIONS_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="New Innovations (opens in a new tab)"
+        className="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors whitespace-nowrap inline-flex items-center gap-1"
+      >
+        New Innovations
+        <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+          <path d="M7 17 17 7M9 7h8v8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </a>
     </nav>
   )
 }
