@@ -8,6 +8,7 @@ import { requireFellow } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import SignOutButton from '@/components/SignOutButton'
 import { ProcedureLogger, type Progress, type RecentLog } from '@/procedures/ProcedureLogger'
+import ExternalHub from '@/components/ExternalHub'
 
 export const dynamic = 'force-dynamic'
 
@@ -111,6 +112,7 @@ export default async function LoggerPage() {
           logs={recent}
           todayStr={new Date().toISOString().slice(0, 10)}
         />
+        <ExternalHub />
       </main>
     </div>
   )

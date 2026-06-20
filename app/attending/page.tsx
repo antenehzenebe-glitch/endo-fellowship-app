@@ -6,6 +6,8 @@
 import Link from 'next/link'
 import { requireAttending } from '@/lib/auth'
 import SignOutButton from '@/components/SignOutButton'
+import ExternalHub from '@/components/ExternalHub'
+import { NEW_INNOVATIONS_URL } from '@/lib/links'
 
 export const dynamic = 'force-dynamic'
 
@@ -79,6 +81,18 @@ export default async function AttendingHome() {
               >
                 Schedule
               </Link>
+              <a
+                href={NEW_INNOVATIONS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="New Innovations (opens in a new tab)"
+                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors inline-flex items-center gap-1"
+              >
+                New Innovations
+                <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path d="M7 17 17 7M9 7h8v8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </a>
               <Link
                 href="/account"
                 className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
@@ -114,6 +128,8 @@ export default async function AttendingHome() {
             </Link>
           ))}
         </div>
+
+        <ExternalHub />
       </main>
     </div>
   )
