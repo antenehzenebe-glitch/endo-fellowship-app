@@ -341,7 +341,10 @@ function EvalCard({
 }) {
   const isFinal = r.status === 'final'
   return (
-    <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <article
+      className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+      style={{ borderLeft: `4px solid ${ratingTone(r.overall_rating)}` }}
+    >
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h3 className="font-semibold text-slate-900">{r.fellowName}</h3>

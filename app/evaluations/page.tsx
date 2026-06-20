@@ -108,7 +108,11 @@ function ReadOnlyList({ rows, fellow }: { rows: EvalRow[]; fellow: boolean }) {
       ) : (
         <div className="space-y-3">
           {rows.map((r) => (
-            <article key={r.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <article
+              key={r.id}
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+              style={{ borderLeft: `4px solid ${ratingTone(r.overall_rating)}` }}
+            >
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
                   <h3 className="font-semibold text-slate-900">{r.fellowName}</h3>
