@@ -540,13 +540,15 @@ export type Database = {
           academic_year: string
           config: Json
           id: string
+          is_current: boolean
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           academic_year?: string
           config?: Json
-          id?: string
+          id: string
+          is_current?: boolean
           updated_at?: string
           updated_by?: string | null
         }
@@ -554,6 +556,7 @@ export type Database = {
           academic_year?: string
           config?: Json
           id?: string
+          is_current?: boolean
           updated_at?: string
           updated_by?: string | null
         }

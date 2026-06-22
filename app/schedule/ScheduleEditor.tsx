@@ -321,12 +321,10 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
       <div className="sticky top-0 z-30 border border-slate-200 rounded-lg bg-white/95 backdrop-blur">
         <div className="px-4 py-2.5 flex items-center gap-3 flex-wrap">
           <label className="text-sm font-medium text-slate-600">Academic year</label>
-          <input
-            value={academicYear}
-            onChange={(e) => setAcademicYear(e.target.value)}
-            className="w-28 text-sm border border-slate-300 rounded px-2 py-1 focus:outline-none focus:ring-2"
-            style={{ caretColor: NAVY }}
-          />
+          <span className="text-sm font-semibold text-slate-900 bg-slate-100 rounded px-2 py-1">
+            {academicYear}
+          </span>
+          <span className="text-xs text-slate-400">(switch years above)</span>
           <div className="flex-1" />
           {isDirty && <span className="text-xs font-medium text-amber-600">Unsaved changes</span>}
           {isDirty && (
@@ -881,7 +879,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
             {showJson ? '▾ Hide' : '▸ View'} saved payload
           </button>
           <span className="text-xs text-slate-400">
-            maps to <code className="bg-slate-100 px-1 rounded">program_schedule</code> (id=current)
+            maps to <code className="bg-slate-100 px-1 rounded">program_schedule</code> ({academicYear})
           </span>
         </div>
         {showJson && (
