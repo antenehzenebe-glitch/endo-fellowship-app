@@ -1,9 +1,11 @@
 // app/schedule/page.tsx
-// Program schedule — DB-backed (program_schedule, id='current') and staff-editable.
-// Any signed-in user can VIEW; staff (is_staff) get the editor, everyone else a
-// read-only view. "Today" (America/New_York) is computed here on the server and
-// passed down so the current block + current month + today's cell are stable
-// across hydration.
+// Program schedule — DB-backed and MULTI-YEAR (one program_schedule row per
+// academic year; migration schedule_multiyear). Any signed-in user can VIEW any
+// year; staff + fellows get the editor for the selected year and can create new
+// years (RLS: insert/update = is_staff() OR is_fellow()). Staff alone can mark a
+// year "current". The shown year comes from ?ay=YYYY-YYYY, else the current year,
+// else the newest. "Today" (America/New_York) is computed server-side so the
+// current block + month + today's cell are stable across hydration.
 //
 // Educational schedule only — continuity clinic, didactics, training, rotation
 // blocks, monthly didactic calendar. Not duty hours, not time-off. NO PHI.
@@ -13,6 +15,7 @@ import { createClient } from '@/lib/supabase/server'
 import SignOutButton from '@/components/SignOutButton'
 import ScheduleEditor from './ScheduleEditor'
 import ScheduleView from './ScheduleView'
+import YearSwitcher from './YearSwitcher'
 import { asConfig, blockForDate, type SchedulePayload } from '@/lib/schedule'
 
 export const dynamic = 'force-dynamic'
@@ -27,23 +30,34 @@ function todayInDC(): string {
   }).format(new Date()) // en-CA yields yyyy-mm-dd
 }
 
-export default async function SchedulePage() {
+export default async function SchedulePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ay?: string }>
+}) {
+  const { ay } = await searchParams
   const profile = await requireProfile()
   const staff = isStaff(profile.role)
-  // Fellows on the Consult rotation maintain the monthly calendar, so they also
-  // get the editor — but structure-locked (the action limits them to months).
+  // Small-program model: staff + fellows edit the schedule and create years.
   const canEditSchedule = staff || profile.role === 'fellow'
 
   const supabase = await createClient()
-  const { data: row } = await supabase
+  const { data: rows } = await supabase
     .from('program_schedule')
-    .select('academic_year, config, updated_at')
-    .eq('id', 'current')
-    .maybeSingle()
+    .select('academic_year, config, is_current, updated_at')
+    .order('academic_year', { ascending: false })
 
-  const academicYear = row?.academic_year ?? '2026-2027'
-  const config = asConfig(row?.config)
-  const updatedAt = row?.updated_at ?? null
+  const years = rows ?? []
+  // Selected year: ?ay if it exists, else the current year, else the newest row.
+  const selected =
+    years.find((r) => r.academic_year === ay) ??
+    years.find((r) => r.is_current) ??
+    years[0] ??
+    null
+
+  const academicYear = selected?.academic_year ?? '2026-2027'
+  const config = asConfig(selected?.config)
+  const updatedAt = selected?.updated_at ?? null
 
   const today = todayInDC()
   const currentBlockId = blockForDate(config.blocks, today)?.id ?? null
@@ -58,6 +72,10 @@ export default async function SchedulePage() {
       : 'Logger'
 
   const initial: SchedulePayload = { academic_year: academicYear, config }
+  const yearOptions = years.map((r) => ({
+    academic_year: r.academic_year,
+    is_current: r.is_current,
+  }))
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -77,7 +95,7 @@ export default async function SchedulePage() {
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
               <Link
-                href="/schedule/print"
+                href={`/schedule/print?ay=${encodeURIComponent(academicYear)}`}
                 className="px-3 py-2 text-sm font-medium rounded-md bg-[#c8102e] text-white hover:bg-[#a50d26] transition-colors"
               >
                 <span aria-hidden="true">🖨</span>
@@ -97,10 +115,19 @@ export default async function SchedulePage() {
 
       <main className="max-w-5xl mx-auto px-4 py-6 sm:px-6">
         <p className="sr-only">Signed in as {profile.full_name}</p>
+        <YearSwitcher
+          years={yearOptions}
+          selected={academicYear}
+          canCreate={canEditSchedule}
+          canSetCurrent={staff}
+        />
+        {/* key={academicYear} forces a fresh mount when the year changes, so the
+            editor's/view's internal state resets to the newly selected year. */}
         {canEditSchedule ? (
-          <ScheduleEditor initial={initial} />
+          <ScheduleEditor key={academicYear} initial={initial} />
         ) : (
           <ScheduleView
+            key={academicYear}
             config={config}
             academicYear={academicYear}
             today={today}
