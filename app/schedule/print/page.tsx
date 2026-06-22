@@ -106,15 +106,26 @@ table.pr-cal .ses { margin-top:3px; background:#eef2f7; border-radius:3px; paddi
 @page { size: landscape; margin: 12mm; }
 `
 
-export default async function SchedulePrintPage() {
+export default async function SchedulePrintPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ay?: string }>
+}) {
+  const { ay } = await searchParams
   await requireProfile()
 
   const supabase = await createClient()
-  const { data: row } = await supabase
+  // Multi-year: print the requested year (?ay=), else the current year, else newest.
+  const { data: rows } = await supabase
     .from('program_schedule')
-    .select('academic_year, config')
-    .eq('id', 'current')
-    .maybeSingle()
+    .select('academic_year, config, is_current')
+    .order('academic_year', { ascending: false })
+  const all = rows ?? []
+  const row =
+    all.find((r) => r.academic_year === ay) ??
+    all.find((r) => r.is_current) ??
+    all[0] ??
+    null
 
   const academicYear = row?.academic_year ?? '—'
   const config: ScheduleConfig = asConfig(row?.config)
@@ -142,7 +153,7 @@ export default async function SchedulePrintPage() {
 
       <div className="pr-toolbar">
         <Link
-          href="/schedule"
+          href={`/schedule?ay=${encodeURIComponent(academicYear)}`}
           className="no-print text-sm font-medium text-slate-600 hover:text-slate-900"
         >
           ← Back to schedule
