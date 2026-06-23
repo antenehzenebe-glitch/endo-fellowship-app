@@ -54,7 +54,6 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
   const [selectedMonthId, setSelectedMonthId] = useState<string>(
     () => initial.config.months?.[0]?.id ?? ''
   )
-  const [showJson, setShowJson] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   const payload = useMemo<SchedulePayload>(
@@ -92,11 +91,6 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
       /* keep current state if the snapshot can't be parsed */
     }
   }, [savedSnapshot])
-
-  const copyJson = useCallback(() => {
-    const pretty = JSON.stringify(payload, null, 2)
-    if (navigator?.clipboard?.writeText) navigator.clipboard.writeText(pretty).catch(() => {})
-  }, [payload])
 
   // ---- weekly skeleton ----
   const setWeekly = (next: ScheduleWeekly[]) => setConfig((c) => ({ ...c, weekly: next }))
@@ -335,12 +329,6 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
               Revert
             </button>
           )}
-          <button
-            onClick={copyJson}
-            className="text-sm font-medium px-3 py-1.5 rounded border border-slate-300 text-slate-700 hover:bg-slate-50"
-          >
-            Copy JSON
-          </button>
           <button
             onClick={handleSave}
             disabled={isPending || !isDirty}
@@ -868,28 +856,13 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
         )}
       </section>
 
-      {/* ============ JSON / FOOTER ============ */}
+      {/* ============ FOOTER ============ */}
       <section className="border-t border-slate-200 pt-5">
         <div className="flex items-center gap-3 flex-wrap">
-          <button
-            onClick={() => setShowJson((v) => !v)}
-            className="text-sm font-medium"
-            style={{ color: NAVY }}
-          >
-            {showJson ? '▾ Hide' : '▸ View'} saved payload
-          </button>
           <span className="text-xs text-slate-400">
             maps to <code className="bg-slate-100 px-1 rounded">program_schedule</code> ({academicYear})
           </span>
         </div>
-        {showJson && (
-          <pre
-            className="mt-3 text-xs bg-slate-900 text-slate-100 rounded-lg p-4 overflow-x-auto leading-relaxed"
-            style={{ maxHeight: 360 }}
-          >
-            {JSON.stringify(payload, null, 2)}
-          </pre>
-        )}
         <p className="text-xs text-slate-400 mt-4 leading-relaxed">
           Save writes this exact payload via a staff-only server action; row-level security blocks
           non-staff writes at the database. Educational schedule only — not duty hours, not time-off.
