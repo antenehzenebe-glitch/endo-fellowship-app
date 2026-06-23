@@ -773,4 +773,18 @@ const CSS = `
 .hu-land .video-ph .play{transition:transform .15s,box-shadow .15s}
 .hu-land button.video-ph.video-ready:hover .play{transform:scale(1.07);box-shadow:0 10px 26px rgba(4,38,63,.28)}
 .hu-land button.video-ph.video-ready:hover .vhint{color:var(--red-ink)}
+
+/* ─── Headshots — larger, face-aware crop, brand ring (premium pop) ─── */
+/* Source photos are full-resolution and correctly proportioned; the old 84px
+   square + center-crop made them look cramped. Bigger, circular, ringed, with a
+   crop biased toward the face so foreheads aren't clipped and wide shots center. */
+.hu-land .headshot{width:clamp(116px,15vw,132px);height:clamp(116px,15vw,132px);border-radius:50%;border:0;overflow:hidden;background:linear-gradient(160deg,#eef3f8,#dfe8f1);box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--blue),0 12px 26px rgba(4,38,63,.20);transition:transform .18s ease,box-shadow .18s ease}
+.hu-land .headshot img{width:100%;height:100%;object-fit:cover;object-position:50% 28%;display:block}
+.hu-land .headshot .ph{font-size:clamp(1.7rem,4.4vw,2.1rem);color:var(--blue)}
+.hu-land .headshot.lead{border:0;background:linear-gradient(160deg,#fdeef0,#f8d8dd);box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--red-btn),0 12px 26px rgba(200,16,46,.22)}
+.hu-land .headshot.lead .ph{color:var(--red-ink)}
+.hu-land .person{gap:14px}
+.hu-land .person .name{font-size:1.16rem}
+.hu-land .person:hover .headshot{transform:translateY(-3px) scale(1.03);box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--blue),0 16px 34px rgba(4,38,63,.26)}
+.hu-land .person:hover .headshot.lead{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--red-btn),0 16px 34px rgba(200,16,46,.28)}
 `;
