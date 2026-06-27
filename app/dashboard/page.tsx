@@ -7,6 +7,12 @@
 //   operations  -> coordinator worklist (chase outstanding items)
 // Staff-gated; each role lands on its own center by default but may switch tabs.
 //
+// The Evaluations tab shows the read-only completion summary; authors
+// (pd/apd/admin via canAuthorEval) also get a CTA up top into the full
+// authoring workspace at /evaluations, which is otherwise only linked from the
+// fellow nav. Non-author staff (coordinator) don't see the CTA — they'd only
+// reach a read-only view there.
+//
 // Chrome only (restyle): sticky navy header + Howard-crimson "filled" active tab
 // with an icon per view. All data loading and routing below is unchanged.
 import type { ReactNode } from 'react'
@@ -16,6 +22,7 @@ import type { UserRole } from '@/lib/auth'
 import { getCoordinatorWorklist, getReadinessOverview } from '@/dashboard/queries'
 import { getEvalSummary } from '@/dashboard/evaluationSummary'
 import { getModuleCompletion } from '@/dashboard/moduleCompletion'
+import { canAuthorEval } from '@/lib/evaluations'
 import CommandCenter from '@/dashboard/CommandCenter'
 import PdCenter from '@/dashboard/PdCenter'
 import CoordinatorCenter from '@/dashboard/CoordinatorCenter'
@@ -90,6 +97,35 @@ function normalizeView(value: string | string[] | undefined): View | null {
     : null
 }
 
+// CTA into the full authoring workspace, shown above the read-only summary for
+// authors only. The summary itself stays the at-a-glance completion grid.
+function EvalAuthorCTA() {
+  return (
+    <Link
+      href="/evaluations"
+      className="group flex items-center justify-between gap-3 rounded-xl border border-[#003a63]/15 bg-white px-4 py-3 shadow-sm transition-colors hover:border-[#c8102e]/40 hover:bg-[#c8102e]/[0.03]"
+    >
+      <span className="flex items-center gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#c8102e]/10 text-[#c8102e]">
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+            <path d="M12 20h9" strokeLinecap="round" />
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold text-slate-900">Write or edit a program summary</span>
+          <span className="block text-xs text-slate-500">
+            Mid-year &amp; end-of-year narratives — the program&apos;s summary alongside the official New Innovations review.
+          </span>
+        </span>
+      </span>
+      <span className="shrink-0 text-sm font-semibold text-[#c8102e] transition-transform group-hover:translate-x-0.5">
+        Open →
+      </span>
+    </Link>
+  )
+}
+
 function ErrorPanel({ what }: { what: string }) {
   return (
     <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -121,7 +157,12 @@ export default async function DashboardPage({
       body = <PdCenter overview={overview} />
     } else if (view === 'evaluations') {
       const summary = await getEvalSummary()
-      body = <EvalSummary summary={summary} />
+      body = (
+        <div className="space-y-5">
+          {canAuthorEval(profile.role) ? <EvalAuthorCTA /> : null}
+          <EvalSummary summary={summary} />
+        </div>
+      )
     } else if (view === 'education') {
       const overview = await getModuleCompletion()
       body = <EducationCenter overview={overview} />
