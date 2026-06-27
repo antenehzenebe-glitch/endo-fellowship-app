@@ -1,6 +1,8 @@
 // dashboard/EducationCenter.tsx
 // Staff "Education" center — learning-module completion across the program.
-// Pure render from a ModuleCompletionOverview (no fetching, no client state).
+// Renders from a ModuleCompletionOverview. Faculty can attest a fellow's
+// self-check (and leave feedback) inline via AttestControl on rows that are
+// awaiting attestation; attested rows show who signed off and any feedback.
 //
 // Distinct layout from the readiness board: a module-centric roster. Each
 // published module is a card with a completion header and a per-fellow status
@@ -13,6 +15,7 @@ import {
   type ModuleCompletionOverview,
   type ModuleFellowStatus,
 } from '@/dashboard/moduleCompletion'
+import AttestControl from '@/dashboard/AttestControl'
 
 const NAVY = '#003a63'
 
@@ -134,28 +137,52 @@ function ModuleCard({ mod }: { mod: ModuleCompletion }) {
               const st = statusFor(s, mod.requiresAttestation)
               const hasScore = typeof s.quizScore === 'number' && typeof s.quizTotal === 'number'
               return (
-                <li key={s.fellowId} className="flex items-center justify-between gap-3 py-2.5">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-gray-900">{s.fellowName}</p>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500">
-                      {s.pgyLevel ? (
-                        <span className="rounded bg-[#c8102e]/10 px-1.5 py-0.5 font-semibold text-[#c8102e]">
-                          {s.pgyLevel}
-                        </span>
+                <li key={s.fellowId} className="py-2.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-gray-900">{s.fellowName}</p>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500">
+                        {s.pgyLevel ? (
+                          <span className="rounded bg-[#c8102e]/10 px-1.5 py-0.5 font-semibold text-[#c8102e]">
+                            {s.pgyLevel}
+                          </span>
+                        ) : null}
+                        {hasScore ? (
+                          <span className="tabular-nums">
+                            Self-check {s.quizScore}/{s.quizTotal}
+                          </span>
+                        ) : null}
+                        {s.completedAt ? (
+                          <span className="tabular-nums">
+                            {new Date(s.completedAt).toLocaleDateString()}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                    <StatusPill tone={st.tone} label={st.label} />
+                  </div>
+
+                  {/* Awaiting attestation -> inline faculty attest + feedback. */}
+                  {st.tone === 'warn' ? (
+                    <AttestControl moduleId={mod.id} fellowId={s.fellowId} fellowName={s.fellowName} />
+                  ) : null}
+
+                  {/* Attested -> who signed off and any feedback left for the fellow. */}
+                  {st.tone === 'good' && (s.attestedByName || s.attestationNote) ? (
+                    <div className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-xs">
+                      {s.attestedByName ? (
+                        <p className="font-medium text-slate-500">
+                          Attested by {s.attestedByName}
+                          {s.attestedAt ? ` · ${new Date(s.attestedAt).toLocaleDateString()}` : ''}
+                        </p>
                       ) : null}
-                      {hasScore ? (
-                        <span className="tabular-nums">
-                          Self-check {s.quizScore}/{s.quizTotal}
-                        </span>
-                      ) : null}
-                      {s.completedAt ? (
-                        <span className="tabular-nums">
-                          {new Date(s.completedAt).toLocaleDateString()}
-                        </span>
+                      {s.attestationNote ? (
+                        <p className="mt-1 leading-relaxed text-slate-700">
+                          <span className="font-semibold">Feedback:</span> {s.attestationNote}
+                        </p>
                       ) : null}
                     </div>
-                  </div>
-                  <StatusPill tone={st.tone} label={st.label} />
+                  ) : null}
                 </li>
               )
             })}
