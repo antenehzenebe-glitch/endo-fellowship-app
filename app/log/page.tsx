@@ -5,7 +5,8 @@
 // on a phone everything stacks single-column (logger first, for fast entry). The
 // quick-links launch bar runs full width below. Server component: loads the
 // procedure menu, the fellow's own logs (RLS scopes to them), program minimums,
-// and the attending roster, then hands serializable data to the client form.
+// the attending roster, and the published learning modules (+ this fellow's
+// progress), then hands serializable data to the client form.
 // Staff are routed to their dashboard. NO PHI.
 import Link from 'next/link'
 import FellowNav from '@/components/FellowNav'
@@ -22,7 +23,7 @@ export default async function LoggerPage() {
 
   const supabase = await createClient()
 
-  const [typesRes, targetsRes, logsRes, attendingsRes] = await Promise.all([
+  const [typesRes, targetsRes, logsRes, attendingsRes, modulesRes, progressRes] = await Promise.all([
     supabase
       .from('procedure_types')
       .select('code, label, sort_order')
@@ -40,10 +41,24 @@ export default async function LoggerPage() {
       .in('role', ['attending', 'pd', 'apd'])
       .eq('is_active', true)
       .order('full_name', { ascending: true }),
+    supabase
+      .from('modules')
+      .select('id, key, title, subtitle, requires_attestation')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true }),
+    supabase
+      .from('module_progress')
+      .select('module_id, completed_at, attested_at')
+      .eq('fellow_id', profile.id),
   ])
 
   const loadError =
-    typesRes.error || targetsRes.error || logsRes.error || attendingsRes.error
+    typesRes.error ||
+    targetsRes.error ||
+    logsRes.error ||
+    attendingsRes.error ||
+    modulesRes.error ||
+    progressRes.error
 
   const firstName = profile.full_name.split(' ')[0]
 
@@ -91,10 +106,15 @@ export default async function LoggerPage() {
   const targets = targetsRes.data ?? []
   const logs = logsRes.data ?? []
   const attendings = attendingsRes.data ?? []
+  const modules = modulesRes.data ?? []
+  const moduleProgress = progressRes.data ?? []
 
   const minByType = new Map<string, number>(targets.map((t) => [t.procedure_type, t.min_total]))
   const labelByType = new Map<string, string>(types.map((t) => [t.code, t.label]))
   const nameById = new Map<string, string>(attendings.map((a) => [a.id, a.full_name]))
+  const progressByModule = new Map<string, (typeof moduleProgress)[number]>(
+    moduleProgress.map((p) => [p.module_id, p]),
+  )
 
   const progress: Progress[] = types.map((t) => ({
     code: t.code,
@@ -187,6 +207,58 @@ export default async function LoggerPage() {
             </div>
           </aside>
         </div>
+
+        {/* Learning modules — the program's interactive teaching units (lecture +
+            videos + self-check). Data-driven: one card per published module, with
+            this fellow's completion state. Reuses the module page's own palette. */}
+        {modules.length > 0 && (
+          <section className="mt-6">
+            <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-[#003a63]">
+              Learning modules
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {modules.map((m) => {
+                const p = progressByModule.get(m.id)
+                const done = Boolean(p?.completed_at)
+                const awaitingAttestation = done && m.requires_attestation && !p?.attested_at
+                return (
+                  <Link
+                    key={m.id}
+                    href={`/modules/${m.key}`}
+                    className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-[#003a63]/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#003a63] focus-visible:ring-offset-2"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-[#c8102e]">
+                        Module
+                      </span>
+                      {done && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M20 6 9 17l-5-5" />
+                          </svg>
+                          Completed
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="mt-1 font-bold text-[#003a63] leading-snug">{m.title}</h3>
+                    {m.subtitle && <p className="mt-1 text-sm text-[#5C6B7A]">{m.subtitle}</p>}
+                    {awaitingAttestation && (
+                      <p className="mt-2 text-xs font-medium text-[#b45309]">
+                        Awaiting faculty attestation
+                      </p>
+                    )}
+                    <span className="mt-4 inline-flex min-h-[44px] items-center justify-center gap-1 self-start rounded-lg bg-[#003a63] px-4 py-2.5 text-sm font-semibold text-white transition-colors group-hover:bg-[#04263f]">
+                      {done ? 'Review module' : 'Start module'}
+                      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M5 12h14M13 6l6 6-6 6" />
+                      </svg>
+                    </span>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )}
 
         <div className="mt-6">
           <ExternalHub />
