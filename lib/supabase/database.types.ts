@@ -1,8 +1,3 @@
-// lib/supabase/database.types.ts
-// Generated from the live Supabase schema (the source of truth). Models use
-// `type` aliases — never `interface` — so they satisfy Record<string, unknown>
-// for the PostgREST typed client. Regenerate after any schema change; never
-// convert these to interfaces.
 export type Json =
   | string
   | number
@@ -281,6 +276,114 @@ export type Database = {
             columns: ["fellow_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      module_progress: {
+        Row: {
+          attested_at: string | null
+          attested_by: string | null
+          completed_at: string
+          fellow_id: string
+          id: string
+          module_id: string
+          quiz_score: number | null
+          quiz_total: number | null
+        }
+        Insert: {
+          attested_at?: string | null
+          attested_by?: string | null
+          completed_at?: string
+          fellow_id: string
+          id?: string
+          module_id: string
+          quiz_score?: number | null
+          quiz_total?: number | null
+        }
+        Update: {
+          attested_at?: string | null
+          attested_by?: string | null
+          completed_at?: string
+          fellow_id?: string
+          id?: string
+          module_id?: string
+          quiz_score?: number | null
+          quiz_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_progress_attested_by_fkey"
+            columns: ["attested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_progress_fellow_id_fkey"
+            columns: ["fellow_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modules: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          key: string
+          lecture_resource_id: string | null
+          pass_pct: number
+          requires_attestation: boolean
+          sort_order: number
+          subtitle: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key: string
+          lecture_resource_id?: string | null
+          pass_pct?: number
+          requires_attestation?: boolean
+          sort_order?: number
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key?: string
+          lecture_resource_id?: string | null
+          pass_pct?: number
+          requires_attestation?: boolean
+          sort_order?: number
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modules_lecture_resource_id_fkey"
+            columns: ["lecture_resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
             referencedColumns: ["id"]
           },
         ]
@@ -566,6 +669,59 @@ export type Database = {
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      program_videos: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          external_url: string | null
+          id: string
+          is_active: boolean
+          module_id: string | null
+          poster_path: string | null
+          sort_order: number
+          storage_path: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          external_url?: string | null
+          id?: string
+          is_active?: boolean
+          module_id?: string | null
+          poster_path?: string | null
+          sort_order?: number
+          storage_path?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          external_url?: string | null
+          id?: string
+          is_active?: boolean
+          module_id?: string | null
+          poster_path?: string | null
+          sort_order?: number
+          storage_path?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_videos_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
             referencedColumns: ["id"]
           },
         ]
