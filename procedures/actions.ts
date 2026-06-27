@@ -6,6 +6,10 @@
 // allowed for the owning fellow or staff by policy; we just attempt it and let
 // the database decide. No service-role key, no raw SQL. (See CLAUDE.md.)
 //
+// A procedure may be supervised by an attending (profiles) OR a non-user
+// radiology supervisor (procedure_supervisors) — never both. The DB enforces
+// this with a CHECK; we also guard here for a friendly message.
+//
 // No PHI: notes are teaching context only. We trim/normalize but do not, and
 // must not, capture patient identifiers.
 'use server'
@@ -23,6 +27,8 @@ export type LogProcedureInput = {
   date_performed: string // 'YYYY-MM-DD'
   outcome: ProcedureOutcome
   supervising_attending_id: string | null
+  // Optional so the logger compiles before/after the radiology-supervisor change.
+  supervising_supervisor_id?: string | null
   notes: string | null
 }
 
@@ -53,6 +59,15 @@ export async function logProcedure(input: LogProcedureInput): Promise<ActionResu
     ? input.outcome
     : 'successful'
 
+  const attendingId = input.supervising_attending_id || null
+  const supervisorId = input.supervising_supervisor_id || null
+  if (attendingId && supervisorId) {
+    return {
+      ok: false,
+      error: 'Pick either a supervising attending or a radiologist — not both.',
+    }
+  }
+
   const notes = input.notes?.trim() ? input.notes.trim() : null
 
   const { error } = await supabase.from('procedure_logs').insert({
@@ -60,7 +75,8 @@ export async function logProcedure(input: LogProcedureInput): Promise<ActionResu
     procedure_type: input.procedure_type,
     date_performed: input.date_performed,
     outcome,
-    supervising_attending_id: input.supervising_attending_id || null,
+    supervising_attending_id: attendingId,
+    supervising_supervisor_id: supervisorId,
     notes,
   })
 
