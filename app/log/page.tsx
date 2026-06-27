@@ -5,9 +5,9 @@
 // on a phone everything stacks single-column (logger first, for fast entry). The
 // quick-links launch bar runs full width below. Server component: loads the
 // procedure menu, the fellow's own logs (RLS scopes to them), program minimums,
-// the attending roster, and the published learning modules (+ this fellow's
-// progress), then hands serializable data to the client form.
-// Staff are routed to their dashboard. NO PHI.
+// the attending roster, the radiology supervisors, and the published learning
+// modules (+ this fellow's progress), then hands serializable data to the
+// client form. Staff are routed to their dashboard. NO PHI.
 import Link from 'next/link'
 import FellowNav from '@/components/FellowNav'
 import { requireFellow } from '@/lib/auth'
@@ -23,40 +23,49 @@ export default async function LoggerPage() {
 
   const supabase = await createClient()
 
-  const [typesRes, targetsRes, logsRes, attendingsRes, modulesRes, progressRes] = await Promise.all([
-    supabase
-      .from('procedure_types')
-      .select('code, label, sort_order')
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true }),
-    supabase.from('procedure_targets').select('procedure_type, min_total'),
-    supabase
-      .from('procedure_logs')
-      .select('id, procedure_type, date_performed, outcome, supervising_attending_id')
-      .order('date_performed', { ascending: false })
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('profiles')
-      .select('id, full_name')
-      .in('role', ['attending', 'pd', 'apd'])
-      .eq('is_active', true)
-      .order('full_name', { ascending: true }),
-    supabase
-      .from('modules')
-      .select('id, key, title, subtitle, requires_attestation')
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true }),
-    supabase
-      .from('module_progress')
-      .select('module_id, completed_at, attested_at')
-      .eq('fellow_id', profile.id),
-  ])
+  const [typesRes, targetsRes, logsRes, attendingsRes, supervisorsRes, modulesRes, progressRes] =
+    await Promise.all([
+      supabase
+        .from('procedure_types')
+        .select('code, label, sort_order')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true }),
+      supabase.from('procedure_targets').select('procedure_type, min_total'),
+      supabase
+        .from('procedure_logs')
+        .select(
+          'id, procedure_type, date_performed, outcome, supervising_attending_id, supervising_supervisor_id',
+        )
+        .order('date_performed', { ascending: false })
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('role', ['attending', 'pd', 'apd'])
+        .eq('is_active', true)
+        .order('full_name', { ascending: true }),
+      supabase
+        .from('procedure_supervisors')
+        .select('id, full_name')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true }),
+      supabase
+        .from('modules')
+        .select('id, key, title, subtitle, requires_attestation')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true }),
+      supabase
+        .from('module_progress')
+        .select('module_id, completed_at, attested_at')
+        .eq('fellow_id', profile.id),
+    ])
 
   const loadError =
     typesRes.error ||
     targetsRes.error ||
     logsRes.error ||
     attendingsRes.error ||
+    supervisorsRes.error ||
     modulesRes.error ||
     progressRes.error
 
@@ -106,12 +115,14 @@ export default async function LoggerPage() {
   const targets = targetsRes.data ?? []
   const logs = logsRes.data ?? []
   const attendings = attendingsRes.data ?? []
+  const radiologists = supervisorsRes.data ?? []
   const modules = modulesRes.data ?? []
   const moduleProgress = progressRes.data ?? []
 
   const minByType = new Map<string, number>(targets.map((t) => [t.procedure_type, t.min_total]))
   const labelByType = new Map<string, string>(types.map((t) => [t.code, t.label]))
   const nameById = new Map<string, string>(attendings.map((a) => [a.id, a.full_name]))
+  const supervisorNameById = new Map<string, string>(radiologists.map((s) => [s.id, s.full_name]))
   const progressByModule = new Map<string, (typeof moduleProgress)[number]>(
     moduleProgress.map((p) => [p.module_id, p]),
   )
@@ -123,6 +134,7 @@ export default async function LoggerPage() {
     min: minByType.get(t.code) ?? 0,
   }))
 
+  // attendingName carries whichever supervisor's name (attending or radiologist).
   const recent: RecentLog[] = logs.slice(0, 20).map((l) => ({
     id: l.id,
     label: labelByType.get(l.procedure_type) ?? l.procedure_type,
@@ -130,7 +142,9 @@ export default async function LoggerPage() {
     outcome: l.outcome,
     attendingName: l.supervising_attending_id
       ? nameById.get(l.supervising_attending_id) ?? null
-      : null,
+      : l.supervising_supervisor_id
+        ? supervisorNameById.get(l.supervising_supervisor_id) ?? null
+        : null,
   }))
 
   // At-a-glance roll-up (summary, distinct from the logger's per-procedure cards).
@@ -150,6 +164,7 @@ export default async function LoggerPage() {
             <ProcedureLogger
               progress={progress}
               attendings={attendings}
+              supervisors={radiologists}
               logs={recent}
               todayStr={new Date().toISOString().slice(0, 10)}
             />
