@@ -8,6 +8,7 @@ const config: Config = {
     './procedures/**/*.{js,ts,jsx,tsx,mdx}',
     './evaluations/**/*.{js,ts,jsx,tsx,mdx}',
     './resources/**/*.{js,ts,jsx,tsx,mdx}',
+    './modules/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
