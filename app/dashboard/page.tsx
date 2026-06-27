@@ -3,6 +3,7 @@
 //   readiness   -> APD command center (graduation readiness)
 //   program     -> PD program oversight (evaluation completion + readiness)
 //   evaluations -> mid-year / end-of-year evaluation summary (all staff)
+//   education   -> learning-module completion + faculty attestation (all staff)
 //   operations  -> coordinator worklist (chase outstanding items)
 // Staff-gated; each role lands on its own center by default but may switch tabs.
 //
@@ -14,22 +15,25 @@ import { requireStaff } from '@/lib/auth'
 import type { UserRole } from '@/lib/auth'
 import { getCoordinatorWorklist, getReadinessOverview } from '@/dashboard/queries'
 import { getEvalSummary } from '@/dashboard/evaluationSummary'
+import { getModuleCompletion } from '@/dashboard/moduleCompletion'
 import CommandCenter from '@/dashboard/CommandCenter'
 import PdCenter from '@/dashboard/PdCenter'
 import CoordinatorCenter from '@/dashboard/CoordinatorCenter'
 import EvalSummary from '@/dashboard/EvalSummary'
+import EducationCenter from '@/dashboard/EducationCenter'
 import SignOutButton from '@/components/SignOutButton'
 import { NEW_INNOVATIONS_URL } from '@/lib/links'
 import ExternalHub from '@/components/ExternalHub'
 
 export const dynamic = 'force-dynamic'
 
-type View = 'readiness' | 'program' | 'evaluations' | 'operations'
+type View = 'readiness' | 'program' | 'evaluations' | 'education' | 'operations'
 
 const TABS: { view: View; label: string }[] = [
   { view: 'readiness', label: 'Readiness' },
   { view: 'program', label: 'Program' },
   { view: 'evaluations', label: 'Evaluations' },
+  { view: 'education', label: 'Education' },
   { view: 'operations', label: 'Operations' },
 ]
 
@@ -55,6 +59,12 @@ const TAB_ICONS: Record<View, ReactNode> = {
       <path d="m9 13 2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
+  education: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M12 7v13" strokeLinecap="round" />
+      <path d="M3 6c2.5-1 6-1 9 .5C15 5 18.5 5 21 6v12c-2.5-1-6-1-9 .5C9 17 5.5 17 3 18V6Z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
   operations: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
       <path d="M9 6h11M9 12h11M9 18h11" strokeLinecap="round" />
@@ -71,7 +81,11 @@ function defaultViewForRole(role: UserRole): View {
 
 function normalizeView(value: string | string[] | undefined): View | null {
   const v = Array.isArray(value) ? value[0] : value
-  return v === 'readiness' || v === 'program' || v === 'evaluations' || v === 'operations'
+  return v === 'readiness' ||
+    v === 'program' ||
+    v === 'evaluations' ||
+    v === 'education' ||
+    v === 'operations'
     ? v
     : null
 }
@@ -108,6 +122,9 @@ export default async function DashboardPage({
     } else if (view === 'evaluations') {
       const summary = await getEvalSummary()
       body = <EvalSummary summary={summary} />
+    } else if (view === 'education') {
+      const overview = await getModuleCompletion()
+      body = <EducationCenter overview={overview} />
     } else {
       const overview = await getReadinessOverview()
       body = <CommandCenter overview={overview} />
