@@ -1,8 +1,14 @@
 // procedures/ProcedureLogger.tsx
 // Mobile Procedure Logger — redesigned. Tap a procedure card (which shows your
 // count toward the program minimum) to open a quick-entry sheet; date/outcome/
-// attending are taps, not dropdowns; the note stays collapsed until needed.
+// supervisor are taps, not dropdowns; the note stays collapsed until needed.
 // "Log" and "History" are two views so nothing stacks into a long scroll.
+//
+// Supervisor can be a supervising attending (profiles) OR a radiology
+// supervisor (procedure_supervisors — the radiologists who train US/FNA/DXA and
+// are not app users). Exactly one or none is recorded per log. RecentLog's
+// attendingName field carries whichever supervisor's name (attending or
+// radiologist) for the History line.
 //
 // Drop-in replacement for ProcedureLogForm + RecentProcedures. Same server
 // actions (logProcedure / deleteProcedure) — fellow_id is set server-side from
@@ -24,10 +30,14 @@ export type RecentLog = {
   label: string
   date_performed: string // 'YYYY-MM-DD'
   outcome: ProcedureOutcome
-  attendingName: string | null
+  attendingName: string | null // attending OR radiologist — whoever supervised
 }
 
 type Attending = { id: string; full_name: string }
+type Supervisor = { id: string; full_name: string }
+
+// Which kind of supervisor a fellow selected, so the server sets the right FK.
+type SupervisorSel = { kind: 'attending' | 'supervisor'; id: string } | null
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 function formatDate(ymd: string): string {
@@ -52,11 +62,13 @@ const outcomeMeta = (v: ProcedureOutcome) => OUTCOMES.find((o) => o.value === v)
 export function ProcedureLogger({
   progress,
   attendings,
+  supervisors = [],
   logs,
   todayStr,
 }: {
   progress: Progress[]
   attendings: Attending[]
+  supervisors?: Supervisor[]
   logs: RecentLog[]
   todayStr: string
 }) {
@@ -82,6 +94,7 @@ export function ProcedureLogger({
     date_performed: string
     outcome: ProcedureOutcome
     supervising_attending_id: string | null
+    supervising_supervisor_id: string | null
     notes: string | null
   }) {
     if (!active) return
@@ -93,6 +106,7 @@ export function ProcedureLogger({
         date_performed: entry.date_performed,
         outcome: entry.outcome,
         supervising_attending_id: entry.supervising_attending_id,
+        supervising_supervisor_id: entry.supervising_supervisor_id,
         notes: entry.notes,
       })
       if (result.ok) {
@@ -172,6 +186,7 @@ export function ProcedureLogger({
         <QuickEntrySheet
           procedure={active}
           attendings={attendings}
+          supervisors={supervisors}
           todayStr={todayStr}
           pending={pending}
           error={error}
@@ -194,6 +209,7 @@ export function ProcedureLogger({
 function QuickEntrySheet({
   procedure,
   attendings,
+  supervisors,
   todayStr,
   pending,
   error,
@@ -202,6 +218,7 @@ function QuickEntrySheet({
 }: {
   procedure: Progress
   attendings: Attending[]
+  supervisors: Supervisor[]
   todayStr: string
   pending: boolean
   error: string | null
@@ -210,6 +227,7 @@ function QuickEntrySheet({
     date_performed: string
     outcome: ProcedureOutcome
     supervising_attending_id: string | null
+    supervising_supervisor_id: string | null
     notes: string | null
   }) => void
 }) {
@@ -217,7 +235,7 @@ function QuickEntrySheet({
   const [date, setDate] = useState(todayStr)
   const [showDatePick, setShowDatePick] = useState(false)
   const [outcome, setOutcome] = useState<ProcedureOutcome>('successful')
-  const [attendingId, setAttendingId] = useState('')
+  const [sel, setSel] = useState<SupervisorSel>(null)
   const [showNote, setShowNote] = useState(false)
   const [note, setNote] = useState('')
   const [shown, setShown] = useState(false)
@@ -303,17 +321,35 @@ function QuickEntrySheet({
             ))}
           </div>
 
-          {/* Attending */}
+          {/* Supervisor — attending or radiologist (at most one) */}
           <p className="text-sm font-semibold text-gray-800 mb-1.5 mt-4">
-            Supervising attending <span className="font-normal text-gray-400">(optional)</span>
+            Supervised by <span className="font-normal text-gray-400">(optional)</span>
           </p>
           <div className="flex gap-2 flex-wrap">
-            <Chip active={attendingId === ''} onClick={() => setAttendingId('')}>None</Chip>
+            <Chip active={sel === null} onClick={() => setSel(null)}>None</Chip>
             {attendings.map((a) => (
-              <Chip key={a.id} active={attendingId === a.id} onClick={() => setAttendingId(a.id)}>
+              <Chip
+                key={a.id}
+                active={sel?.kind === 'attending' && sel.id === a.id}
+                onClick={() => setSel({ kind: 'attending', id: a.id })}
+              >
                 {a.full_name}
               </Chip>
             ))}
+            {supervisors.length > 0 ? (
+              <>
+                <p className="w-full mt-1 text-xs font-medium text-gray-400">Radiology · US / FNA / DXA</p>
+                {supervisors.map((s) => (
+                  <Chip
+                    key={s.id}
+                    active={sel?.kind === 'supervisor' && sel.id === s.id}
+                    onClick={() => setSel({ kind: 'supervisor', id: s.id })}
+                  >
+                    {s.full_name}
+                  </Chip>
+                ))}
+              </>
+            ) : null}
           </div>
 
           {/* Note (collapsed) */}
@@ -348,7 +384,15 @@ function QuickEntrySheet({
             type="button"
             disabled={pending}
             aria-busy={pending}
-            onClick={() => onSubmit({ date_performed: date, outcome, supervising_attending_id: attendingId || null, notes: note || null })}
+            onClick={() =>
+              onSubmit({
+                date_performed: date,
+                outcome,
+                supervising_attending_id: sel?.kind === 'attending' ? sel.id : null,
+                supervising_supervisor_id: sel?.kind === 'supervisor' ? sel.id : null,
+                notes: note || null,
+              })
+            }
             className="w-full mt-5 py-3.5 text-white font-semibold rounded-xl active:scale-[0.99] transition-transform disabled:opacity-60"
             style={{ background: CRIMSON }}
           >
