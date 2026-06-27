@@ -9,9 +9,12 @@
 //
 // The Evaluations tab shows the read-only completion summary; authors
 // (pd/apd/admin via canAuthorEval) also get a CTA up top into the full
-// authoring workspace at /evaluations, which is otherwise only linked from the
-// fellow nav. Non-author staff (coordinator) don't see the CTA — they'd only
-// reach a read-only view there.
+// authoring workspace at /evaluations, plus a "Faculty notes" block at the FOOT
+// of the summary (one lightweight, editable note per fellow). Both are
+// author-only and never shown to the coordinator; RLS independently enforces
+// the same on the addenda table. The summary matrix itself stays a read-only
+// server component (EvalSummary) — the notes block is a separate client
+// component rendered beneath it.
 //
 // Chrome only (restyle): sticky navy header + Howard-crimson "filled" active tab
 // with an icon per view. All data loading and routing below is unchanged.
@@ -21,12 +24,14 @@ import { requireStaff } from '@/lib/auth'
 import type { UserRole } from '@/lib/auth'
 import { getCoordinatorWorklist, getReadinessOverview } from '@/dashboard/queries'
 import { getEvalSummary } from '@/dashboard/evaluationSummary'
+import { getFellowAddenda } from '@/dashboard/fellowAddenda'
 import { getModuleCompletion } from '@/dashboard/moduleCompletion'
 import { canAuthorEval } from '@/lib/evaluations'
 import CommandCenter from '@/dashboard/CommandCenter'
 import PdCenter from '@/dashboard/PdCenter'
 import CoordinatorCenter from '@/dashboard/CoordinatorCenter'
 import EvalSummary from '@/dashboard/EvalSummary'
+import FacultyAddenda from '@/dashboard/FacultyAddenda'
 import EducationCenter from '@/dashboard/EducationCenter'
 import SignOutButton from '@/components/SignOutButton'
 import { NEW_INNOVATIONS_URL } from '@/lib/links'
@@ -156,11 +161,16 @@ export default async function DashboardPage({
       const overview = await getReadinessOverview()
       body = <PdCenter overview={overview} />
     } else if (view === 'evaluations') {
-      const summary = await getEvalSummary()
+      const canAuthor = canAuthorEval(profile.role)
+      const [summary, addenda] = await Promise.all([
+        getEvalSummary(),
+        canAuthor ? getFellowAddenda() : Promise.resolve(null),
+      ])
       body = (
         <div className="space-y-5">
-          {canAuthorEval(profile.role) ? <EvalAuthorCTA /> : null}
+          {canAuthor ? <EvalAuthorCTA /> : null}
           <EvalSummary summary={summary} />
+          {canAuthor && addenda ? <FacultyAddenda data={addenda} canEdit /> : null}
         </div>
       )
     } else if (view === 'education') {
