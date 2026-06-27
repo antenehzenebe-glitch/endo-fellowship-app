@@ -128,6 +128,48 @@ export type Database = {
           },
         ]
       }
+      fellow_addenda: {
+        Row: {
+          author_id: string | null
+          body: string
+          created_at: string
+          fellow_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          created_at?: string
+          fellow_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          created_at?: string
+          fellow_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fellow_addenda_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fellow_addenda_fellow_id_fkey"
+            columns: ["fellow_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fellow_evaluations: {
         Row: {
           academic_year: string
