@@ -282,6 +282,7 @@ export type Database = {
       }
       module_progress: {
         Row: {
+          attestation_note: string | null
           attested_at: string | null
           attested_by: string | null
           completed_at: string
@@ -292,6 +293,7 @@ export type Database = {
           quiz_total: number | null
         }
         Insert: {
+          attestation_note?: string | null
           attested_at?: string | null
           attested_by?: string | null
           completed_at?: string
@@ -302,6 +304,7 @@ export type Database = {
           quiz_total?: number | null
         }
         Update: {
+          attestation_note?: string | null
           attested_at?: string | null
           attested_by?: string | null
           completed_at?: string
@@ -504,6 +507,7 @@ export type Database = {
           outcome: Database["public"]["Enums"]["procedure_outcome"]
           procedure_type: string
           supervising_attending_id: string | null
+          supervising_supervisor_id: string | null
           updated_at: string
         }
         Insert: {
@@ -515,6 +519,7 @@ export type Database = {
           outcome?: Database["public"]["Enums"]["procedure_outcome"]
           procedure_type: string
           supervising_attending_id?: string | null
+          supervising_supervisor_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -526,6 +531,7 @@ export type Database = {
           outcome?: Database["public"]["Enums"]["procedure_outcome"]
           procedure_type?: string
           supervising_attending_id?: string | null
+          supervising_supervisor_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -544,6 +550,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "procedure_logs_supervising_supervisor_id_fkey"
+            columns: ["supervising_supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "procedure_supervisors"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "procedure_logs_type_fk"
             columns: ["procedure_type"]
             isOneToOne: false
@@ -551,6 +564,30 @@ export type Database = {
             referencedColumns: ["code"]
           },
         ]
+      }
+      procedure_supervisors: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          is_active: boolean
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+        }
+        Relationships: []
       }
       procedure_targets: {
         Row: {
