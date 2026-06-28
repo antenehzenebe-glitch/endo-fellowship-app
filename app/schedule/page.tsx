@@ -7,6 +7,10 @@
 // else the newest. "Today" (America/New_York) is computed server-side so the
 // current block + month + today's cell are stable across hydration.
 //
+// Staff + fellows also PUBLISH a year (migration 0016_schedule_publish_flags):
+// the block grid and the monthly calendar publish independently. Publish state +
+// publisher names are loaded here and handed to <PublishControls>.
+//
 // Educational schedule only — continuity clinic, didactics, training, rotation
 // blocks, monthly didactic calendar. Not duty hours, not time-off. NO PHI.
 import Link from 'next/link'
@@ -16,6 +20,7 @@ import SignOutButton from '@/components/SignOutButton'
 import ScheduleEditor from './ScheduleEditor'
 import ScheduleView from './ScheduleView'
 import YearSwitcher from './YearSwitcher'
+import PublishControls from './PublishControls'
 import { asConfig, blockForDate, type SchedulePayload } from '@/lib/schedule'
 
 export const dynamic = 'force-dynamic'
@@ -44,7 +49,9 @@ export default async function SchedulePage({
   const supabase = await createClient()
   const { data: rows } = await supabase
     .from('program_schedule')
-    .select('academic_year, config, is_current, updated_at')
+    .select(
+      'academic_year, config, is_current, updated_at, blocks_published_at, blocks_published_by, months_published_at, months_published_by'
+    )
     .order('academic_year', { ascending: false })
 
   const years = rows ?? []
@@ -61,6 +68,30 @@ export default async function SchedulePage({
 
   const today = todayInDC()
   const currentBlockId = blockForDate(config.blocks, today)?.id ?? null
+
+  // Resolve publisher display names for the selected year's publish stamps (if
+  // any). Degrades gracefully to date-only if a name can't be read.
+  const blocksBy = selected?.blocks_published_by ?? null
+  const monthsBy = selected?.months_published_by ?? null
+  const publisherIds = [blocksBy, monthsBy].filter((v): v is string => Boolean(v))
+  const nameById = new Map<string, string>()
+  if (publisherIds.length) {
+    const { data: people } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', publisherIds)
+    people?.forEach((p) => nameById.set(p.id, p.full_name))
+  }
+  const publish = {
+    blocks: {
+      publishedAt: selected?.blocks_published_at ?? null,
+      publishedByName: blocksBy ? nameById.get(blocksBy) ?? null : null,
+    },
+    months: {
+      publishedAt: selected?.months_published_at ?? null,
+      publishedByName: monthsBy ? nameById.get(monthsBy) ?? null : null,
+    },
+  }
 
   // Back link goes where the user actually has a home (mirrors roleHome):
   // staff → dashboard, attending → faculty home, fellow → logger.
@@ -121,6 +152,13 @@ export default async function SchedulePage({
           canCreate={canEditSchedule}
           canSetCurrent={staff}
         />
+        {canEditSchedule && (
+          <PublishControls
+            academicYear={academicYear}
+            blocks={publish.blocks}
+            months={publish.months}
+          />
+        )}
         {/* key={academicYear} forces a fresh mount when the year changes, so the
             editor's/view's internal state resets to the newly selected year. */}
         {canEditSchedule ? (
