@@ -720,25 +720,37 @@ export type Database = {
       program_schedule: {
         Row: {
           academic_year: string
+          blocks_published_at: string | null
+          blocks_published_by: string | null
           config: Json
           id: string
           is_current: boolean
+          months_published_at: string | null
+          months_published_by: string | null
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           academic_year?: string
+          blocks_published_at?: string | null
+          blocks_published_by?: string | null
           config?: Json
           id: string
           is_current?: boolean
+          months_published_at?: string | null
+          months_published_by?: string | null
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
           academic_year?: string
+          blocks_published_at?: string | null
+          blocks_published_by?: string | null
           config?: Json
           id?: string
           is_current?: boolean
+          months_published_at?: string | null
+          months_published_by?: string | null
           updated_at?: string
           updated_by?: string | null
         }
