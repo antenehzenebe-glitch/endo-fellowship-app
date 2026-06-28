@@ -10,7 +10,8 @@
 //   • Staff (pd/apd/coordinator/admin) AND fellows — edit any year's schedule
 //     (block grid, weekly skeleton, fellows, rotations, monthly calendars) and
 //     CREATE a new academic year.
-//   • Only staff may mark a year "current" or (via RLS) delete a year.
+//   • Only staff may mark a year "current", PUBLISH a view (migration
+//     0016_schedule_publish_flags), or (via RLS) delete a year.
 //   • Attendings / anyone else — read-only.
 //
 // RLS (schedule_multiyear): read = true; insert/update = is_staff() OR is_fellow();
@@ -34,6 +35,9 @@ export type ActionResult = { ok: true } | { ok: false; error: string }
 export type CreateYearResult =
   | { ok: true; academic_year: string }
   | { ok: false; error: string }
+
+// The two independently-publishable views of a year's schedule.
+export type ScheduleScope = 'blocks' | 'months'
 
 const EDITOR_ROLES = ['pd', 'apd', 'coordinator', 'admin', 'fellow']
 const STAFF_ROLES = ['pd', 'apd', 'coordinator', 'admin']
@@ -188,5 +192,51 @@ export async function setCurrentYear(academicYear: string): Promise<ActionResult
   }
 
   revalidatePath('/schedule')
+  return { ok: true }
+}
+
+// Publish ONE view of a year's schedule — the yearly block grid ('blocks') or the
+// monthly didactic calendar ('months'). Staff only (matches setCurrentYear).
+// Stamps published_at = now and published_by = me on the matching academic_year
+// row, then revalidates the schedule page AND the whole app, because the
+// app-wide "schedule published" banner is rendered from the root layout.
+// Re-publishing simply refreshes the timestamp — which re-surfaces the banner
+// for anyone who had dismissed the previous announcement. (Email notification is
+// 4b and is intentionally NOT wired here yet.)
+export async function publishSchedule(
+  academicYear: string,
+  scope: ScheduleScope
+): Promise<ActionResult> {
+  const me = await getMe()
+  if (!me) return { ok: false, error: 'Your session has expired. Please sign in again.' }
+  if (!STAFF_ROLES.includes(me.role)) {
+    return { ok: false, error: 'Only program staff can publish the schedule.' }
+  }
+  if (scope !== 'blocks' && scope !== 'months') {
+    return { ok: false, error: 'Unknown schedule section.' }
+  }
+  const year = academicYear?.trim()
+  if (!year) return { ok: false, error: 'Missing academic year.' }
+
+  const now = new Date().toISOString()
+  const patch =
+    scope === 'blocks'
+      ? { blocks_published_at: now, blocks_published_by: me.userId }
+      : { months_published_at: now, months_published_by: me.userId }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('program_schedule')
+    .update(patch)
+    .eq('academic_year', year)
+    .select('academic_year')
+
+  if (error) return { ok: false, error: `Could not publish: ${error.message}` }
+  if (!data || data.length === 0) {
+    return { ok: false, error: 'That academic year no longer exists. Refresh and try again.' }
+  }
+
+  revalidatePath('/schedule')
+  revalidatePath('/', 'layout') // refresh the app-wide published banner everywhere
   return { ok: true }
 }
