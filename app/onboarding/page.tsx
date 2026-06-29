@@ -4,6 +4,11 @@
 //   Training & Development   (category = 'training')   — ongoing formative milestones
 // Role-aware: a fellow gets interactive checklists of their own items; staff get
 // a read-only progress overview of every fellow. RLS scopes the data.
+//
+// CHANGE (this revision): the fellow view container widened from max-w-md to
+// max-w-4xl so the checklist can render in a multi-column grid (see
+// OnboardingChecklist) instead of one long vertical column. Staff view already
+// uses max-w-4xl.
 import Link from 'next/link'
 import { requireProfile, isStaff } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
@@ -119,7 +124,7 @@ export default async function OnboardingPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200">
-        <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between gap-3">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="" className="w-10 h-10 shrink-0 object-contain" />
             <div>
@@ -134,7 +139,7 @@ export default async function OnboardingPage() {
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {error ? (
           <ErrorPanel />
         ) : rows.length === 0 ? (
