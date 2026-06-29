@@ -6,9 +6,11 @@
 // against public.onboarding_tasks (RLS lets a fellow update own rows).
 // Optimistic UI; reverts on error.
 //
-// CHANGE (this revision): the progress bar now sits at the END of the checklist
-// (after the items) and shows a numeric "X% complete" label, with proper
-// progressbar semantics. The header keeps the count + tap hint only.
+// CHANGE (this revision): the task list now renders in a responsive GRID
+// (1 col on phones, 2 cols ≥640px) instead of one long vertical column, so a
+// long onboarding list (e.g. the incoming-PGY-4 access checklist) stays
+// scannable. Cards stretch to equal height per row. Progress bar still sits at
+// the END with proper progressbar semantics.
 import { useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -80,18 +82,18 @@ export default function OnboardingChecklist({
         </p>
       </section>
 
-      {/* Tasks */}
-      <ul className="space-y-2">
+      {/* Tasks — responsive grid, not a single vertical column */}
+      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {tasks.map((task) => {
           const completed = task.status === 'completed'
           return (
-            <li key={task.id}>
+            <li key={task.id} className="h-full">
               <button
                 type="button"
                 onClick={() => toggle(task)}
                 disabled={savingId === task.id}
                 aria-pressed={completed}
-                className={`w-full text-left flex items-start gap-3 rounded-xl border p-4 transition-colors disabled:opacity-60 ${
+                className={`h-full w-full text-left flex items-start gap-3 rounded-xl border p-4 transition-colors disabled:opacity-60 ${
                   completed ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white hover:bg-gray-50'
                 }`}
               >
