@@ -3,9 +3,13 @@
 // app/onboarding/StaffOnboardingTabs.tsx
 // Staff-facing onboarding overview rendered as a glossy horizontal tab strip:
 // one tab per fellow (name · PGY · % complete), with only the selected
-// fellow's checklist shown below. Replaces the old vertical stack of all
-// fellows. Presentational only — data is fetched server-side in page.tsx
-// (RLS-scoped) and passed in as props.
+// fellow's checklist shown below. Presentational only — data is fetched
+// server-side in page.tsx (RLS-scoped) and passed in as props.
+//
+// CHANGE (this revision): each group's item list renders in a responsive grid
+// (1 col on phones, 2 cols ≥640px, 3 cols ≥1024px) instead of one vertical
+// column, so a long onboarding list (e.g. the incoming-PGY-4 access checklist)
+// stays scannable.
 
 import { useState } from 'react'
 
@@ -149,7 +153,8 @@ export default function StaffOnboardingTabs({
                   <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
                     <div className="h-full bg-[#003a63]" style={{ width: `${pct}%` }} />
                   </div>
-                  <ul className="space-y-2">
+                  {/* Items — multi-column grid, not one tall list */}
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1.5">
                     {gi.map((t) => {
                       const completed = t.status === 'completed'
                       return (
