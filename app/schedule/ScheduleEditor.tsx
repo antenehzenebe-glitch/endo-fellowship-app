@@ -51,6 +51,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [newRotation, setNewRotation] = useState('')
   const [newMonthYm, setNewMonthYm] = useState('')
+  const [monthError, setMonthError] = useState<string | null>(null)
   const [selectedMonthId, setSelectedMonthId] = useState<string>(
     () => initial.config.months?.[0]?.id ?? ''
   )
@@ -202,7 +203,14 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
   const setMonths = (next: ScheduleMonth[]) => setConfig((c) => ({ ...c, months: next }))
   const addMonth = () => {
     const ym = newMonthYm.trim()
-    if (!/^\d{4}-\d{2}$/.test(ym)) return
+    if (!/^\d{4}-\d{2}$/.test(ym)) {
+      // Safari on macOS renders <input type="month"> as a plain text box, so
+      // typed values like "July 2026" land here — explain the expected format
+      // instead of failing silently.
+      setMonthError('Enter the month as YYYY-MM (for example 2026-07), then press “+ Add month”.')
+      return
+    }
+    setMonthError(null)
     if (config.months.some((mo) => mo.ym === ym)) {
       setSelectedMonthId(config.months.find((mo) => mo.ym === ym)?.id ?? '')
       setNewMonthYm('')
@@ -692,7 +700,11 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
             <input
               type="month"
               value={newMonthYm}
-              onChange={(e) => setNewMonthYm(e.target.value)}
+              placeholder="2026-07"
+              onChange={(e) => {
+                setNewMonthYm(e.target.value)
+                setMonthError(null)
+              }}
               className="text-sm border border-slate-300 rounded px-2 py-1.5"
             />
             <button
@@ -704,6 +716,8 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
             </button>
           </span>
         </div>
+
+        {monthError && <p className="-mt-1 mb-3 text-sm text-red-600">{monthError}</p>}
 
         {selectedMonth ? (
           <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-5">
