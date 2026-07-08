@@ -38,10 +38,13 @@ export default async function LoggerPage() {
         )
         .order('date_performed', { ascending: false })
         .order('created_at', { ascending: false }),
+      // Supervising physicians for procedures: attendings, the PD/APD, and
+      // admins who also attend on service (e.g. Dr. Nunlee-Bland). Matches the
+      // can_author_eval() role set; coordinators are intentionally excluded.
       supabase
         .from('profiles')
         .select('id, full_name')
-        .in('role', ['attending', 'pd', 'apd'])
+        .in('role', ['attending', 'pd', 'apd', 'admin'])
         .eq('is_active', true)
         .order('full_name', { ascending: true }),
       supabase
