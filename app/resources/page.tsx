@@ -124,7 +124,7 @@ export default async function ResourcesPage() {
                     <a
                       href={href}
                       target="_blank"
-                      rel="noopener"
+                      rel="noopener noreferrer"
                       className="mt-4 inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-[#003a63] text-white hover:bg-[#04263f] min-h-[44px]"
                     >
                       Open
