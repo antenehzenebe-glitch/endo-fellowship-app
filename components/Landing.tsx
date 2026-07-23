@@ -439,7 +439,7 @@ export default function Landing({ groups }: { groups: DirectoryGroups }) {
                 className="line"
                 href="https://maps.google.com/?q=2041+Georgia+Ave+NW,+Washington,+DC+20060"
                 target="_blank"
-                rel="noopener"
+                rel="noopener noreferrer"
               >
                 2041 Georgia Ave NW, Washington, DC 20060
               </a>
@@ -449,7 +449,7 @@ export default function Landing({ groups }: { groups: DirectoryGroups }) {
             </div>
             <div>
               <div className="ft">Apply</div>
-              <a className="line" href={ERAS} target="_blank" rel="noopener">
+              <a className="line" href={ERAS} target="_blank" rel="noopener noreferrer">
                 Applications are accepted through ERAS ↗
               </a>
               <span className="line" style={{ color: 'rgba(255,255,255,.7)' }}>
