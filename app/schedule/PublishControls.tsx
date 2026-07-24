@@ -1,17 +1,19 @@
 // app/schedule/PublishControls.tsx
-// STAFF-ONLY control to PUBLISH a year's schedule to the program. The schedule
-// has two independently-publishable views — the yearly block grid and the
-// monthly didactic calendar — so this renders one card per view, each showing
-// current publish status (when + by whom) and a Publish / Re-publish button
-// guarded by an inline confirm. Calls the publishSchedule server action (staff
-// only; see actions.ts), which stamps the row and revalidates; we then
-// router.refresh() so the status updates in place.
+// Control for schedule editors (staff + fellows) to PUBLISH a year's schedule
+// to the program. Schedules are built by the chief fellows and published in
+// consultation with the APD/PD. The schedule has two independently-publishable
+// views — the yearly block grid and the monthly didactic calendar — so this
+// renders one card per view, each showing current publish status (when + by
+// whom) and a Publish / Re-publish button guarded by an inline confirm. Calls
+// the publishSchedule server action (staff + fellows; see actions.ts), which
+// stamps the row and revalidates; we then router.refresh() so the status
+// updates in place.
 //
 // Publish is ANNOUNCEMENT-ONLY (decision D1): it posts the app-wide banner. It
 // does NOT gate what fellows/attendings see — the schedule renders regardless
 // of publish state. Copy below must never imply visibility gating.
 //
-// Only rendered for staff — see page.tsx. NO PHI.
+// Rendered for schedule editors (staff + fellows) — see page.tsx. NO PHI.
 'use client'
 
 import { useState, useTransition } from 'react'
@@ -48,7 +50,8 @@ export default function PublishControls({ academicYear, blocks, months }: Props)
       </h2>
       <p className="mt-1 text-sm text-[#5C6B7A]">
         Publishing posts an announcement banner to fellows and faculty across the app,
-        linking the schedule. Re-publish after changes to re-notify everyone.
+        linking the schedule. Publish only after reviewing the schedule with the
+        APD/PD — and re-publish after changes to re-notify everyone.
       </p>
       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <PublishCard academicYear={academicYear} scope="blocks" state={blocks} />

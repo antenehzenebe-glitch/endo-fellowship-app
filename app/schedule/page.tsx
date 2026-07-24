@@ -7,13 +7,13 @@
 // else the newest. "Today" (America/New_York) is computed server-side so the
 // current block + month + today's cell are stable across hydration.
 //
-// Staff alone PUBLISH a year (migration 0016_schedule_publish_flags): publish is
-// ANNOUNCEMENT-ONLY (decision D1) — it posts the app-wide banner; it does NOT
-// gate what fellows/attendings see. The block grid and the monthly calendar
+// Staff AND fellows PUBLISH a year (migration 0016_schedule_publish_flags):
+// schedules are built by the chief fellows and published in consultation with
+// the APD/PD, so the publishSchedule action accepts every editor role. Publish
+// is ANNOUNCEMENT-ONLY (decision D1) — it posts the app-wide banner; it does
+// NOT gate what fellows/attendings see. The block grid and the monthly calendar
 // publish independently. Publish state + publisher names are loaded here and
-// handed to <PublishControls>, which is rendered for STAFF ONLY (the
-// publishSchedule action rejects non-staff, so showing it to fellows would just
-// render a button that always errors).
+// handed to <PublishControls>, rendered for everyone who can edit the schedule.
 //
 // When zero program_schedule rows exist there is NO fallback year: instead of a
 // phantom hardcoded year whose every Save would fail, the page shows a friendly
@@ -177,9 +177,9 @@ export default async function SchedulePage({
           </div>
         ) : (
           <>
-            {/* Publish is announcement-only (D1) and staff-only: the server
-                action rejects non-staff, so fellows never see these controls. */}
-            {staff && (
+            {/* Publish is announcement-only (D1), open to staff + fellows:
+                chief fellows publish in consultation with the APD/PD. */}
+            {canEditSchedule && (
               <PublishControls
                 academicYear={academicYear}
                 blocks={publish.blocks}
