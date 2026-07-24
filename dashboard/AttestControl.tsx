@@ -51,7 +51,7 @@ export default function AttestControl({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex min-h-[34px] items-center gap-1.5 rounded-md border border-[#003a63]/30 bg-white px-3 py-1.5 text-xs font-semibold text-[#003a63] transition-colors hover:bg-[#003a63]/5"
+          className="inline-flex min-h-[34px] items-center gap-1.5 rounded-md border border-primary/30 bg-white px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/5"
         >
           <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
             <path d="M3 8.5l3.5 3.5L13 5" strokeLinecap="round" strokeLinejoin="round" />
@@ -77,7 +77,7 @@ export default function AttestControl({
         rows={3}
         disabled={pending}
         placeholder="Technique to reinforce, next steps… (no patient identifiers)"
-        className="mt-1.5 w-full resize-y rounded-md border border-slate-300 px-2.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#003a63] focus:outline-none focus:ring-2 focus:ring-[#003a63]/30 disabled:opacity-60"
+        className="mt-1.5 w-full resize-y rounded-md border border-slate-300 px-2.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-60"
       />
       {error ? (
         <p role="alert" className="mt-1.5 text-xs font-medium text-red-700">
@@ -90,7 +90,7 @@ export default function AttestControl({
           onClick={confirm}
           disabled={pending}
           aria-busy={pending}
-          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-md bg-[#15803d] px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#136a34] disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-md bg-success-dark px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {pending ? 'Saving…' : `Confirm attestation — ${fellowName}, ${moduleTitle}`}
         </button>
