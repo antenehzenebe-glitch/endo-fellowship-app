@@ -16,9 +16,8 @@
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { createYear, setCurrentYear } from './actions'
+import { NAVY, CRIMSON } from '@/lib/tokens'
 
-const NAVY = '#003a63'
-const CRIMSON = '#c8102e'
 
 type YearOption = { academic_year: string; is_current: boolean }
 

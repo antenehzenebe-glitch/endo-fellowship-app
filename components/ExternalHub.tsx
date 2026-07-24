@@ -8,6 +8,7 @@
 // title + aria-label so the bar stays scannable. Edit the arrays to change a
 // destination. includeSocieties={false} renders New-Innovations-only (the PC).
 import { NEW_INNOVATIONS_URL } from '@/lib/links'
+import { NAVY } from '@/lib/tokens'
 
 type HubLink = { name: string; href: string; blurb: string }
 
@@ -40,11 +41,11 @@ export default function ExternalHub({ includeSocieties = true }: { includeSociet
   return (
     <section aria-label="Quick links" className="mb-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-900/5">
       <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/70 px-4 py-2.5">
-        <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#003a63" strokeWidth={2} aria-hidden="true" className="shrink-0">
+        <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth={2} aria-hidden="true" className="shrink-0">
           <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 1 0-7.07-7.07l-1.72 1.71" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 1 0 7.07 7.07l1.71-1.71" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <h2 className="text-xs font-bold uppercase tracking-wide text-[#003a63]">Quick links</h2>
+        <h2 className="text-xs font-bold uppercase tracking-wide text-primary">Quick links</h2>
         <span className="hidden text-xs text-slate-400 sm:inline">- systems &amp; societies, each opens in a new tab</span>
       </div>
 
@@ -55,7 +56,7 @@ export default function ExternalHub({ includeSocieties = true }: { includeSociet
           rel="noopener noreferrer"
           title={PROGRAM_SYSTEM.blurb}
           aria-label={PROGRAM_SYSTEM.name + ' - ' + PROGRAM_SYSTEM.blurb + ' (opens in a new tab)'}
-          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg bg-[#c8102e] px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#a60d26] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c8102e] focus-visible:ring-offset-2"
+          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg bg-crimson px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson focus-visible:ring-offset-2"
         >
           {PROGRAM_SYSTEM.name}
           <LaunchGlyph />
@@ -70,7 +71,7 @@ export default function ExternalHub({ includeSocieties = true }: { includeSociet
                 rel="noopener noreferrer"
                 title={s.blurb}
                 aria-label={s.name + ' - ' + s.blurb + ' (opens in a new tab)'}
-                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-[#003a63]/20 bg-white px-3 text-sm font-medium text-[#003a63] transition-colors hover:border-[#003a63]/50 hover:bg-[#003a63]/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#003a63] focus-visible:ring-offset-2"
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-primary/20 bg-white px-3 text-sm font-medium text-primary transition-colors hover:border-primary/50 hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
                 {s.name}
                 <LaunchGlyph />
