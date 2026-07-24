@@ -174,7 +174,7 @@ export default async function SchedulePrintPage({
         </div>
         <div className="pr-body">
           {config.blocks.length === 0 ? (
-            <div className="pr-empty">No block grid has been published yet.</div>
+            <div className="pr-empty">No block grid has been set up yet.</div>
           ) : (
             <table className="pr-grid">
               <thead>

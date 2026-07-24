@@ -8,10 +8,12 @@
 //
 // Write access (small-program model):
 //   • Staff (pd/apd/coordinator/admin) AND fellows — edit any year's schedule
-//     (block grid, weekly skeleton, fellows, rotations, monthly calendars) and
-//     CREATE a new academic year.
-//   • Only staff may mark a year "current", PUBLISH a view (migration
-//     0016_schedule_publish_flags), or (via RLS) delete a year.
+//     (block grid, weekly skeleton, fellows, rotations, monthly calendars),
+//     CREATE a new academic year, and PUBLISH a view (migration
+//     0016_schedule_publish_flags). Schedules are built by the chief fellows
+//     and published in consultation with the APD/PD, so publishing is open to
+//     fellows too.
+//   • Only staff may mark a year "current" or (via RLS) delete a year.
 //   • Attendings / anyone else — read-only.
 //
 // RLS (schedule_multiyear): read = true; insert/update = is_staff() OR is_fellow();
@@ -196,7 +198,9 @@ export async function setCurrentYear(academicYear: string): Promise<ActionResult
 }
 
 // Publish ONE view of a year's schedule — the yearly block grid ('blocks') or the
-// monthly didactic calendar ('months'). Staff only (matches setCurrentYear).
+// monthly didactic calendar ('months'). Staff + fellows (schedules are built by
+// the chief fellows and published in consultation with the APD/PD; marking a
+// year "current" stays staff-only).
 // Stamps published_at = now and published_by = me on the matching academic_year
 // row, then revalidates the schedule page AND the whole app, because the
 // app-wide "schedule published" banner is rendered from the root layout.
@@ -209,8 +213,8 @@ export async function publishSchedule(
 ): Promise<ActionResult> {
   const me = await getMe()
   if (!me) return { ok: false, error: 'Your session has expired. Please sign in again.' }
-  if (!STAFF_ROLES.includes(me.role)) {
-    return { ok: false, error: 'Only program staff can publish the schedule.' }
+  if (!EDITOR_ROLES.includes(me.role)) {
+    return { ok: false, error: 'You do not have permission to publish the schedule.' }
   }
   if (scope !== 'blocks' && scope !== 'months') {
     return { ok: false, error: 'Unknown schedule section.' }

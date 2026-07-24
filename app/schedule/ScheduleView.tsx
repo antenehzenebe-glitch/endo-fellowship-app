@@ -84,7 +84,7 @@ export default function ScheduleView({
       <section>
         <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-3">Weekly Skeleton</h3>
         {config.weekly.length === 0 ? (
-          <EmptyCard>The weekly skeleton hasn’t been published yet.</EmptyCard>
+          <EmptyCard>The weekly skeleton hasn’t been set up yet.</EmptyCard>
         ) : (
           <div className="space-y-2.5">
             {config.weekly.map((row) => (
@@ -133,7 +133,7 @@ export default function ScheduleView({
       <section>
         <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-3">Annual Block Grid</h3>
         {config.blocks.length === 0 ? (
-          <EmptyCard>The block grid hasn’t been published yet.</EmptyCard>
+          <EmptyCard>The block grid hasn’t been set up yet.</EmptyCard>
         ) : (
           <div className="overflow-x-auto bg-white border border-slate-200 rounded-lg">
             <table className="w-full border-collapse text-sm">
