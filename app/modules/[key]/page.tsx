@@ -12,7 +12,9 @@ import ThyroidQuiz from '@/modules/ThyroidQuiz'
 export const dynamic = 'force-dynamic'
 
 const VIDEO_URL_TTL = 3600 // 1h - comfortable for a viewing session
-const LECTURE_URL_TTL = 600 // 10m - matches the resources page
+// 1h - matches the resources page. Minted at page render, so 1h covers a
+// normal session; sign-on-click is the proper fix and is ticketed separately.
+const LECTURE_URL_TTL = 3600
 
 export default async function ModulePage({
   params,
