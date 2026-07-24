@@ -128,9 +128,9 @@ function FellowNoteCard({
     <div className="rounded-xl border border-gray-200 bg-white p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-[#003a63]">{fellow.name}</span>
+          <span className="font-semibold text-primary">{fellow.name}</span>
           {fellow.pgyLevel ? (
-            <span className="inline-block rounded bg-[#003a63]/10 px-1.5 py-0.5 text-xs font-semibold text-[#003a63]">
+            <span className="inline-block rounded bg-primary/10 px-1.5 py-0.5 text-xs font-semibold text-primary">
               {fellow.pgyLevel}
             </span>
           ) : null}
@@ -139,7 +139,7 @@ function FellowNoteCard({
           <button
             type="button"
             onClick={startEditing}
-            className="min-h-[44px] rounded-md px-3 py-1.5 text-sm font-semibold text-[#c8102e] transition-colors hover:bg-[#c8102e]/[0.06]"
+            className="min-h-[44px] rounded-md px-3 py-1.5 text-sm font-semibold text-crimson transition-colors hover:bg-crimson/[0.06]"
           >
             {note ? 'Edit' : 'Add a note'}
           </button>
@@ -168,7 +168,7 @@ function FellowNoteCard({
             onChange={(e) => setDraft(e.target.value)}
             rows={4}
             placeholder="A short faculty note on this fellow — strengths, focus areas, follow-up."
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003a63]"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           {note && overwritesExisting ? (
@@ -185,7 +185,7 @@ function FellowNoteCard({
                   type="button"
                   onClick={remove}
                   disabled={busy}
-                  className="min-h-[44px] rounded-lg bg-[#c8102e] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#a60d26] disabled:opacity-50"
+                  className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark disabled:opacity-50"
                 >
                   {busy ? 'Deleting…' : 'Delete note'}
                 </button>
@@ -207,7 +207,7 @@ function FellowNoteCard({
                   type="button"
                   onClick={cancel}
                   disabled={busy}
-                  className="min-h-[44px] rounded-lg bg-[#c8102e] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#a60d26] disabled:opacity-50"
+                  className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark disabled:opacity-50"
                 >
                   Discard
                 </button>
@@ -227,7 +227,7 @@ function FellowNoteCard({
                 type="button"
                 onClick={save}
                 disabled={busy || draft.trim().length === 0}
-                className="min-h-[44px] rounded-lg bg-[#c8102e] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#a60d26] disabled:opacity-50"
+                className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark disabled:opacity-50"
               >
                 {busy ? 'Saving…' : 'Save note'}
               </button>
@@ -274,7 +274,7 @@ export default function FacultyAddenda({
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-lg font-bold text-[#003a63]">Faculty notes</h2>
+        <h2 className="text-lg font-bold text-primary">Faculty notes</h2>
         <span className="text-sm text-gray-500">One short note per fellow</span>
       </div>
       <p className="text-sm text-gray-600">
