@@ -36,9 +36,22 @@ const config: Config = {
         // Ink & muted slate for body/secondary text
         ink: '#1B2733',
         muted: '#5C6B7A',
+        // Warm paper canvas for the public landing's content sections
+        cream: {
+          DEFAULT: '#fefef9',
+          50: '#fefef9',
+          100: '#faf8ee',
+          200: '#f3efdd',
+          300: '#e7dfc4',
+        },
         success: { DEFAULT: '#16a34a', dark: '#15803d' },
         warning: '#F97316',
         error: '#EF4444',
+      },
+      fontFamily: {
+        // next/font CSS variables, wired up in app/layout.tsx
+        display: ['var(--font-display)', 'Georgia', 'serif'],
+        body: ['var(--font-body)', 'system-ui', 'sans-serif'],
       },
     },
   },

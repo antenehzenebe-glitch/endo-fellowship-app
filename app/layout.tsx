@@ -1,7 +1,24 @@
 import type { Metadata } from 'next'
+import { Playfair_Display, Open_Sans } from 'next/font/google'
 import './globals.css'
 import { createClient } from '@/lib/supabase/server'
 import ScheduleBanner, { type LatestPublish } from '@/components/ScheduleBanner'
+
+// Program typefaces, self-hosted by next/font (no render-blocking Google CSS).
+// Exposed as CSS variables consumed by the font-display / font-body Tailwind
+// tokens (see tailwind.config.ts) — currently used by the public landing.
+const displayFont = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['500', '600', '700', '800'],
+  variable: '--font-display',
+  display: 'swap',
+})
+const bodyFont = Open_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-body',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Howard Endo Fellowship',
@@ -48,7 +65,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const latest = await getLatestPublish()
   return (
     <html lang="en">
-      <body className="bg-white text-gray-900 antialiased">
+      <body
+        className={`${displayFont.variable} ${bodyFont.variable} bg-white text-gray-900 antialiased`}
+      >
         <ScheduleBanner latest={latest} />
         {children}
       </body>
