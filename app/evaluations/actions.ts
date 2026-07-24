@@ -24,6 +24,17 @@ type SaveInput = {
   status: EvalStatus
 }
 
+const AY_RE = /^\d{4}-\d{4}$/
+
+// Validate 'YYYY-YYYY' where the second year is the first + 1. Mirrors
+// app/schedule/actions.ts normalizeYear — a free-text typo like "2025-26"
+// used to create a duplicate period row (audit P1).
+function isValidAcademicYear(year: string): boolean {
+  if (!AY_RE.test(year)) return false
+  const [a, b] = year.split('-').map(Number)
+  return b === a + 1
+}
+
 export async function saveEvaluation(input: SaveInput): Promise<ActionResult> {
   const supabase = await createClient()
   const {
@@ -44,6 +55,12 @@ export async function saveEvaluation(input: SaveInput): Promise<ActionResult> {
   const narrative = input.narrative?.trim()
   if (!input.fellowId) return { ok: false, error: 'Choose a fellow to evaluate.' }
   if (!academic_year) return { ok: false, error: 'Enter an academic year (e.g. 2025-2026).' }
+  if (!isValidAcademicYear(academic_year)) {
+    return {
+      ok: false,
+      error: 'Enter the academic year as YYYY-YYYY with consecutive years, e.g. 2025-2026.',
+    }
+  }
   if (!input.period) return { ok: false, error: 'Choose the evaluation period.' }
   if (!input.overallRating) return { ok: false, error: 'Choose an overall rating.' }
   if (!narrative) return { ok: false, error: 'Write the evaluation narrative before saving.' }
