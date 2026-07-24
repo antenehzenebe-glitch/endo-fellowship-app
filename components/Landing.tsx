@@ -79,7 +79,15 @@ function directVideo(src?: string): string | null {
   return /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(s) ? s : null;
 }
 
-export default function Landing({ groups }: { groups: DirectoryGroups }) {
+export default function Landing({
+  groups,
+  directoryError = false,
+}: {
+  groups: DirectoryGroups;
+  // True when the directory query failed — the People tab shows an honest
+  // "temporarily unavailable" notice instead of fake empty tiers.
+  directoryError?: boolean;
+}) {
   const { leadership, faculty, fellows } = groups;
   const [active, setActive] = useState<TabId>('overview');
   const barRef = useRef<HTMLDivElement>(null);
@@ -351,6 +359,12 @@ export default function Landing({ groups }: { groups: DirectoryGroups }) {
             <p className="eyebrow">Who you&apos;ll work with</p>
             <h2>Program leadership, faculty &amp; fellows.</h2>
           </div>
+          {directoryError ? (
+            <p style={{ color: '#6a808c', margin: 0 }}>
+              Our team directory is temporarily unavailable — please check back soon.
+            </p>
+          ) : (
+          <>
           <h3 className="subhead" style={{ marginTop: 0 }}>
             Leadership
           </h3>
@@ -377,6 +391,8 @@ export default function Landing({ groups }: { groups: DirectoryGroups }) {
               <p style={{ color: '#6a808c', margin: 0 }}>Fellow profiles coming soon.</p>
             )}
           </div>
+          </>
+          )}
         </section>
 
         {/* POLICIES & WELL-BEING */}
