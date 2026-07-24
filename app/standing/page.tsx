@@ -20,8 +20,8 @@ function Meter({ done, min }: { done: number; min: number }) {
   return (
     <div className="h-2 rounded-full bg-gray-100 overflow-hidden" aria-hidden="true">
       <div
-        className="h-full rounded-full"
-        style={{ width: `${pct}%`, background: met ? '#15803d' : '#003a63' }}
+        className={`h-full rounded-full ${met ? 'bg-success-dark' : 'bg-primary'}`}
+        style={{ width: `${pct}%` }}
       />
     </div>
   )
@@ -124,7 +124,7 @@ export default async function StandingPage() {
         <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 flex items-baseline justify-between">
             <h2 className="font-bold text-gray-900">Procedures</h2>
-            <Link href="/log" className="text-sm font-medium text-[#003a63] hover:underline">Log →</Link>
+            <Link href="/log" className="text-sm font-medium text-primary hover:underline">Log →</Link>
           </div>
           <div className="p-4 space-y-4">
             <p className="text-sm text-gray-600">
@@ -163,7 +163,7 @@ export default async function StandingPage() {
         <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 flex items-baseline justify-between">
             <h2 className="font-bold text-gray-900">Onboarding &amp; milestones</h2>
-            <Link href="/onboarding" className="text-sm font-medium text-[#003a63] hover:underline">Open →</Link>
+            <Link href="/onboarding" className="text-sm font-medium text-primary hover:underline">Open →</Link>
           </div>
           <div className="p-4 space-y-4">
             {onbTotal === 0 ? (
@@ -200,7 +200,7 @@ export default async function StandingPage() {
         <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 flex items-baseline justify-between">
             <h2 className="font-bold text-gray-900">Faculty evaluation</h2>
-            <Link href="/evaluations" className="text-sm font-medium text-[#003a63] hover:underline">All →</Link>
+            <Link href="/evaluations" className="text-sm font-medium text-primary hover:underline">All →</Link>
           </div>
           <div className="p-4 space-y-3">
             {latestEval ? (
@@ -222,7 +222,7 @@ export default async function StandingPage() {
                   </span>
                   <Link
                     href={`/evaluations/${latestEval.id}/print`}
-                    className="text-sm font-medium text-[#003a63] hover:underline"
+                    className="text-sm font-medium text-primary hover:underline"
                   >
                     Read
                   </Link>

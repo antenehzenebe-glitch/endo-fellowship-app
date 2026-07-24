@@ -10,20 +10,33 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { NEW_INNOVATIONS_URL } from '@/lib/links'
+import {
+  CRIMSON,
+  AMBER_700,
+  BLUE_700,
+  EMERALD_700,
+  RED_700,
+  SLATE_200,
+  SLATE_700,
+  SLATE_800,
+  TEAL_700,
+  VIOLET_700,
+  WHITE,
+} from '@/lib/tokens'
 import type { ReactNode } from 'react'
 
 type NavItem = { href: string; label: string; color: string; icon: ReactNode }
 
 // Accent colors are chosen dark enough for white text on the active (filled) pill.
 const ITEMS: NavItem[] = [
-  { href: '/log', label: 'Logger', color: '#c8102e', icon: <PathIcon name="logger" /> },
-  { href: '/standing', label: 'Progress', color: '#047857', icon: <PathIcon name="progress" /> },
-  { href: '/onboarding', label: 'Checklist', color: '#b45309', icon: <PathIcon name="checklist" /> },
-  { href: '/evaluations', label: 'Evaluations', color: '#6d28d9', icon: <PathIcon name="star" /> },
-  { href: '/resources', label: 'Materials', color: '#1d4ed8', icon: <PathIcon name="book" /> },
-  { href: '/emergencies', label: 'Emergencies', color: '#b91c1c', icon: <PathIcon name="alert" /> },
-  { href: '/schedule', label: 'Schedule', color: '#0f766e', icon: <PathIcon name="calendar" /> },
-  { href: '/account', label: 'Password', color: '#334155', icon: <PathIcon name="lock" /> },
+  { href: '/log', label: 'Logger', color: CRIMSON, icon: <PathIcon name="logger" /> },
+  { href: '/standing', label: 'Progress', color: EMERALD_700, icon: <PathIcon name="progress" /> },
+  { href: '/onboarding', label: 'Checklist', color: AMBER_700, icon: <PathIcon name="checklist" /> },
+  { href: '/evaluations', label: 'Evaluations', color: VIOLET_700, icon: <PathIcon name="star" /> },
+  { href: '/resources', label: 'Materials', color: BLUE_700, icon: <PathIcon name="book" /> },
+  { href: '/emergencies', label: 'Emergencies', color: RED_700, icon: <PathIcon name="alert" /> },
+  { href: '/schedule', label: 'Schedule', color: TEAL_700, icon: <PathIcon name="calendar" /> },
+  { href: '/account', label: 'Password', color: SLATE_700, icon: <PathIcon name="lock" /> },
 ]
 
 export default function FellowNav() {
@@ -43,15 +56,15 @@ export default function FellowNav() {
             className="group inline-flex min-h-[44px] items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             style={
               active
-                ? { background: item.color, color: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }
-                : { background: '#ffffff', color: '#1e293b', boxShadow: 'inset 0 0 0 1px #e2e8f0' }
+                ? { background: item.color, color: WHITE, boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }
+                : { background: WHITE, color: SLATE_800, boxShadow: `inset 0 0 0 1px ${SLATE_200}` }
             }
           >
             <span
               className="grid h-7 w-7 place-items-center rounded-lg"
               style={
                 active
-                  ? { background: 'rgba(255,255,255,0.22)', color: '#ffffff' }
+                  ? { background: 'rgba(255,255,255,0.22)', color: WHITE }
                   : { background: item.color + '14', color: item.color }
               }
               aria-hidden="true"
@@ -68,12 +81,12 @@ export default function FellowNav() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="New Innovations (opens in a new tab)"
-        className="group inline-flex min-h-[44px] items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-white transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-        style={{ background: '#003a63', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}
+        className="group inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-white transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+        style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}
       >
         <span
           className="grid h-7 w-7 place-items-center rounded-lg"
-          style={{ background: 'rgba(255,255,255,0.22)', color: '#ffffff' }}
+          style={{ background: 'rgba(255,255,255,0.22)', color: WHITE }}
           aria-hidden="true"
         >
           <PathIcon name="external" />
