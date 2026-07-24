@@ -3,7 +3,8 @@
 //   readiness   -> APD command center (graduation readiness)
 //   program     -> PD program oversight (evaluation completion + readiness)
 //   evaluations -> mid-year / end-of-year evaluation summary (all staff)
-//   education   -> learning-module completion + faculty attestation (all staff)
+//   education   -> learning-module completion (all staff) + faculty attestation
+//                  (faculty/leadership only — the coordinator cannot attest)
 //   operations  -> coordinator worklist (chase outstanding items)
 // Staff-gated; each role lands on its own center by default but may switch tabs.
 //
@@ -67,7 +68,7 @@ const TAB_ICONS: Record<View, ReactNode> = {
   evaluations: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
       <path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1Z" strokeLinejoin="round" />
-      <path d="M16 4h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1 2-2h2" strokeLinecap="round" strokeLinejoin="round" />
       <path d="m9 13 2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
@@ -152,6 +153,10 @@ export default async function DashboardPage({
   const sp = (await searchParams) ?? {}
   const view: View = normalizeView(sp.view) ?? defaultViewForRole(profile.role)
 
+  // Module attestation is a clinical sign-off: every staff role except the
+  // (non-clinical) coordinator may attest. The server action re-checks this.
+  const canAttest = profile.role !== 'coordinator'
+
   let body: ReactNode
   try {
     if (view === 'operations') {
@@ -175,7 +180,7 @@ export default async function DashboardPage({
       )
     } else if (view === 'education') {
       const overview = await getModuleCompletion()
-      body = <EducationCenter overview={overview} />
+      body = <EducationCenter overview={overview} canAttest={canAttest} />
     } else {
       const overview = await getReadinessOverview()
       body = <CommandCenter overview={overview} />

@@ -1,10 +1,13 @@
 // dashboard/AttestControl.tsx
 // Inline faculty control on the Education center: attests one fellow's module
 // self-check and (optionally) leaves feedback for that fellow. Collapsed it is a
-// single button; expanded it reveals a feedback box plus confirm/cancel. On
-// success it refreshes the dashboard so the row flips to its attested state.
-// Rendered only for rows awaiting attestation; the action itself is staff-gated
-// by RLS regardless. NO PHI.
+// single button; expanded it reveals a feedback box plus confirm/cancel. The
+// confirm restates exactly who/what is being attested (fellow + module) so the
+// sign-off is unambiguous. On success it refreshes the dashboard so the row
+// flips to its attested state.
+// Rendered only for rows awaiting attestation, and only for roles that may
+// attest (the coordinator never sees this control); the server action also
+// rejects coordinators, and the write is staff-gated by RLS regardless. NO PHI.
 'use client'
 
 import { useState, useTransition } from 'react'
@@ -13,10 +16,12 @@ import { attestModule } from '@/dashboard/moduleAttest'
 
 export default function AttestControl({
   moduleId,
+  moduleTitle,
   fellowId,
   fellowName,
 }: {
   moduleId: string
+  moduleTitle: string
   fellowId: string
   fellowName: string
 }) {
@@ -87,7 +92,7 @@ export default function AttestControl({
           aria-busy={pending}
           className="inline-flex min-h-[36px] items-center gap-1.5 rounded-md bg-[#15803d] px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#136a34] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {pending ? 'Saving…' : 'Confirm attestation'}
+          {pending ? 'Saving…' : `Confirm attestation — ${fellowName}, ${moduleTitle}`}
         </button>
         <button
           type="button"

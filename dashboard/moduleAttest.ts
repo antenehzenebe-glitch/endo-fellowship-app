@@ -1,10 +1,12 @@
 // dashboard/moduleAttest.ts
 // Server action: a faculty member attests a fellow's module self-check and,
-// optionally, records feedback for the fellow. Staff-only — enforced by the
-// module_progress UPDATE policy, whose only branch that may set attested_* is
-// is_staff(). The update targets the fellow's existing completion row; if the
-// fellow has not completed the self-check there is no row to attest, so the
-// row count comes back zero and we surface a friendly message.
+// optionally, records feedback for the fellow. Faculty/leadership only — the
+// (non-clinical) coordinator role is rejected here, and the write is further
+// constrained by the module_progress UPDATE policy, whose only branch that may
+// set attested_* is is_staff(). The update targets the fellow's existing
+// completion row; if the fellow has not completed the self-check there is no
+// row to attest, so the row count comes back zero and we surface a friendly
+// message.
 // De-identified educational feedback only. NO PHI.
 'use server'
 
@@ -32,6 +34,18 @@ export async function attestModule(input: {
   } = await supabase.auth.getUser()
   if (!user) {
     return { ok: false, error: 'Your session has expired — please sign in again.' }
+  }
+
+  // Attestation is a clinical sign-off: the coordinator (non-clinical staff)
+  // may track completion but can never attest. Defence in depth with the UI
+  // (which hides the control) and RLS.
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
+  if (profile?.role === 'coordinator') {
+    return { ok: false, error: 'Only faculty and program leadership can attest module completion.' }
   }
 
   const { error, count } = await supabase
