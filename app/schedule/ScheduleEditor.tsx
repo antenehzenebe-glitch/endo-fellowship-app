@@ -28,6 +28,7 @@ import {
 } from 'react'
 import { useRouter } from 'next/navigation'
 import { saveSchedule } from './actions'
+import { NAVY, CRIMSON } from '@/lib/tokens'
 import {
   KIND_COLOR,
   WEEKDAYS,
@@ -46,8 +47,6 @@ import {
   type WeeklyKind,
 } from '@/lib/schedule'
 
-const NAVY = '#003a63'
-const CRIMSON = '#c8102e'
 const MONTHS = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
 
 const uid = (p: string) => `${p}${Math.random().toString(36).slice(2, 7)}`
@@ -379,6 +378,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
           </div>
         )}
       </div>
+
 
       {/* shared rotation suggestions for the block grid */}
       <datalist id="rotation-suggestions">
