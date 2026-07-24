@@ -1,6 +1,7 @@
 // lib/evaluations.ts
 // Shared types + helpers for the fellow evaluation feature.
 // De-identified educational records only — NO PHI.
+import { todayET } from '@/lib/dates'
 import type { Database } from '@/lib/supabase/database.types'
 
 export type EvalPeriod = Database['public']['Enums']['eval_period'] // 'mid_year' | 'end_of_year'
@@ -36,11 +37,11 @@ export function ratingTone(r: string): string {
   return RATINGS.find((x) => x.value === r)?.tone ?? '#475569'
 }
 
-// Current academic year as "YYYY-YYYY" (July–June). June 2026 -> "2025-2026".
+// Current academic year as "YYYY-YYYY" (July–June, rolled over at midnight
+// America/New_York — the program's timezone). June 2026 -> "2025-2026".
 export function currentAcademicYear(d: Date = new Date()): string {
-  const y = d.getFullYear()
-  const m = d.getMonth() // 0 = Jan
-  return m >= 6 ? `${y}-${y + 1}` : `${y - 1}-${y}`
+  const [y, m] = todayET(d).split('-').map(Number)
+  return m >= 7 ? `${y}-${y + 1}` : `${y - 1}-${y}`
 }
 
 // Roles permitted to AUTHOR evaluations — PD / APD / Chief (admin) only.

@@ -12,6 +12,7 @@ import Link from 'next/link'
 import FellowNav from '@/components/FellowNav'
 import { requireFellow } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
+import { todayET } from '@/lib/dates'
 import SignOutButton from '@/components/SignOutButton'
 import { ProcedureLogger, type Progress, type RecentLog } from '@/procedures/ProcedureLogger'
 import ExternalHub from '@/components/ExternalHub'
@@ -169,7 +170,7 @@ export default async function LoggerPage() {
               attendings={attendings}
               supervisors={radiologists}
               logs={recent}
-              todayStr={new Date().toISOString().slice(0, 10)}
+              todayStr={todayET()}
             />
           </section>
 

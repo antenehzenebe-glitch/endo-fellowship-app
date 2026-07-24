@@ -13,6 +13,7 @@
 // saved draft with no finalized summary shows as in-progress; no row at all
 // shows as pending (rendered as null).
 import { createClient } from '@/lib/supabase/server'
+import { todayET } from '@/lib/dates'
 
 export type EvalCellStatus = 'completed' | 'in_progress' | 'pending'
 
@@ -34,10 +35,12 @@ export type EvalSummaryData = {
   academicYear: string
 }
 
-// Academic year runs July 1 → June 30, written as "YYYY-YYYY" (e.g. 2025-2026).
-// Must match the academic_year string the evaluation workspace writes.
+// Academic year runs July 1 → June 30 in America/New_York (the program's
+// timezone), written as "YYYY-YYYY" (e.g. 2025-2026). Must match the
+// academic_year string the evaluation workspace writes.
 function currentAcademicYear(now = new Date()): string {
-  const startYear = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1
+  const [year, month] = todayET(now).split('-').map(Number)
+  const startYear = month >= 7 ? year : year - 1
   return `${startYear}-${startYear + 1}`
 }
 
