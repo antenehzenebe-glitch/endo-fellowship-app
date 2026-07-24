@@ -13,6 +13,7 @@ const STATUS_META: Record<ReadinessStatus, { label: string; pill: string }> = {
   on_track: { label: 'On track', pill: 'bg-green-100 text-green-800' },
   at_risk: { label: 'At risk', pill: 'bg-amber-100 text-amber-900' },
   behind: { label: 'Behind', pill: 'bg-red-100 text-red-800' },
+  provisioning: { label: 'Provisioning', pill: 'bg-gray-100 text-gray-700' },
 }
 
 function Gauge({
@@ -58,8 +59,14 @@ function FellowRow({ f }: { f: FellowReadiness }) {
         <StatusPill status={f.status} />
       </td>
       <td className="px-3 py-3 tabular-nums whitespace-nowrap">
-        <span className="font-semibold text-gray-900">{f.proceduresMet}</span>
-        <span className="text-gray-400">/{f.proceduresWithTarget} mins</span>
+        {f.status === 'provisioning' ? (
+          <span className="text-gray-400">—</span>
+        ) : (
+          <>
+            <span className="font-semibold text-gray-900">{f.proceduresMet}</span>
+            <span className="text-gray-400">/{f.proceduresWithTarget} mins</span>
+          </>
+        )}
       </td>
       <td className="px-3 py-3 whitespace-nowrap text-gray-700">
         {ite}

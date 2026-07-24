@@ -99,12 +99,12 @@ export default function CoordinatorCenter({ worklist }: { worklist: CoordinatorW
           {noFellows ? (
             <p className="px-1 py-2 text-sm text-gray-500">No active fellows enrolled yet.</p>
           ) : worklist.missingIteNames.length === 0 ? (
-            <AllClear message="Every fellow has a score on file." />
+            <AllClear message="Every fellow has a score for the current academic year." />
           ) : (
             worklist.missingIteNames.map((name) => (
               <Card key={name}>
                 <p className="text-sm font-medium text-gray-900">{name}</p>
-                <p className="text-xs text-gray-500">No ITE score on file</p>
+                <p className="text-xs text-gray-500">No ITE score for the current academic year</p>
               </Card>
             ))
           )}
