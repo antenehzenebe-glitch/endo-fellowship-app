@@ -1,25 +1,56 @@
 'use client'
 
 // app/onboarding/OnboardingChecklist.tsx
-// A tappable checklist for one group of a fellow's tasks (Institutional
-// Onboarding or Training & Development). Each row toggles pending<->completed
-// against public.onboarding_tasks (RLS lets a fellow update own rows).
-// Optimistic UI; reverts on error.
+// The fellow's interactive checklist for ONE group (Institutional Onboarding or
+// Training & Development). Status cycling with immediate server persistence and
+// a progress header; completed items move to the bottom with a strikethrough.
 //
-// CHANGE (this revision): the task list now renders in a responsive GRID
-// (1 col on phones, 2 cols ≥640px) instead of one long vertical column, so a
-// long onboarding list (e.g. the incoming-PGY-4 access checklist) stays
-// scannable. Cards stretch to equal height per row. Progress bar still sits at
-// the END with proper progressbar semantics.
-import { useMemo, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+// CHANGE (this revision): two-column layout on ≥sm screens — header/progress spans
+// the full width; task rows flow into a 2-col grid (1-col on phones) so the
+// checklist no longer reads as one long column on the newly widened page.
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { updateOnboardingStatus, type OnboardingStatus } from './actions'
 
 export type OnboardingTask = {
   id: string
   task_name: string
   description: string | null
-  status: 'pending' | 'in_progress' | 'completed'
+  status: OnboardingStatus
   completed_at: string | null
+}
+
+const STATUS_LABEL: Record<OnboardingStatus, string> = {
+  pending: 'To do',
+  in_progress: 'In progress',
+  completed: 'Done',
+}
+
+const NEXT: Record<OnboardingStatus, OnboardingStatus> = {
+  pending: 'in_progress',
+  in_progress: 'completed',
+  completed: 'pending',
+}
+
+function StatusChip({ status, onClick, disabled }: { status: OnboardingStatus; onClick: () => void; disabled: boolean }) {
+  const base = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold border transition-colors min-h-[36px]'
+  if (status === 'completed')
+    return (
+      <button onClick={onClick} disabled={disabled} aria-label="Mark as to do" className={`${base} bg-green-600 border-green-600 text-white`}>
+        ✓ Done
+      </button>
+    )
+  if (status === 'in_progress')
+    return (
+      <button onClick={onClick} disabled={disabled} aria-label="Mark as done" className={`${base} bg-amber-400 border-amber-400 text-amber-950`}>
+        ◐ In progress
+      </button>
+    )
+  return (
+    <button onClick={onClick} disabled={disabled} aria-label="Mark as in progress" className={`${base} bg-white border-gray-300 text-gray-600 hover:border-gray-400`}>
+      ○ To do
+    </button>
+  )
 }
 
 export default function OnboardingChecklist({
@@ -31,139 +62,89 @@ export default function OnboardingChecklist({
   subtitle?: string
   initialTasks: OnboardingTask[]
 }) {
-  const supabase = createClient()
-  const [tasks, setTasks] = useState<OnboardingTask[]>(initialTasks)
-  const [savingId, setSavingId] = useState<string | null>(null)
-  const [error, setError] = useState('')
+  const router = useRouter()
+  const [tasks, setTasks] = useState(initialTasks)
+  const [error, setError] = useState<string | null>(null)
+  const [pending, startTransition] = useTransition()
 
-  const done = useMemo(() => tasks.filter((t) => t.status === 'completed').length, [tasks])
+  const done = tasks.filter((t) => t.status === 'completed').length
   const total = tasks.length
   const pct = total ? Math.round((done / total) * 100) : 0
 
-  const toggle = async (task: OnboardingTask) => {
-    setError('')
-    const completing = task.status !== 'completed'
-    const nextStatus: OnboardingTask['status'] = completing ? 'completed' : 'pending'
-    const nextCompletedAt = completing ? new Date().toISOString() : null
-
-    setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, status: nextStatus, completed_at: nextCompletedAt } : t)),
-    )
-    setSavingId(task.id)
-
-    const { error: updErr } = await supabase
-      .from('onboarding_tasks')
-      .update({ status: nextStatus, completed_at: nextCompletedAt })
-      .eq('id', task.id)
-
-    setSavingId(null)
-
-    if (updErr) {
-      setTasks((prev) =>
-        prev.map((t) => (t.id === task.id ? { ...t, status: task.status, completed_at: task.completed_at } : t)),
+  function cycle(task: OnboardingTask) {
+    const next = NEXT[task.status]
+    // Optimistic update
+    setTasks((ts) =>
+      ts.map((t) =>
+        t.id === task.id
+          ? { ...t, status: next, completed_at: next === 'completed' ? new Date().toISOString() : null }
+          : t
       )
-      setError('Could not save that change. Check your connection and try again.')
-    }
+    )
+    setError(null)
+    startTransition(async () => {
+      const res = await updateOnboardingStatus(task.id, next)
+      if (!res.ok) {
+        // Roll back on failure
+        setTasks((ts) => ts.map((t) => (t.id === task.id ? task : t)))
+        setError(res.error)
+      } else {
+        router.refresh()
+      }
+    })
   }
 
-  if (total === 0) return null
+  const active = tasks.filter((t) => t.status !== 'completed')
+  const complete = tasks.filter((t) => t.status === 'completed')
 
   return (
-    <div className="space-y-3">
-      {/* Header: title + count + tap hint (no bar here anymore) */}
-      <section className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
-        <div className="flex items-center justify-between gap-3 mb-1">
-          <h2 className="font-semibold text-gray-900">{title}</h2>
-          <span className="text-sm font-medium text-gray-700">{done}/{total}</span>
+    <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="px-4 py-3 border-b border-gray-100 sm:px-5">
+        <div className="flex items-baseline justify-between gap-2 flex-wrap">
+          <div>
+            <h2 className="font-bold text-gray-900">{title}</h2>
+            {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+          </div>
+          <span className="text-sm font-semibold text-gray-700 tabular-nums">
+            {done} / {total}
+          </span>
         </div>
-        {subtitle ? <p className="text-sm text-gray-500">{subtitle}</p> : null}
-        <p className="text-xs text-gray-400 mt-1">
-          Tap an item to mark it complete. {done === total ? 'All done!' : `${total - done} left.`}
-        </p>
-      </section>
+        <div className="mt-2 h-2 rounded-full bg-gray-100 overflow-hidden" aria-hidden="true">
+          <div className="h-full rounded-full bg-green-600 transition-[width] duration-300" style={{ width: `${pct}%` }} />
+        </div>
+      </div>
 
-      {/* Tasks — responsive grid, not a single vertical column */}
-      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {tasks.map((task) => {
-          const completed = task.status === 'completed'
+      {error && (
+        <div role="alert" className="mx-4 mt-3 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700 sm:mx-5">
+          {error}
+        </div>
+      )}
+
+      <ul className="divide-y divide-gray-100 sm:grid sm:grid-cols-2 sm:divide-y-0">
+        {[...active, ...complete].map((t) => {
+          const isDone = t.status === 'completed'
           return (
-            <li key={task.id} className="h-full">
-              <button
-                type="button"
-                onClick={() => toggle(task)}
-                disabled={savingId === task.id}
-                aria-pressed={completed}
-                className={`h-full w-full text-left flex items-start gap-3 rounded-xl border p-4 transition-colors disabled:opacity-60 ${
-                  completed ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white hover:bg-gray-50'
-                }`}
-              >
-                <span
-                  aria-hidden="true"
-                  className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border text-sm font-bold ${
-                    completed ? 'border-green-600 bg-green-600 text-white' : 'border-gray-300 bg-white text-transparent'
-                  }`}
-                >
-                  ✓
-                </span>
-                <span className="min-w-0">
-                  <span className={`block font-medium ${completed ? 'text-green-900' : 'text-gray-900'}`}>
-                    {task.task_name}
-                  </span>
-                  {task.description ? (
-                    <span className={`block text-sm ${completed ? 'text-green-800/80' : 'text-gray-500'}`}>
-                      {task.description}
-                    </span>
-                  ) : null}
-                  <span className="mt-1 block text-xs">
-                    {completed ? (
-                      <span className="text-green-700">
-                        Completed{task.completed_at ? ` · ${new Date(task.completed_at).toLocaleDateString()}` : ''} — tap to undo
-                      </span>
-                    ) : (
-                      <span className="text-gray-400">Not done — tap to mark complete</span>
-                    )}
-                  </span>
-                </span>
-              </button>
+            <li key={t.id} className="px-4 py-3 flex items-start gap-3 sm:px-5 sm:border-b sm:border-gray-100">
+              <div className="min-w-0 flex-1">
+                <p className={`text-sm font-medium leading-snug ${isDone ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                  {t.task_name}
+                </p>
+                {t.description && (
+                  <p className={`text-xs mt-0.5 leading-relaxed ${isDone ? 'text-gray-300' : 'text-gray-500'}`}>
+                    {t.description}
+                  </p>
+                )}
+                {isDone && t.completed_at && (
+                  <p className="text-xs text-green-700 mt-0.5">
+                    Completed {new Date(t.completed_at).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+              <StatusChip status={t.status} disabled={pending} onClick={() => cycle(t)} />
             </li>
           )
         })}
       </ul>
-
-      {/* Progress bar at the END — fills by percentage, with a numeric label. */}
-      <section className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
-        <div className="flex items-baseline justify-between gap-3 mb-2">
-          <span className="text-sm font-medium text-gray-700">Progress</span>
-          <span className="text-sm font-semibold tabular-nums text-[#003a63]">
-            {pct}% complete
-            <span className="ml-1 font-normal text-gray-400">({done}/{total})</span>
-          </span>
-        </div>
-        <div
-          className="h-3 w-full rounded-full bg-gray-100 overflow-hidden"
-          role="progressbar"
-          aria-label={`${title} progress`}
-          aria-valuenow={pct}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        >
-          <div
-            className="h-full rounded-full bg-[#003a63] transition-[width] duration-500"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        {done === total ? (
-          <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-green-700">
-            <span aria-hidden="true">✓</span> All items complete.
-          </p>
-        ) : null}
-      </section>
-
-      {error ? (
-        <div role="alert" className="p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700">
-          {error}
-        </div>
-      ) : null}
-    </div>
+    </section>
   )
 }

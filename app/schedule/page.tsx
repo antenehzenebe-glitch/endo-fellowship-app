@@ -1,47 +1,39 @@
+'use client'
+
 // app/schedule/page.tsx
-// Program schedule — DB-backed and MULTI-YEAR (one program_schedule row per
-// academic year; migration schedule_multiyear). Any signed-in user can VIEW any
-// year; staff + fellows get the editor for the selected year and can create new
-// years (RLS: insert/update = is_staff() OR is_fellow()). Staff alone can mark a
-// year "current". The shown year comes from ?ay=YYYY-YYYY, else the current year,
-// else the newest. "Today" (America/New_York) is computed server-side so the
-// current block + month + today's cell are stable across hydration.
-//
-// Staff AND fellows PUBLISH a year (migration 0016_schedule_publish_flags):
-// schedules are built by the chief fellows and published in consultation with
-// the APD/PD, so the publishSchedule action accepts every editor role. Publish
-// is ANNOUNCEMENT-ONLY (decision D1) — it posts the app-wide banner; it does
-// NOT gate what fellows/attendings see. The block grid and the monthly calendar
-// publish independently. Publish state + publisher names are loaded here and
-// handed to <PublishControls>, rendered for everyone who can edit the schedule.
-//
-// When zero program_schedule rows exist there is NO fallback year: instead of a
-// phantom hardcoded year whose every Save would fail, the page shows a friendly
-// "create the first academic year" empty state with the YearSwitcher's create
-// affordance.
-//
-// Educational schedule only — continuity clinic, didactics, training, rotation
-// blocks, monthly didactic calendar. Not duty hours, not time-off. NO PHI.
-import Link from 'next/link'
-import { requireProfile, isStaff, roleHome } from '@/lib/auth'
+// Program schedule route: reads the requested academic year's program_schedule
+// row (?ay=), then renders either the staff editor (staff only) or the read-only
+// view (fellows & attendings). Staff-only because the schedule embeds fellows'
+// names — attendings and fellows still see it (it's their program), but only
+// staff can edit. Multi-year (Phase 6b): YearSwitcher drives which row loads;
+// the editor/view remount per year via key={academicYear}. NO PHI.
+import { requireProfile, isStaff } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
-import SignOutButton from '@/components/SignOutButton'
+import Link from 'next/link'
 import ScheduleEditor from './ScheduleEditor'
 import ScheduleView from './ScheduleView'
 import YearSwitcher from './YearSwitcher'
 import PublishControls from './PublishControls'
-import { asConfig, blockForDate, type SchedulePayload } from '@/lib/schedule'
+import {
+  asConfig,
+  blockForDate,
+  emptyConfig,
+  type SchedulePayload,
+} from '@/lib/schedule'
+import { todayET } from '@/lib/dates'
+import { NEW_INNOVATIONS_URL } from '@/lib/links'
 
 export const dynamic = 'force-dynamic'
 
-// Today's date in America/New_York (Howard / D.C.) as yyyy-mm-dd.
-function todayInDC(): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/New_York',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date()) // en-CA yields yyyy-mm-dd
+type YearRow = {
+  academic_year: string
+  is_current: boolean
+  config: unknown
+  updated_at: string | null
+  blocks_published_at: string | null
+  blocks_published_by: string | null
+  months_published_at: string | null
+  months_published_by: string | null
 }
 
 export default async function SchedulePage({
@@ -49,155 +41,149 @@ export default async function SchedulePage({
 }: {
   searchParams: Promise<{ ay?: string }>
 }) {
-  const { ay } = await searchParams
   const profile = await requireProfile()
   const staff = isStaff(profile.role)
-  // Small-program model: staff + fellows edit the schedule and create years.
-  const canEditSchedule = staff || profile.role === 'fellow'
+  const { ay } = await searchParams
 
   const supabase = await createClient()
-  const { data: rows } = await supabase
+
+  // Load every year's metadata (for the switcher) — config is fetched for all rows
+  // but only the selected year's config is used.
+  const { data: rows, error } = await supabase
     .from('program_schedule')
     .select(
-      'academic_year, config, is_current, updated_at, blocks_published_at, blocks_published_by, months_published_at, months_published_by'
+      'academic_year, is_current, config, updated_at, blocks_published_at, blocks_published_by, months_published_at, months_published_by'
     )
     .order('academic_year', { ascending: false })
+    .returns<YearRow[]>()
 
-  const years = rows ?? []
-  // Selected year: ?ay if it exists, else the current year, else the newest row.
+  const loadError = Boolean(error)
+  const all = rows ?? []
+
+  // Resolve the selected year: ?ay= → current → newest.
   const selected =
-    years.find((r) => r.academic_year === ay) ??
-    years.find((r) => r.is_current) ??
-    years[0] ??
+    all.find((r) => r.academic_year === ay) ??
+    all.find((r) => r.is_current) ??
+    all[0] ??
     null
 
-  // No phantom year: when no row exists, academicYear stays empty and the page
-  // renders the "create the first year" empty state instead of a broken editor.
   const academicYear = selected?.academic_year ?? ''
-  const config = asConfig(selected?.config)
-  const updatedAt = selected?.updated_at ?? null
+  const payload: SchedulePayload = selected
+    ? { academic_year: academicYear, config: asConfig(selected.config) }
+    : { academic_year: academicYear, config: emptyConfig() }
 
-  const today = todayInDC()
-  const currentBlockId = blockForDate(config.blocks, today)?.id ?? null
-
-  // Resolve publisher display names for the selected year's publish stamps (if
-  // any). Degrades gracefully to date-only if a name can't be read.
-  const blocksBy = selected?.blocks_published_by ?? null
-  const monthsBy = selected?.months_published_by ?? null
-  const publisherIds = [blocksBy, monthsBy].filter((v): v is string => Boolean(v))
-  const nameById = new Map<string, string>()
-  if (publisherIds.length) {
-    const { data: people } = await supabase
+  // Who published (display names) for the publish status line.
+  const publisherIds = [
+    selected?.blocks_published_by,
+    selected?.months_published_by,
+  ].filter((v): v is string => Boolean(v))
+  const publisherNames = new Map<string, string>()
+  if (publisherIds.length > 0) {
+    const { data: pubs } = await supabase
       .from('profiles')
       .select('id, full_name')
-      .in('id', publisherIds)
-    people?.forEach((p) => nameById.set(p.id, p.full_name))
-  }
-  const publish = {
-    blocks: {
-      publishedAt: selected?.blocks_published_at ?? null,
-      publishedByName: blocksBy ? nameById.get(blocksBy) ?? null : null,
-    },
-    months: {
-      publishedAt: selected?.months_published_at ?? null,
-      publishedByName: monthsBy ? nameById.get(monthsBy) ?? null : null,
-    },
+      .in('id', [...new Set(publisherIds)])
+    for (const p of pubs ?? []) publisherNames.set(p.id, p.full_name)
   }
 
-  // Back link goes where the user actually has a home (mirrors roleHome):
-  // staff → dashboard, attending → faculty home, fellow → logger.
-  const homeHref = roleHome(profile.role)
-  const homeLabel = staff
-    ? 'Dashboard'
-    : profile.role === 'attending'
-      ? 'Faculty home'
-      : 'Logger'
-
-  const initial: SchedulePayload = { academic_year: academicYear, config }
-  const yearOptions = years.map((r) => ({
-    academic_year: r.academic_year,
-    is_current: r.is_current,
-  }))
+  const today = todayET()
+  const currentBlockId = blockForDate(payload.config.blocks, today)?.id ?? null
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#003a63] text-white border-b-4 border-[#c8102e]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="py-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <img
-                src="/logo.png"
-                alt=""
-                className="w-10 h-10 shrink-0 object-contain bg-white rounded p-0.5"
-              />
-              <div className="min-w-0">
-                <h1 className="text-xl font-bold leading-tight truncate">Program Schedule</h1>
-                <p className="text-sm text-white/70">Rotations, didactics &amp; coverage</p>
-              </div>
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <img src="/logo.png" alt="" className="w-10 h-10 shrink-0 object-contain" />
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold text-gray-900 leading-tight truncate">
+                Program Schedule
+              </h1>
+              <p className="text-sm text-gray-500 truncate">
+                {profile.full_name} · {profile.role.toUpperCase()}
+              </p>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2">
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {staff && (
               <Link
-                href={`/schedule/print?ay=${encodeURIComponent(academicYear)}`}
-                className="px-3 py-2 text-sm font-medium rounded-md bg-[#c8102e] text-white hover:bg-[#a50d26] transition-colors"
+                href="/dashboard"
+                className="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
               >
-                <span aria-hidden="true">🖨</span>
-                <span className="hidden sm:inline"> Print / PDF</span>
+                Dashboard
               </Link>
+            )}
+            {!staff && (
               <Link
-                href={homeHref}
-                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
+                href="/log"
+                className="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
               >
-                {homeLabel}
+                Logger
               </Link>
-              <SignOutButton variant="onDark" />
-            </div>
+            )}
+            <a
+              href={NEW_INNOVATIONS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="New Innovations (opens in a new tab)"
+              className="hidden sm:inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              New Innovations
+              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                <path d="M7 17 17 7M9 7h8v8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </a>
+            <Link
+              href={`/schedule/print?ay=${encodeURIComponent(academicYear)}`}
+              className="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              Print / PDF
+            </Link>
           </div>
         </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-6 sm:px-6">
-        <p className="sr-only">Signed in as {profile.full_name}</p>
-        <YearSwitcher
-          years={yearOptions}
-          selected={academicYear}
-          canCreate={canEditSchedule}
-          canSetCurrent={staff && Boolean(selected)}
-        />
-        {!selected ? (
-          // Empty database: no phantom year, no editor. Point editors at the
-          // "+ New academic year" button in the YearSwitcher above.
-          <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
-            <h2 className="text-lg font-bold text-[#003a63]">No academic years exist yet</h2>
-            <p className="mt-2 text-sm text-[#5C6B7A] max-w-md mx-auto leading-relaxed">
-              The first step is creating the current academic year.
-              {canEditSchedule
-                ? ' Use “+ New academic year” above to create it — it starts from your fellows & rotations with an empty block grid you can fill in.'
-                : ' Once a program staff member creates it, the schedule will appear here.'}
-            </p>
+        {loadError ? (
+          <div role="alert" className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+            We couldn’t load the schedule right now. Please refresh; if it keeps
+            happening, your session may have expired — sign out and back in.
           </div>
         ) : (
           <>
-            {/* Publish is announcement-only (D1), open to staff + fellows:
-                chief fellows publish in consultation with the APD/PD. */}
-            {canEditSchedule && (
+            <YearSwitcher
+              years={all.map((r) => ({ academic_year: r.academic_year, is_current: r.is_current }))}
+              selected={academicYear}
+              canCreate={true}
+              canSetCurrent={staff}
+            />
+            {staff && selected && (
               <PublishControls
                 academicYear={academicYear}
-                blocks={publish.blocks}
-                months={publish.months}
+                blocks={{
+                  publishedAt: selected.blocks_published_at,
+                  publishedByName: selected.blocks_published_by
+                    ? publisherNames.get(selected.blocks_published_by) ?? null
+                    : null,
+                }}
+                months={{
+                  publishedAt: selected.months_published_at,
+                  publishedByName: selected.months_published_by
+                    ? publisherNames.get(selected.months_published_by) ?? null
+                    : null,
+                }}
               />
             )}
-            {/* key={academicYear} forces a fresh mount when the year changes, so the
-                editor's/view's internal state resets to the newly selected year. */}
-            {canEditSchedule ? (
-              <ScheduleEditor key={academicYear} initial={initial} />
+            {staff ? (
+              <ScheduleEditor key={academicYear} initial={payload} />
             ) : (
               <ScheduleView
                 key={academicYear}
-                config={config}
+                config={payload.config}
                 academicYear={academicYear}
                 today={today}
                 currentBlockId={currentBlockId}
-                updatedAt={updatedAt}
+                updatedAt={selected?.updated_at ?? null}
               />
             )}
           </>
