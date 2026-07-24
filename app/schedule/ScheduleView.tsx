@@ -14,9 +14,18 @@ import {
   type ScheduleWeekly,
   type WeeklyKind,
 } from '@/lib/schedule'
-
-const NAVY = '#003a63'
-const CRIMSON = '#c8102e'
+import {
+  NAVY,
+  CRIMSON,
+  PRIMARY_50,
+  ORANGE_50,
+  SLATE_50,
+  SLATE_200,
+  SLATE_400,
+  SLATE_600,
+  SLATE_700,
+  SLATE_800,
+} from '@/lib/tokens'
 
 function fmtUpdated(iso: string | null): string | null {
   if (!iso) return null
@@ -69,7 +78,7 @@ export default function ScheduleView({
 
       {/* current block banner */}
       {currentBlock && (
-        <div className="rounded-lg border-l-4 px-4 py-3" style={{ borderColor: NAVY, background: '#f0f6fb' }}>
+        <div className="rounded-lg border-l-4 px-4 py-3" style={{ borderColor: NAVY, background: PRIMARY_50 }}>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Current block{currentBlock.attending ? ` · Attending: ${currentBlock.attending}` : ''}
           </p>
@@ -94,7 +103,7 @@ export default function ScheduleView({
               >
                 <span
                   className="mt-1 w-1.5 h-8 rounded shrink-0"
-                  style={{ background: KIND_COLOR[row.kind as WeeklyKind] || '#475569' }}
+                  style={{ background: KIND_COLOR[row.kind as WeeklyKind] || SLATE_600 }}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -113,7 +122,7 @@ export default function ScheduleView({
                           style={
                             on
                               ? { background: NAVY, color: 'white', borderColor: NAVY }
-                              : { background: 'white', color: '#94a3b8', borderColor: '#e2e8f0' }
+                              : { background: 'white', color: SLATE_400, borderColor: SLATE_200 }
                           }
                         >
                           {d}
@@ -163,8 +172,8 @@ export default function ScheduleView({
               <tbody>
                 {config.blocks.map((b, i) => {
                   const isCurrent = b.id === currentBlockId
-                  const base = i % 2 ? '#f8fafc' : 'white'
-                  const bg = isCurrent ? '#fff7ed' : base
+                  const base = i % 2 ? SLATE_50 : 'white'
+                  const bg = isCurrent ? ORANGE_50 : base
                   return (
                     <tr key={b.id} style={{ background: bg }}>
                       <td
@@ -274,12 +283,12 @@ function MonthCalendar({
                     <td
                       key={ci}
                       className="border border-slate-200 px-1.5 py-1.5 align-top"
-                      style={{ height: 84, background: isToday ? '#fff7ed' : 'white' }}
+                      style={{ height: 84, background: isToday ? ORANGE_50 : 'white' }}
                     >
                       <div className="flex items-center justify-between">
                         <span
                           className="text-xs font-semibold"
-                          style={{ color: isToday ? CRIMSON : '#334155' }}
+                          style={{ color: isToday ? CRIMSON : SLATE_700 }}
                         >
                           {cell.day}
                         </span>
@@ -297,7 +306,7 @@ function MonthCalendar({
                           <div
                             key={s.id}
                             className="text-[11px] font-medium leading-snug rounded px-1 py-0.5"
-                            style={{ background: '#eef2f7', color: '#1e293b' }}
+                            style={{ background: PRIMARY_50, color: SLATE_800 }}
                           >
                             {s.badge ? `${s.badge} ` : ''}
                             {s.title}
