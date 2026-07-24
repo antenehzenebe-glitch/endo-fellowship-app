@@ -3,6 +3,9 @@
 // Renders from a ModuleCompletionOverview. Faculty can attest a fellow's
 // self-check (and leave feedback) inline via AttestControl on rows that are
 // awaiting attestation; attested rows show who signed off and any feedback.
+// Attestation is a clinical sign-off: the attest control is only rendered when
+// the viewer may attest (canAttest — every staff role except the coordinator);
+// coordinators still see the full completion/attestation status, read-only.
 //
 // Distinct layout from the readiness board: a module-centric roster. Each
 // published module is a card with a completion header and a per-fellow status
@@ -103,7 +106,7 @@ function EducationSummary({ overview }: { overview: ModuleCompletionOverview }) 
 }
 
 /* ------------------------------------------------------- module card -- */
-function ModuleCard({ mod }: { mod: ModuleCompletion }) {
+function ModuleCard({ mod, canAttest }: { mod: ModuleCompletion; canAttest: boolean }) {
   return (
     <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-900/5">
       <header className="border-b border-gray-100 px-5 py-4">
@@ -162,9 +165,15 @@ function ModuleCard({ mod }: { mod: ModuleCompletion }) {
                     <StatusPill tone={st.tone} label={st.label} />
                   </div>
 
-                  {/* Awaiting attestation -> inline faculty attest + feedback. */}
-                  {st.tone === 'warn' ? (
-                    <AttestControl moduleId={mod.id} fellowId={s.fellowId} fellowName={s.fellowName} />
+                  {/* Awaiting attestation -> inline faculty attest + feedback.
+                      Hidden entirely for roles that may not attest (coordinator). */}
+                  {canAttest && st.tone === 'warn' ? (
+                    <AttestControl
+                      moduleId={mod.id}
+                      moduleTitle={mod.title}
+                      fellowId={s.fellowId}
+                      fellowName={s.fellowName}
+                    />
                   ) : null}
 
                   {/* Attested -> who signed off and any feedback left for the fellow. */}
@@ -213,7 +222,13 @@ function EmptyState() {
 }
 
 /* --------------------------------------------------------------- root -- */
-export default function EducationCenter({ overview }: { overview: ModuleCompletionOverview }) {
+export default function EducationCenter({
+  overview,
+  canAttest,
+}: {
+  overview: ModuleCompletionOverview
+  canAttest: boolean
+}) {
   return (
     <section aria-label="Learning module completion">
       <EducationSummary overview={overview} />
@@ -222,7 +237,7 @@ export default function EducationCenter({ overview }: { overview: ModuleCompleti
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {overview.modules.map((mod) => (
-            <ModuleCard key={mod.id} mod={mod} />
+            <ModuleCard key={mod.id} mod={mod} canAttest={canAttest} />
           ))}
         </div>
       )}
