@@ -649,7 +649,7 @@ function VideoTile({
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:wght@500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&display=swap');
-.hu-land{--blue:#003a63;--blue-deep:#04263f;--blue-tint:#eef2f6;--red:#e51937;--red-btn:#c8102e;--red-ink:#b3142c;--gray:#6a808c;--ink:#16242f;--bg:#f6f8fa;--surface:#ffffff;--border:#e2e7ec;--shadow:0 1px 2px rgba(4,38,63,.05),0 10px 28px rgba(4,38,63,.07);background:var(--bg);color:var(--ink);font-family:"Open Sans",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+.hu-land{--blue:#003a63;--blue-deep:#04263f;--blue-tint:#eef2f6;--red:#e51937;--red-btn:#c8102e;--red-ink:#b3142c;--gray:#566775;--ink:#16242f;--bg:#f6f8fa;--surface:#ffffff;--border:#e2e7ec;--shadow:0 1px 2px rgba(4,38,63,.05),0 10px 28px rgba(4,38,63,.07);background:var(--bg);color:var(--ink);font-family:"Open Sans",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
 .hu-land *{box-sizing:border-box}
 @media (prefers-reduced-motion:reduce){.hu-land{scroll-behavior:auto}.hu-land *{transition:none!important}}
 .hu-land .wrap{width:100%;max-width:1120px;margin:0 auto;padding:0 22px}
