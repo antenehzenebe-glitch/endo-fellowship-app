@@ -76,13 +76,13 @@ export default function UploadForm() {
     }
   }
 
-  const fieldCls = 'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#003a63]'
+  const fieldCls = 'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-primary'
   const labelCls = 'block text-sm font-semibold text-gray-800 mb-1.5'
 
   if (!open) {
     return (
       <button onClick={() => setOpen(true)}
-        className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-[#c8102e] text-white hover:bg-[#a50e26] min-h-[44px]">
+        className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-crimson text-white hover:bg-crimson-dark min-h-[44px]">
         + Add material
       </button>
     )
@@ -91,17 +91,17 @@ export default function UploadForm() {
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-bold text-[#003a63]">Add a material</h2>
+        <h2 className="font-bold text-primary">Add a material</h2>
         <button onClick={() => { reset(); setOpen(false) }} className="text-sm text-gray-500 hover:text-gray-800">Cancel</button>
       </div>
 
       <div className="flex gap-2 mb-4">
         <button type="button" onClick={() => setMode('file')}
-          className={`px-3 py-2 text-sm font-medium rounded-lg border ${mode === 'file' ? 'border-[#003a63] text-[#003a63] bg-[#eef2f6]' : 'border-gray-300 text-gray-600'}`}>
+          className={`px-3 py-2 text-sm font-medium rounded-lg border ${mode === 'file' ? 'border-primary text-primary bg-primary-50' : 'border-gray-300 text-gray-600'}`}>
           Upload a file
         </button>
         <button type="button" onClick={() => setMode('link')}
-          className={`px-3 py-2 text-sm font-medium rounded-lg border ${mode === 'link' ? 'border-[#003a63] text-[#003a63] bg-[#eef2f6]' : 'border-gray-300 text-gray-600'}`}>
+          className={`px-3 py-2 text-sm font-medium rounded-lg border ${mode === 'link' ? 'border-primary text-primary bg-primary-50' : 'border-gray-300 text-gray-600'}`}>
           Link out
         </button>
       </div>
@@ -138,7 +138,7 @@ export default function UploadForm() {
         </label>
         {error ? <div role="alert" className="p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700">{error}</div> : null}
         <button type="submit" disabled={busy} aria-busy={busy}
-          className="w-full py-3 bg-[#c8102e] text-white font-semibold rounded-lg hover:bg-[#a50e26] disabled:opacity-60 min-h-[44px]">
+          className="w-full py-3 bg-crimson text-white font-semibold rounded-lg hover:bg-crimson-dark disabled:opacity-60 min-h-[44px]">
           {busy ? 'Saving…' : 'Save material'}
         </button>
       </form>

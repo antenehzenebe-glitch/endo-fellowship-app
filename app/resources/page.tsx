@@ -51,7 +51,7 @@ export default async function ResourcesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#003a63] text-white border-b-4 border-[#c8102e]">
+      <header className="bg-primary text-white border-b-4 border-crimson">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="py-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -114,10 +114,10 @@ export default async function ResourcesPage() {
                   key={r.id}
                   className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col"
                 >
-                  <span className="text-xs font-semibold uppercase tracking-wide text-[#c8102e]">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-crimson">
                     {CATEGORY_LABELS[r.category]}
                   </span>
-                  <h3 className="mt-1 font-bold text-[#003a63] leading-snug">{r.title}</h3>
+                  <h3 className="mt-1 font-bold text-primary leading-snug">{r.title}</h3>
                   {r.description ? (
                     <p className="mt-1 text-sm text-gray-600 flex-1">{r.description}</p>
                   ) : (
@@ -128,7 +128,7 @@ export default async function ResourcesPage() {
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-4 inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-[#003a63] text-white hover:bg-[#04263f] min-h-[44px]"
+                      className="mt-4 inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-primary text-white hover:bg-primary-800 min-h-[44px]"
                     >
                       Open
                     </a>
