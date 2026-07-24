@@ -41,7 +41,7 @@ export default async function EvalPrintPage({
           </p>
           <Link
             href="/evaluations"
-            className="text-sm text-[#003a63] hover:underline mt-3 inline-block"
+            className="text-sm text-primary hover:underline mt-3 inline-block"
           >
             ← Back to evaluations
           </Link>
@@ -83,8 +83,8 @@ export default async function EvalPrintPage({
 
       <div className="max-w-3xl mx-auto p-4 sm:p-8">
         <article className="sheet bg-white rounded-lg shadow-sm border border-slate-200 p-8 sm:p-12">
-          <div className="border-b-4 pb-4 mb-6" style={{ borderColor: '#c8102e' }}>
-            <h1 className="text-xl font-bold" style={{ color: '#003a63' }}>
+          <div className="border-b-4 pb-4 mb-6 border-crimson">
+            <h1 className="text-xl font-bold text-primary">
               Howard University Hospital
             </h1>
             <p className="text-sm text-slate-600">

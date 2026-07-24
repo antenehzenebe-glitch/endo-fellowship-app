@@ -46,7 +46,7 @@ export default async function AttendingHome() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="bg-[#003a63] text-white border-b-4 border-[#c8102e]">
+      <header className="bg-primary text-white border-b-4 border-crimson">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="py-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -118,11 +118,11 @@ export default async function AttendingHome() {
             <Link
               key={t.href}
               href={t.href}
-              className="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-[#003a63]/30 transition-all"
+              className="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all"
             >
               <h3 className="font-semibold text-slate-900">{t.title}</h3>
               <p className="text-sm text-slate-600 mt-1.5 leading-relaxed">{t.blurb}</p>
-              <span className="inline-flex items-center gap-1 text-sm font-medium text-[#003a63] mt-3 group-hover:gap-2 transition-all">
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-primary mt-3 group-hover:gap-2 transition-all">
                 {t.cta} <span aria-hidden="true">→</span>
               </span>
             </Link>

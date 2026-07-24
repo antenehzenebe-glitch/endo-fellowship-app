@@ -10,13 +10,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { NEW_INNOVATIONS_URL } from '@/lib/links'
+import { CRIMSON } from '@/lib/tokens'
 import type { ReactNode } from 'react'
 
 type NavItem = { href: string; label: string; color: string; icon: ReactNode }
 
 // Accent colors are chosen dark enough for white text on the active (filled) pill.
 const ITEMS: NavItem[] = [
-  { href: '/log', label: 'Logger', color: '#c8102e', icon: <PathIcon name="logger" /> },
+  { href: '/log', label: 'Logger', color: CRIMSON, icon: <PathIcon name="logger" /> },
   { href: '/standing', label: 'Progress', color: '#047857', icon: <PathIcon name="progress" /> },
   { href: '/onboarding', label: 'Checklist', color: '#b45309', icon: <PathIcon name="checklist" /> },
   { href: '/evaluations', label: 'Evaluations', color: '#6d28d9', icon: <PathIcon name="star" /> },
@@ -68,8 +69,8 @@ export default function FellowNav() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="New Innovations (opens in a new tab)"
-        className="group inline-flex min-h-[44px] items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-white transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-        style={{ background: '#003a63', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}
+        className="group inline-flex min-h-[44px] items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-white transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-primary"
+        style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}
       >
         <span
           className="grid h-7 w-7 place-items-center rounded-lg"

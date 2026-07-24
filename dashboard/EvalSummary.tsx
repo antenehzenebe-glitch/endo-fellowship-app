@@ -59,7 +59,7 @@ export default function EvalSummary({ summary }: { summary: EvalSummaryData }) {
   return (
     <section className="space-y-4">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-lg font-bold text-[#003a63]">Evaluation Summary</h2>
+        <h2 className="text-lg font-bold text-primary">Evaluation Summary</h2>
         <span className="text-sm text-gray-500">Academic year {summary.academicYear}</span>
       </div>
       <p className="text-sm text-gray-600">
@@ -83,7 +83,7 @@ export default function EvalSummary({ summary }: { summary: EvalSummaryData }) {
                 Mid-year and end-of-year evaluation status for each active fellow, academic year {summary.academicYear}.
               </caption>
               <thead>
-                <tr className="bg-[#003a63] text-white">
+                <tr className="bg-primary text-white">
                   <th scope="col" className="px-3 py-2.5 text-left font-semibold">Fellow</th>
                   <th scope="col" className="px-3 py-2.5 text-center font-semibold">Mid-year</th>
                   <th scope="col" className="px-3 py-2.5 text-center font-semibold">End-of-year</th>
@@ -93,9 +93,9 @@ export default function EvalSummary({ summary }: { summary: EvalSummaryData }) {
                 {summary.fellows.map((f) => (
                   <tr key={f.id}>
                     <th scope="row" className="border border-gray-200 bg-white px-3 py-3 text-left align-middle">
-                      <span className="block font-semibold text-[#003a63] leading-snug">{f.name}</span>
+                      <span className="block font-semibold text-primary leading-snug">{f.name}</span>
                       {f.pgyLevel ? (
-                        <span className="mt-0.5 inline-block rounded bg-[#003a63]/10 px-1.5 py-0.5 text-xs font-semibold text-[#003a63]">
+                        <span className="mt-0.5 inline-block rounded bg-primary/10 px-1.5 py-0.5 text-xs font-semibold text-primary">
                           {f.pgyLevel}
                         </span>
                       ) : null}
