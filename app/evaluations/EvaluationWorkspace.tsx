@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { saveEvaluation, setEvaluationStatus, deleteEvaluation } from './actions'
@@ -18,8 +18,17 @@ import {
 
 const NAVY = '#003a63'
 const CRIMSON = '#c8102e'
+const AMBER = '#b45309'
 
 type FellowOpt = { id: string; name: string; pgy: string | null }
+
+// Two-step inline confirm state for actions that change an evaluation's
+// visibility to the fellow (audit P0-1). `evalId` is set for card-level
+// actions; the form-level "Finalize & share" omits it because the evaluation
+// may not have been saved yet. First tap arms the action; a second tap on
+// "Yes, …" commits it. Mirrors the inline confirm UX in
+// app/schedule/PublishControls.tsx.
+type PendingAction = { kind: 'finalize' | 'reopen'; evalId?: string }
 
 export default function EvaluationWorkspace({
   fellows,
@@ -46,6 +55,27 @@ export default function EvaluationWorkspace({
 
   const [error, setError] = useState<string | null>(null)
   const [savedMsg, setSavedMsg] = useState<string | null>(null)
+
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
+
+  // Auto-cancel an armed confirm after ~5 seconds or on any click anywhere
+  // else. The identity check means arming a *different* action in that same
+  // click is not immediately cancelled by the previous listener.
+  useEffect(() => {
+    if (!pendingAction) return
+    const armed = pendingAction
+    const timer = setTimeout(() => {
+      setPendingAction((cur) => (cur === armed ? null : cur))
+    }, 5000)
+    const onAnyClick = () => {
+      setPendingAction((cur) => (cur === armed ? null : cur))
+    }
+    document.addEventListener('click', onAnyClick)
+    return () => {
+      clearTimeout(timer)
+      document.removeEventListener('click', onAnyClick)
+    }
+  }, [pendingAction])
 
   function resetForm() {
     setEditingId(null)
@@ -130,8 +160,29 @@ export default function EvaluationWorkspace({
     })
   }
 
+  function armAction(a: PendingAction) {
+    setError(null)
+    setSavedMsg(null)
+    setPendingAction(a)
+  }
+
+  // Second tap of the two-step confirm: actually run the armed action.
+  function confirmFinalize(id?: string) {
+    setPendingAction(null)
+    if (id) changeStatus(id, 'final')
+    else submit('final')
+  }
+
+  function confirmReopen(id: string) {
+    setPendingAction(null)
+    changeStatus(id, 'draft')
+  }
+
   const mine = rows.filter((r) => r.evaluator_id === currentUserId)
   const others = rows.filter((r) => r.evaluator_id !== currentUserId)
+
+  const formFellowName = fellows.find((f) => f.id === fellowId)?.name ?? 'this fellow'
+  const formFinalizeArmed = pendingAction?.kind === 'finalize' && !pendingAction.evalId
 
   return (
     <div className="space-y-6">
@@ -262,14 +313,42 @@ export default function EvaluationWorkspace({
             >
               {pending ? 'Saving…' : 'Save draft'}
             </button>
-            <button
-              onClick={() => submit('final')}
-              disabled={pending}
-              className="text-sm font-semibold px-4 py-2 rounded-lg text-white disabled:opacity-50"
-              style={{ background: CRIMSON }}
-            >
-              {pending ? 'Saving…' : editingId ? 'Save & finalize' : 'Finalize & share'}
-            </button>
+            {formFinalizeArmed ? (
+              <div className="w-full rounded-md bg-slate-50 border border-slate-200 p-3">
+                <p className="text-sm text-slate-800">
+                  Share {formFellowName}&rsquo;s {periodLabel(period)} evaluation with the
+                  fellow? It becomes visible immediately.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => confirmFinalize()}
+                    disabled={pending}
+                    className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-lg text-white disabled:opacity-50 min-h-[44px]"
+                    style={{ background: CRIMSON }}
+                  >
+                    {pending ? 'Sharing…' : 'Yes, share'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPendingAction(null)}
+                    disabled={pending}
+                    className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50 min-h-[44px]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => armAction({ kind: 'finalize' })}
+                disabled={pending}
+                className="text-sm font-semibold px-4 py-2 rounded-lg text-white disabled:opacity-50"
+                style={{ background: CRIMSON }}
+              >
+                {pending ? 'Saving…' : editingId ? 'Save & finalize' : 'Finalize & share'}
+              </button>
+            )}
           </div>
           <p className="text-xs text-slate-400">
             A draft is private to you. Finalizing makes the evaluation visible to the fellow and
@@ -295,8 +374,12 @@ export default function EvaluationWorkspace({
                 r={r}
                 owned
                 onEdit={() => loadIntoForm(r)}
-                onFinalize={() => changeStatus(r.id, 'final')}
-                onReopen={() => changeStatus(r.id, 'draft')}
+                onFinalize={() => confirmFinalize(r.id)}
+                onReopen={() => confirmReopen(r.id)}
+                onArmFinalize={() => armAction({ kind: 'finalize', evalId: r.id })}
+                onArmReopen={() => armAction({ kind: 'reopen', evalId: r.id })}
+                onCancelConfirm={() => setPendingAction(null)}
+                armedAction={pendingAction?.evalId === r.id ? pendingAction.kind : null}
                 onDelete={() => remove(r.id)}
                 pending={pending}
               />
@@ -328,6 +411,10 @@ function EvalCard({
   onEdit,
   onFinalize,
   onReopen,
+  onArmFinalize,
+  onArmReopen,
+  onCancelConfirm,
+  armedAction,
   onDelete,
   pending,
 }: {
@@ -336,6 +423,10 @@ function EvalCard({
   onEdit?: () => void
   onFinalize?: () => void
   onReopen?: () => void
+  onArmFinalize?: () => void
+  onArmReopen?: () => void
+  onCancelConfirm?: () => void
+  armedAction?: 'finalize' | 'reopen' | null
   onDelete?: () => void
   pending: boolean
 }) {
@@ -394,16 +485,70 @@ function EvalCard({
               Edit
             </button>
             {isFinal ? (
-              <button
-                onClick={onReopen}
-                disabled={pending}
-                className="text-sm font-medium text-amber-700 hover:underline disabled:opacity-50"
-              >
-                Reopen to draft
-              </button>
+              armedAction === 'reopen' ? (
+                <div className="w-full rounded-md bg-slate-50 border border-slate-200 p-3">
+                  <p className="text-sm text-slate-800">
+                    Reopen {r.fellowName}&rsquo;s {periodLabel(r.period)} evaluation? The
+                    fellow will no longer see the finalized version.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={onReopen}
+                      disabled={pending}
+                      className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-lg text-white disabled:opacity-50 min-h-[44px]"
+                      style={{ background: AMBER }}
+                    >
+                      {pending ? 'Reopening…' : 'Yes, reopen'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onCancelConfirm}
+                      disabled={pending}
+                      className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50 min-h-[44px]"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={onArmReopen}
+                  disabled={pending}
+                  className="text-sm font-medium text-amber-700 hover:underline disabled:opacity-50"
+                >
+                  Reopen to draft
+                </button>
+              )
+            ) : armedAction === 'finalize' ? (
+              <div className="w-full rounded-md bg-slate-50 border border-slate-200 p-3">
+                <p className="text-sm text-slate-800">
+                  Share {r.fellowName}&rsquo;s {periodLabel(r.period)} evaluation with the
+                  fellow? It becomes visible immediately.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={onFinalize}
+                    disabled={pending}
+                    className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-lg text-white disabled:opacity-50 min-h-[44px]"
+                    style={{ background: CRIMSON }}
+                  >
+                    {pending ? 'Sharing…' : 'Yes, share'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onCancelConfirm}
+                    disabled={pending}
+                    className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50 min-h-[44px]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             ) : (
               <button
-                onClick={onFinalize}
+                onClick={onArmFinalize}
                 disabled={pending}
                 className="text-sm font-medium text-green-700 hover:underline disabled:opacity-50"
               >
