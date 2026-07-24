@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:no-hex": "! grep -rniE '#(003a63|04263f|c8102e|a50e26|a60d26|a50d26|1b2733|5c6b7a|16a34a|15803d)' app components dashboard procedures modules resources people --include='*.tsx' --include='*.ts' | grep -v 'Landing.tsx' | grep -v 'endocrine-emergencies.ts' | grep -v 'lib/tokens'"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.0",

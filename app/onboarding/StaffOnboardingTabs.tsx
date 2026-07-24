@@ -75,9 +75,9 @@ export default function StaffOnboardingTabs({
               onClick={() => setActiveId(f.id)}
               className={[
                 'group relative flex-1 min-w-[150px] rounded-xl px-4 py-3 text-left transition-all',
-                'ring-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c8102e]',
+                'ring-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson',
                 isActive
-                  ? 'bg-gradient-to-b from-[#0a4f86] to-[#003a63] text-white ring-[#003a63] shadow-md -translate-y-px'
+                  ? 'bg-gradient-to-b from-[#0a4f86] to-primary text-white ring-primary shadow-md -translate-y-px'
                   : 'bg-gradient-to-b from-white to-gray-100 text-gray-700 ring-gray-200 shadow-sm hover:to-gray-50',
               ].join(' ')}
             >
@@ -111,7 +111,7 @@ export default function StaffOnboardingTabs({
               {isActive && (
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-[#c8102e]"
+                  className="pointer-events-none absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-crimson"
                 />
               )}
             </button>
@@ -145,13 +145,13 @@ export default function StaffOnboardingTabs({
               return (
                 <div key={g.key} className="mt-4">
                   <div className="mb-1 flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-[#003a63]">{g.label}</h3>
+                    <h3 className="text-sm font-semibold text-primary">{g.label}</h3>
                     <span className="text-sm font-medium text-gray-700">
                       {done}/{total}
                     </span>
                   </div>
                   <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                    <div className="h-full bg-[#003a63]" style={{ width: `${pct}%` }} />
+                    <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
                   </div>
                   {/* Items — multi-column grid, not one tall list */}
                   <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1.5">

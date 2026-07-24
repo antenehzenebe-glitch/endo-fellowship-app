@@ -18,9 +18,8 @@
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { logProcedure, deleteProcedure, type ProcedureOutcome } from '@/procedures/actions'
+import { NAVY, CRIMSON } from '@/lib/tokens'
 
-const NAVY = '#003a63'
-const CRIMSON = '#c8102e'
 
 // Same shapes the page already builds — re-exported here so app/log/page.tsx
 // imports its types from this module instead of the old RecentProcedures.
@@ -297,7 +296,7 @@ function QuickEntrySheet({
               value={date}
               max={todayStr}
               onChange={(e) => setDate(e.target.value)}
-              className="mt-2 w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#003a63]"
+              className="mt-2 w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-primary"
             />
           ) : null}
           {!isPreset && !showDatePick ? <p className="text-xs text-gray-500 mt-1">{formatDate(date)}</p> : null}
@@ -366,7 +365,7 @@ function QuickEntrySheet({
                   onChange={(e) => setNote(e.target.value)}
                   rows={2}
                   placeholder="Technique, learning points…"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#003a63]"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <p className="mt-1 text-xs text-gray-500">No patient identifiers (no names, MRNs, or dates of birth).</p>
               </>

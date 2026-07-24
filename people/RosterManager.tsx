@@ -40,7 +40,7 @@ function draftFrom(p?: Person): Draft {
 }
 
 const fieldCls =
-  'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#003a63]'
+  'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-primary'
 const labelCls = 'block text-sm font-semibold text-gray-800 mb-1.5'
 
 function PersonForm({
@@ -112,7 +112,7 @@ function PersonForm({
       ) : null}
       <div className="flex gap-2">
         <button type="submit" disabled={busy} aria-busy={busy}
-          className="flex-1 py-3 bg-[#c8102e] text-white font-semibold rounded-lg hover:bg-[#a50e26] disabled:opacity-60 min-h-[44px]">
+          className="flex-1 py-3 bg-crimson text-white font-semibold rounded-lg hover:bg-crimson-dark disabled:opacity-60 min-h-[44px]">
           {busy ? 'Saving…' : submitLabel}
         </button>
         <button type="button" onClick={onCancel}
@@ -237,7 +237,7 @@ export default function RosterManager({ initialPeople }: { initialPeople: Person
         </p>
         {!adding ? (
           <button onClick={() => setAdding(true)}
-            className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-[#c8102e] text-white hover:bg-[#a50e26] min-h-[44px]">
+            className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-crimson text-white hover:bg-crimson-dark min-h-[44px]">
             + Add person
           </button>
         ) : null}
@@ -254,7 +254,7 @@ export default function RosterManager({ initialPeople }: { initialPeople: Person
         if (!rows.length) return null
         return (
           <section key={g}>
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-[#c8102e] mb-3">{CATEGORY_LABELS[g]}</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-crimson mb-3">{CATEGORY_LABELS[g]}</h2>
             <ul className="space-y-3">
               {rows.map((p) => (
                 <li key={p.id} className="bg-white border border-gray-200 rounded-xl p-4">
@@ -268,13 +268,13 @@ export default function RosterManager({ initialPeople }: { initialPeople: Person
                         <img src={publicUrl(p.photo_path) as string} alt=""
                           className="w-16 h-16 rounded-full object-cover border border-gray-200 shrink-0" />
                       ) : (
-                        <div className="w-16 h-16 rounded-full bg-[#eef2f6] text-[#003a63] grid place-items-center font-bold shrink-0">
+                        <div className="w-16 h-16 rounded-full bg-[#eef2f6] text-primary grid place-items-center font-bold shrink-0">
                           {p.full_name.split(' ').map((s) => s[0]).slice(0, 2).join('')}
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-bold text-[#003a63] leading-tight">
+                          <h3 className="font-bold text-primary leading-tight">
                             {p.full_name}{p.credentials ? `, ${p.credentials}` : ''}
                           </h3>
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.is_published ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
@@ -287,7 +287,7 @@ export default function RosterManager({ initialPeople }: { initialPeople: Person
                           <button onClick={() => startEdit(p)}
                             className="px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 min-h-[44px]">Edit</button>
                           <button onClick={() => togglePublish(p)}
-                            className="px-3 py-2 text-sm font-medium rounded-lg border border-[#003a63] text-[#003a63] hover:bg-[#eef2f6] min-h-[44px]">
+                            className="px-3 py-2 text-sm font-medium rounded-lg border border-primary text-primary hover:bg-[#eef2f6] min-h-[44px]">
                             {p.is_published ? 'Unpublish' : 'Publish'}
                           </button>
                           <button onClick={() => remove(p)}

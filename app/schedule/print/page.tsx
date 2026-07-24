@@ -19,11 +19,10 @@ import {
   type ScheduleConfig,
   type ScheduleWeekly,
 } from '@/lib/schedule'
+import { NAVY, CRIMSON } from '@/lib/tokens'
 
 export const dynamic = 'force-dynamic'
 
-const NAVY = '#003a63'
-const CRIMSON = '#c8102e'
 
 function todayInDC(): string {
   return new Intl.DateTimeFormat('en-CA', {

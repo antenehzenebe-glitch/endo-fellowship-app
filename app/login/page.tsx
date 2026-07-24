@@ -51,7 +51,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <img src="/logo.png" alt="" className="block w-16 h-16 mx-auto mb-4 object-contain" />
-          <h1 className="text-2xl font-bold text-[#003a63]">Howard Endo Fellowship</h1>
+          <h1 className="text-2xl font-bold text-primary">Howard Endo Fellowship</h1>
           <p className="text-gray-600 mt-1 text-sm">Sign in to the program hub</p>
         </div>
 
@@ -71,13 +71,13 @@ export default function LoginPage() {
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">Work email</label>
               <input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)}
                 placeholder="your.name@huhosp.org" required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#003a63]" />
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <button type="submit" disabled={loading || !email} aria-busy={loading}
-              className="w-full py-3.5 bg-[#c8102e] text-white font-semibold rounded-lg hover:bg-[#a50e26] disabled:opacity-60 transition-colors">
+              className="w-full py-3.5 bg-crimson text-white font-semibold rounded-lg hover:bg-crimson-dark disabled:opacity-60 transition-colors">
               {loading ? 'Sending link…' : 'Email me a one-time link'}
             </button>
-            <button type="button" onClick={() => setLinkMode(false)} className="w-full text-sm text-[#003a63] font-medium">
+            <button type="button" onClick={() => setLinkMode(false)} className="w-full text-sm text-primary font-medium">
               ← Back to password sign-in
             </button>
             {error ? <div role="alert" className="p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700">{error}</div> : null}
@@ -88,20 +88,20 @@ export default function LoginPage() {
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">Work email</label>
               <input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)}
                 placeholder="your.name@huhosp.org" required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#003a63]" />
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
               <input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••" required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#003a63]" />
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <button type="submit" disabled={loading || !email || !password} aria-busy={loading}
-              className="w-full py-3.5 bg-[#c8102e] text-white font-semibold rounded-lg hover:bg-[#a50e26] disabled:opacity-60 transition-colors">
+              className="w-full py-3.5 bg-crimson text-white font-semibold rounded-lg hover:bg-crimson-dark disabled:opacity-60 transition-colors">
               {loading ? 'Signing in…' : 'Sign in'}
             </button>
             {error ? <div role="alert" className="p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700">{error}</div> : null}
-            <button type="button" onClick={() => { setError(''); setLinkMode(true) }} className="w-full text-sm text-[#003a63] font-medium pt-1">
+            <button type="button" onClick={() => { setError(''); setLinkMode(true) }} className="w-full text-sm text-primary font-medium pt-1">
               Forgot password? Email me a one-time link instead
             </button>
             <p className="text-xs text-center text-gray-500 pt-1">Accounts are added by the program coordinator.</p>

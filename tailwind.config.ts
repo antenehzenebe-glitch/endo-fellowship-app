@@ -13,11 +13,30 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Howard navy primary — matches the public landing page
-        primary: { DEFAULT: '#003a63', 50: '#eef2f6', 100: '#d6e1ec', 600: '#003a63', 700: '#04263f', 800: '#04263f' },
-        // Howard crimson accent
-        crimson: { DEFAULT: '#c8102e', 600: '#c8102e', 700: '#a50e26' },
-        success: '#22C55E',
+        // Howard navy primary — canonical brand color (audit P0-2, decision D3)
+        // 50/100/600 anchored to the pre-existing stops; 700 keeps #04263f
+        // (the existing hover shade). 200–500 interpolate 100→600, 800/900
+        // deepen 700. `primary` with no step === 600 === #003a63.
+        primary: {
+          DEFAULT: '#003a63',
+          50: '#eef2f6',
+          100: '#d6e1ec',
+          200: '#abc0d1',
+          300: '#809db5',
+          400: '#567d9a',
+          500: '#2b5b7e',
+          600: '#003a63',
+          700: '#04263f',
+          800: '#031c2e',
+          900: '#02121e',
+        },
+        // Howard crimson accent; `dark` is the canonical hover shade (kills
+        // the #a50e26 / #a60d26 / #a50d26 drift variants)
+        crimson: { DEFAULT: '#c8102e', 600: '#c8102e', 700: '#a50e26', dark: '#a50e26' },
+        // Ink & muted slate for body/secondary text
+        ink: '#1B2733',
+        muted: '#5C6B7A',
+        success: { DEFAULT: '#16a34a', dark: '#15803d' },
         warning: '#F97316',
         error: '#EF4444',
       },

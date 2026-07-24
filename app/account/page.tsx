@@ -46,7 +46,7 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#003a63] text-white border-b-4 border-[#c8102e]">
+      <header className="bg-primary text-white border-b-4 border-crimson">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="py-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -68,7 +68,7 @@ export default function AccountPage() {
       </header>
 
       <main className="max-w-md mx-auto px-4 py-8 sm:px-6">
-        <h2 className="text-lg font-bold text-[#003a63]">Change password</h2>
+        <h2 className="text-lg font-bold text-primary">Change password</h2>
         <p className="mt-1 text-sm text-gray-600">
           {email ? (
             <>
@@ -104,7 +104,7 @@ export default function AccountPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 8 characters"
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#003a63]"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           <div>
@@ -122,14 +122,14 @@ export default function AccountPage() {
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="Re-enter the password"
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#003a63]"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           <button
             type="submit"
             disabled={loading || !password || !confirm}
             aria-busy={loading}
-            className="w-full py-3.5 bg-[#c8102e] text-white font-semibold rounded-lg hover:bg-[#a50e26] disabled:opacity-60 transition-colors"
+            className="w-full py-3.5 bg-crimson text-white font-semibold rounded-lg hover:bg-crimson-dark disabled:opacity-60 transition-colors"
           >
             {loading ? 'Saving…' : 'Update password'}
           </button>

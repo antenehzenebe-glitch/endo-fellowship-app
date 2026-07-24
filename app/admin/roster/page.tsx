@@ -27,7 +27,7 @@ export default async function RosterAdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#003a63] text-white border-b-4 border-[#c8102e]">
+      <header className="bg-primary text-white border-b-4 border-crimson">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="py-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">

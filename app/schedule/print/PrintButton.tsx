@@ -7,8 +7,7 @@ export default function PrintButton() {
   return (
     <button
       onClick={() => window.print()}
-      className="no-print inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white"
-      style={{ background: '#c8102e' }}
+      className="no-print inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white bg-crimson"
     >
       🖨 Print / Save as PDF
     </button>

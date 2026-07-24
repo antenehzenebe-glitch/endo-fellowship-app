@@ -100,7 +100,7 @@ export default async function ModulePage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#003a63] text-white border-b-4 border-[#c8102e]">
+      <header className="bg-primary text-white border-b-4 border-crimson">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="py-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
@@ -130,7 +130,7 @@ export default async function ModulePage({
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6 sm:px-6 space-y-6">
-        {mod.subtitle && <p className="text-[#5C6B7A] -mt-1">{mod.subtitle}</p>}
+        {mod.subtitle && <p className="text-muted -mt-1">{mod.subtitle}</p>}
 
         {progress?.completed_at && (
           <div className="rounded-xl border border-green-200 bg-green-50 p-4">
@@ -146,7 +146,7 @@ export default async function ModulePage({
 
         {mod.description && (
           <section className="bg-white border border-gray-200 rounded-xl p-5">
-            <p className="text-[15px] leading-relaxed text-[#1B2733] whitespace-pre-line">
+            <p className="text-[15px] leading-relaxed text-ink whitespace-pre-line">
               {mod.description}
             </p>
           </section>
@@ -154,14 +154,14 @@ export default async function ModulePage({
 
         {lecture && (
           <section className="bg-white border border-gray-200 rounded-xl p-5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-[#c8102e]">Lecture</span>
-            <h2 className="mt-1 font-bold text-[#003a63] leading-snug">{lecture.title}</h2>
+            <span className="text-xs font-semibold uppercase tracking-wide text-crimson">Lecture</span>
+            <h2 className="mt-1 font-bold text-primary leading-snug">{lecture.title}</h2>
             {lecture.url ? (
               <a
                 href={lecture.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-[#003a63] text-white hover:bg-[#04263f] min-h-[44px]"
+                className="mt-3 inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-primary text-white hover:bg-primary-700 min-h-[44px]"
               >
                 Open slides
               </a>
@@ -173,7 +173,7 @@ export default async function ModulePage({
 
         {videos.length > 0 && (
           <section className="space-y-4">
-            <span className="text-xs font-semibold uppercase tracking-wide text-[#c8102e]">
+            <span className="text-xs font-semibold uppercase tracking-wide text-crimson">
               Procedure videos
             </span>
             {videos.map((v) => {
@@ -181,8 +181,8 @@ export default async function ModulePage({
               const poster = v.poster_path ? signedByPath.get(v.poster_path) : undefined
               return (
                 <div key={v.id} className="bg-white border border-gray-200 rounded-xl p-5">
-                  <h3 className="font-bold text-[#003a63] leading-snug">{v.title}</h3>
-                  {v.description && <p className="mt-1 text-sm text-[#5C6B7A]">{v.description}</p>}
+                  <h3 className="font-bold text-primary leading-snug">{v.title}</h3>
+                  {v.description && <p className="mt-1 text-sm text-muted">{v.description}</p>}
                   {src ? (
                     <video
                       controls
@@ -204,11 +204,11 @@ export default async function ModulePage({
 
         {key === 'thyroid_us' && (
           <section className="bg-white border border-gray-200 rounded-xl p-5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-[#c8102e]">Self-check</span>
-            <h2 className="mt-1 font-bold text-[#003a63] leading-snug">
+            <span className="text-xs font-semibold uppercase tracking-wide text-crimson">Self-check</span>
+            <h2 className="mt-1 font-bold text-primary leading-snug">
               Check your readiness &middot; {mod.pass_pct ?? 80}% to pass
             </h2>
-            <p className="mt-1 mb-4 text-sm text-[#5C6B7A]">
+            <p className="mt-1 mb-4 text-sm text-muted">
               A short formative self-check. Not a graded ACGME assessment.
             </p>
             <ThyroidQuiz
@@ -227,7 +227,7 @@ export default async function ModulePage({
 function NotPublished({ home }: { home: string }) {
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#003a63] text-white border-b-4 border-[#c8102e]">
+      <header className="bg-primary text-white border-b-4 border-crimson">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -240,12 +240,12 @@ function NotPublished({ home }: { home: string }) {
       </header>
       <main className="max-w-4xl mx-auto px-4 py-10 sm:px-6">
         <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
-          <span className="text-xs font-semibold uppercase tracking-wide text-[#c8102e]">Not available</span>
-          <h2 className="mt-1 font-bold text-[#003a63] text-lg">This module is not published yet</h2>
+          <span className="text-xs font-semibold uppercase tracking-wide text-crimson">Not available</span>
+          <h2 className="mt-1 font-bold text-primary text-lg">This module is not published yet</h2>
           <p className="mt-2 text-sm text-gray-600">It will appear here once the program adds it.</p>
           <Link
             href={home}
-            className="mt-5 inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-[#003a63] text-white hover:bg-[#04263f] min-h-[44px]"
+            className="mt-5 inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-primary text-white hover:bg-primary-700 min-h-[44px]"
           >
             Back to home
           </Link>

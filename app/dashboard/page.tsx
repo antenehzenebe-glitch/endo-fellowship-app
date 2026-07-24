@@ -109,10 +109,10 @@ function EvalAuthorCTA() {
   return (
     <Link
       href="/evaluations"
-      className="group flex items-center justify-between gap-3 rounded-xl border border-[#003a63]/15 bg-white px-4 py-3 shadow-sm transition-colors hover:border-[#c8102e]/40 hover:bg-[#c8102e]/[0.03]"
+      className="group flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-white px-4 py-3 shadow-sm transition-colors hover:border-crimson/40 hover:bg-crimson/[0.03]"
     >
       <span className="flex items-center gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#c8102e]/10 text-[#c8102e]">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-crimson/10 text-crimson">
           <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
             <path d="M12 20h9" strokeLinecap="round" />
             <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" strokeLinecap="round" strokeLinejoin="round" />
@@ -125,7 +125,7 @@ function EvalAuthorCTA() {
           </span>
         </span>
       </span>
-      <span className="shrink-0 text-sm font-semibold text-[#c8102e] transition-transform group-hover:translate-x-0.5">
+      <span className="shrink-0 text-sm font-semibold text-crimson transition-transform group-hover:translate-x-0.5">
         Open →
       </span>
     </Link>
@@ -191,7 +191,7 @@ export default async function DashboardPage({
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="sticky top-0 z-30 bg-[#003a63] text-white border-b-4 border-[#c8102e] shadow-sm">
+      <header className="sticky top-0 z-30 bg-primary text-white border-b-4 border-crimson shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="py-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -270,7 +270,7 @@ export default async function DashboardPage({
                   aria-current={active ? 'page' : undefined}
                   className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold rounded-lg whitespace-nowrap transition-colors ${
                     active
-                      ? 'bg-[#c8102e] text-white shadow-sm'
+                      ? 'bg-crimson text-white shadow-sm'
                       : 'text-white/70 hover:text-white hover:bg-white/10'
                   }`}
                 >

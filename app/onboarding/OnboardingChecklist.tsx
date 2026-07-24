@@ -134,7 +134,7 @@ export default function OnboardingChecklist({
       <section className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
         <div className="flex items-baseline justify-between gap-3 mb-2">
           <span className="text-sm font-medium text-gray-700">Progress</span>
-          <span className="text-sm font-semibold tabular-nums text-[#003a63]">
+          <span className="text-sm font-semibold tabular-nums text-primary">
             {pct}% complete
             <span className="ml-1 font-normal text-gray-400">({done}/{total})</span>
           </span>
@@ -148,7 +148,7 @@ export default function OnboardingChecklist({
           aria-valuemax={100}
         >
           <div
-            className="h-full rounded-full bg-[#003a63] transition-[width] duration-500"
+            className="h-full rounded-full bg-primary transition-[width] duration-500"
             style={{ width: `${pct}%` }}
           />
         </div>

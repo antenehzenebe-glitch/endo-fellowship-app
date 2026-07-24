@@ -13,8 +13,8 @@ function Column({ title, count, children }: { title: string; count: number; chil
   return (
     <section aria-label={title} className="flex flex-col rounded-xl border border-gray-200 bg-gray-50/60">
       <header className="flex items-center justify-between gap-2 border-b border-gray-200 px-4 py-3">
-        <h2 className="font-semibold text-[#003a63]">{title}</h2>
-        <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-[#003a63] px-2 py-0.5 text-xs font-bold text-white tabular-nums">
+        <h2 className="font-semibold text-primary">{title}</h2>
+        <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-white tabular-nums">
           {count}
         </span>
       </header>
