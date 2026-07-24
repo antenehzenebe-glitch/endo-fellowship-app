@@ -18,9 +18,7 @@
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { logProcedure, deleteProcedure, type ProcedureOutcome } from '@/procedures/actions'
-
-const NAVY = '#003a63'
-const CRIMSON = '#c8102e'
+import { NAVY, CRIMSON, GRAY_200, GRAY_300, GRAY_500, GRAY_700, GREEN_300 } from '@/lib/tokens'
 
 // Same shapes the page already builds — re-exported here so app/log/page.tsx
 // imports its types from this module instead of the old RecentProcedures.
@@ -129,7 +127,7 @@ export function ProcedureLogger({
             type="button"
             onClick={() => setView(k)}
             className="py-2 text-sm font-semibold rounded-md transition-colors"
-            style={view === k ? { background: 'white', color: NAVY, boxShadow: '0 1px 2px rgba(0,0,0,0.08)' } : { color: '#6b7280' }}
+            style={view === k ? { background: 'white', color: NAVY, boxShadow: '0 1px 2px rgba(0,0,0,0.08)' } : { color: GRAY_500 }}
             aria-pressed={view === k}
           >
             {k === 'log' ? 'Log' : 'History'}
@@ -150,7 +148,7 @@ export function ProcedureLogger({
                   type="button"
                   onClick={() => openCard(p)}
                   className="text-left rounded-xl border bg-white p-4 shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
-                  style={{ borderColor: met ? '#86efac' : '#e5e7eb' }}
+                  style={{ borderColor: met ? GREEN_300 : GRAY_200 }}
                 >
                   <div className="flex items-start justify-between gap-1">
                     <span className="font-semibold text-gray-900 text-sm leading-snug">{p.label}</span>
@@ -162,7 +160,8 @@ export function ProcedureLogger({
                   </div>
                   {p.min > 0 ? (
                     <div className="h-1.5 w-full rounded-full bg-gray-200 overflow-hidden mt-2">
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: met ? '#22c55e' : NAVY }} />
+                      <div className={`h-full rounded-full ${met ? 'bg-green-500' : 'bg-primary'}`}
+                      style={{ width: `${pct}%` }} />
                     </div>
                   ) : (
                     <div className="h-1.5 mt-2" />
@@ -297,7 +296,7 @@ function QuickEntrySheet({
               value={date}
               max={todayStr}
               onChange={(e) => setDate(e.target.value)}
-              className="mt-2 w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#003a63]"
+              className="mt-2 w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-primary"
             />
           ) : null}
           {!isPreset && !showDatePick ? <p className="text-xs text-gray-500 mt-1">{formatDate(date)}</p> : null}
@@ -313,7 +312,7 @@ function QuickEntrySheet({
                 className="py-2.5 text-sm font-medium rounded-lg border transition-colors"
                 style={outcome === o.value
                   ? { background: NAVY, color: 'white', borderColor: NAVY }
-                  : { background: 'white', color: '#374151', borderColor: '#d1d5db' }}
+                  : { background: 'white', color: GRAY_700, borderColor: GRAY_300 }}
                 aria-pressed={outcome === o.value}
               >
                 {o.label}
@@ -366,7 +365,7 @@ function QuickEntrySheet({
                   onChange={(e) => setNote(e.target.value)}
                   rows={2}
                   placeholder="Technique, learning points…"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#003a63]"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <p className="mt-1 text-xs text-gray-500">No patient identifiers (no names, MRNs, or dates of birth).</p>
               </>
@@ -412,7 +411,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
       className="px-3.5 py-2 text-sm font-medium rounded-full border transition-colors"
       style={active
         ? { background: NAVY, color: 'white', borderColor: NAVY }
-        : { background: 'white', color: '#374151', borderColor: '#d1d5db' }}
+        : { background: 'white', color: GRAY_700, borderColor: GRAY_300 }}
       aria-pressed={active}
     >
       {children}

@@ -15,10 +15,9 @@ import {
   type EvalPeriod,
   type EvalRating,
 } from '@/lib/evaluations'
+import { NAVY, CRIMSON, AMBER_700, AMBER_100, GREEN_100, SLATE_700, SUCCESS_DARK } from '@/lib/tokens'
 
-const NAVY = '#003a63'
-const CRIMSON = '#c8102e'
-const AMBER = '#b45309'
+const AMBER = AMBER_700
 
 type FellowOpt = { id: string; name: string; pgy: string | null }
 
@@ -215,7 +214,7 @@ export default function EvaluationWorkspace({
                 id="ev-fellow"
                 value={fellowId}
                 onChange={(e) => setFellowId(e.target.value)}
-                className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#003a63]"
+                className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">Select a fellow…</option>
                 {fellows.map((f) => (
@@ -235,7 +234,7 @@ export default function EvaluationWorkspace({
                 value={academicYear}
                 onChange={(e) => setAcademicYear(e.target.value)}
                 placeholder="2025-2026"
-                className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#003a63]"
+                className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
@@ -254,7 +253,7 @@ export default function EvaluationWorkspace({
                     style={
                       active
                         ? { background: NAVY, color: 'white' }
-                        : { background: 'white', color: '#334155' }
+                        : { background: 'white', color: SLATE_700 }
                     }
                   >
                     {p.label}
@@ -298,7 +297,7 @@ export default function EvaluationWorkspace({
               onChange={(e) => setNarrative(e.target.value)}
               rows={8}
               placeholder="Summarize the fellow's performance for this period: clinical skills, medical knowledge, professionalism, scholarly progress, and goals for the next period."
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2.5 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#003a63]"
+              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2.5 leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
@@ -455,8 +454,8 @@ function EvalCard({
             className="text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded"
             style={
               isFinal
-                ? { background: '#dcfce7', color: '#15803d' }
-                : { background: '#fef3c7', color: '#b45309' }
+                ? { background: GREEN_100, color: SUCCESS_DARK }
+                : { background: AMBER_100, color: AMBER }
             }
           >
             {isFinal ? 'Final' : 'Draft'}
@@ -471,7 +470,7 @@ function EvalCard({
       <div className="flex items-center gap-3 flex-wrap mt-3 pt-3 border-t border-slate-100">
         <Link
           href={`/evaluations/${r.id}/print`}
-          className="text-sm font-medium text-[#003a63] hover:underline"
+          className="text-sm font-medium text-primary hover:underline"
         >
           Print / PDF
         </Link>
