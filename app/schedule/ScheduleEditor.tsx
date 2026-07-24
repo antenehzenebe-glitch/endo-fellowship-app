@@ -10,8 +10,22 @@
 //   1. Weekly skeleton + Fellows + Rotation vocabulary
 //   2. Annual block grid — attending-of-the-month + each fellow's rotation/vacation
 //   3. Monthly didactic calendars — dated sessions + coverage footer
+//
+// Unsaved-work safety: while `isDirty`, a beforeunload handler makes the
+// browser warn on tab close/reload, and the dirty flag is broadcast via the
+// 'schedule-editor-dirty' window event so YearSwitcher can confirm before
+// navigating (which remounts this editor via key={academicYear}). Destructive
+// actions (generate year, clear all, remove month, remove fellow) use the
+// inline two-step ConfirmButton so they can't fire from a single stray tap.
 
-import { useCallback, useMemo, useState, useTransition } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+  type CSSProperties,
+} from 'react'
 import { useRouter } from 'next/navigation'
 import { saveSchedule } from './actions'
 import {
@@ -63,6 +77,19 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
   )
   const payloadJson = useMemo(() => JSON.stringify(payload), [payload])
   const isDirty = payloadJson !== savedSnapshot
+
+  // Warn on tab close / reload while there are unsaved edits, and broadcast
+  // the dirty flag so YearSwitcher can confirm before remounting this editor.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('schedule-editor-dirty', { detail: isDirty }))
+    if (!isDirty) return
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [isDirty])
 
   const handleSave = useCallback(() => {
     const json = payloadJson
@@ -476,13 +503,13 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                 placeholder="PGY-4"
                 className="w-24 text-sm border border-slate-300 rounded px-2 py-1.5"
               />
-              <button
-                onClick={() => removeFellow(f.id)}
-                className="text-slate-400 hover:text-red-600 px-1"
+              <ConfirmButton
+                label="✕"
                 title="Remove fellow"
-              >
-                ✕
-              </button>
+                confirmText={`Remove ${f.name || 'this fellow'}? They will be removed from every block.`}
+                onConfirm={() => removeFellow(f.id)}
+                buttonClassName="text-slate-400 hover:text-red-600 px-1"
+              />
             </div>
           ))}
           {config.fellows.length === 0 && (
@@ -554,14 +581,14 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
           title="Annual Block Grid"
           hint="Attending-of-the-month plus each fellow's rotation per month. Generate a standard Jul–Jun set, or add blocks manually."
         />
-        <div className="flex gap-2 flex-wrap mb-3">
-          <button
-            onClick={generateYear}
-            className="text-sm font-medium px-3 py-1.5 rounded text-white"
-            style={{ background: CRIMSON }}
-          >
-            Generate monthly blocks ({academicYear})
-          </button>
+        <div className="flex gap-2 flex-wrap mb-3 items-center">
+          <ConfirmButton
+            label={`Generate monthly blocks (${academicYear})`}
+            confirmText="Regenerate the whole block grid? All attending and assignment entries will be replaced."
+            onConfirm={generateYear}
+            buttonClassName="text-sm font-medium px-3 py-1.5 rounded text-white"
+            buttonStyle={{ background: CRIMSON }}
+          />
           <button
             onClick={addBlock}
             className="text-sm font-medium px-3 py-1.5 rounded border border-slate-300 text-slate-700 hover:bg-slate-50"
@@ -569,12 +596,12 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
             + Add block
           </button>
           {config.blocks.length > 0 && (
-            <button
-              onClick={() => setBlocks([])}
-              className="text-sm font-medium px-3 py-1.5 rounded text-slate-500 hover:text-red-600"
-            >
-              Clear all
-            </button>
+            <ConfirmButton
+              label="Clear all"
+              confirmText="Clear all blocks? The entire block grid will be emptied."
+              onConfirm={() => setBlocks([])}
+              buttonClassName="text-sm font-medium px-3 py-1.5 rounded text-slate-500 hover:text-red-600"
+            />
           )}
         </div>
 
@@ -731,12 +758,12 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
               />
               <span className="text-xs text-slate-400">({selectedMonth.ym})</span>
               <div className="flex-1" />
-              <button
-                onClick={() => removeMonth(selectedMonth.id)}
-                className="text-xs font-medium text-slate-400 hover:text-red-600"
-              >
-                Remove month
-              </button>
+              <ConfirmButton
+                label="Remove month"
+                confirmText={`Remove ${selectedMonth.label || selectedMonth.ym}? Its sessions and coverage will be deleted.`}
+                onConfirm={() => removeMonth(selectedMonth.id)}
+                buttonClassName="text-xs font-medium text-slate-400 hover:text-red-600"
+              />
             </div>
             <input
               value={selectedMonth.subtitle || ''}
@@ -904,5 +931,71 @@ function SectionHead({ n, title, hint }: { n: string; title: string; hint?: stri
         </p>
       )}
     </div>
+  )
+}
+
+// Inline two-step confirm for destructive actions (same pattern as
+// PublishControls): first tap arms the control and shows what will be lost;
+// the action only fires from the explicit Confirm button. Auto-cancels after
+// 5s so a stray arm can't be confirmed accidentally later.
+function ConfirmButton({
+  label,
+  confirmText,
+  onConfirm,
+  buttonClassName,
+  buttonStyle,
+  title,
+}: {
+  label: string
+  confirmText: string
+  onConfirm: () => void
+  buttonClassName?: string
+  buttonStyle?: CSSProperties
+  title?: string
+}) {
+  const [armed, setArmed] = useState(false)
+
+  useEffect(() => {
+    if (!armed) return
+    const t = setTimeout(() => setArmed(false), 5000)
+    return () => clearTimeout(t)
+  }, [armed])
+
+  if (!armed) {
+    return (
+      <button
+        type="button"
+        onClick={() => setArmed(true)}
+        className={buttonClassName}
+        style={buttonStyle}
+        title={title}
+      >
+        {label}
+      </button>
+    )
+  }
+
+  return (
+    <span className="inline-flex items-center gap-2 flex-wrap rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5">
+      <span className="text-xs font-medium text-red-700">{confirmText}</span>
+      <button
+        type="button"
+        onClick={() => {
+          setArmed(false)
+          onConfirm()
+        }}
+        className="inline-flex items-center justify-center px-3 text-xs font-semibold rounded text-white min-h-[44px]"
+        style={{ background: CRIMSON }}
+      >
+        Confirm
+      </button>
+      <button
+        type="button"
+        onClick={() => setArmed(false)}
+        className="inline-flex items-center justify-center px-3 text-xs font-medium rounded border border-slate-300 text-slate-700 hover:bg-slate-50 min-h-[44px]"
+      >
+        Cancel
+      </button>
+    </span>
   )
 }

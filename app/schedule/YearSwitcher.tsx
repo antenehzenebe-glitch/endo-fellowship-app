@@ -6,10 +6,15 @@
 // loads the right program_schedule row). Staff + fellows can create a new year;
 // staff alone can mark the shown year as the program's current year.
 //
+// Switching years remounts ScheduleEditor (key={academicYear} in page.tsx),
+// which would silently discard unsaved edits — so we listen for the editor's
+// 'schedule-editor-dirty' broadcast and confirm before any navigation while
+// dirty (native confirm, mirroring the browser's beforeunload dialog).
+//
 // Educational schedule only — NO PHI.
 
 import { useRouter, usePathname } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { createYear, setCurrentYear } from './actions'
 
 const NAVY = '#003a63'
@@ -33,9 +38,29 @@ export default function YearSwitcher({
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
-  const go = (ay: string) => router.push(`${pathname}?ay=${encodeURIComponent(ay)}`)
+  // Latest dirty flag broadcast by ScheduleEditor (it remounts on year change,
+  // so state can't be shared via props/context across the switch).
+  const editorDirtyRef = useRef(false)
+  useEffect(() => {
+    const onDirty = (e: Event) => {
+      editorDirtyRef.current = Boolean((e as CustomEvent<boolean>).detail)
+    }
+    window.addEventListener('schedule-editor-dirty', onDirty)
+    return () => window.removeEventListener('schedule-editor-dirty', onDirty)
+  }, [])
+
+  const confirmDiscardIfDirty = () =>
+    !editorDirtyRef.current ||
+    window.confirm('You have unsaved schedule edits. Leave without saving?')
+
+  const go = (ay: string) => {
+    if (ay === selected) return
+    if (!confirmDiscardIfDirty()) return
+    router.push(`${pathname}?ay=${encodeURIComponent(ay)}`)
+  }
 
   const onCreate = () => {
+    if (!confirmDiscardIfDirty()) return
     setError(null)
     const input = window.prompt(
       'New academic year (YYYY-YYYY), e.g. 2026-2027.\nIt starts from this year\u2019s fellows & rotations with an empty block grid you can generate.'
@@ -53,6 +78,7 @@ export default function YearSwitcher({
   }
 
   const onSetCurrent = () => {
+    if (!confirmDiscardIfDirty()) return
     setError(null)
     startTransition(async () => {
       const r = await setCurrentYear(selected)
