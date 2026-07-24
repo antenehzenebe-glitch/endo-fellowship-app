@@ -27,7 +27,7 @@ function Gauge({
   sub?: string
   tone?: 'navy' | 'good'
 }) {
-  const valueColor = tone === 'good' ? 'text-green-700' : 'text-[#003a63]'
+  const valueColor = tone === 'good' ? 'text-green-700' : 'text-primary'
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4 text-center">
       <p className={`text-3xl font-bold tabular-nums leading-none ${valueColor}`}>{value}</p>
@@ -52,7 +52,7 @@ function FellowRow({ f }: { f: FellowReadiness }) {
   return (
     <tr className="align-top">
       <th scope="row" className="px-3 py-3 text-left font-normal">
-        <span className="block font-semibold text-[#003a63] leading-snug">{f.name}</span>
+        <span className="block font-semibold text-primary leading-snug">{f.name}</span>
         {f.pgyLevel ? <span className="text-xs text-gray-500">{f.pgyLevel}</span> : null}
       </th>
       <td className="px-3 py-3">
