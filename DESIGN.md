@@ -48,11 +48,22 @@ This document defines the design principles, component library, visual identity,
 #### Primary Colors
 | Color | Hex | Usage | Tailwind |
 |-------|-----|-------|----------|
-| **Howard Blue** | `#0066CC` | Buttons, links, primary CTAs | `blue-600` |
-| **Success Green** | `#22C55E` | Confirmations, completed items | `green-500` |
-| **Warning Orange** | `#F97316` | Alerts, incomplete items | `orange-500` |
-| **Error Red** | `#EF4444` | Destructive actions, errors | `red-500` |
+| **Howard Navy** | `#003a63` | Buttons, links, primary CTAs, headers | `primary` |
+| **Howard Crimson** | `#C8102E` | Accent, destructive-primary CTAs, badges | `crimson` |
+| **Ink** | `#1B2733` | Primary body/heading text | `ink` |
+| **Muted** | `#5C6B7A` | Secondary text, captions | `muted` |
+| **Success Green** | `#16A34A` | Confirmations, completed items | `success` |
+| **Warning Orange** | `#F97316` | Alerts, incomplete items | `warning` |
+| **Error Red** | `#EF4444` | Destructive actions, errors | `error` |
 | **Neutral Gray** | `#6B7280` | Text, secondary elements | `gray-500` |
+
+> **Canonical brand colors (decision D3):** Howard Navy `#003a63` and Howard
+> Crimson `#C8102E` are the canonical brand palette. They are defined once in
+> `tailwind.config.ts` (`primary`, `crimson`) — components must use the
+> Tailwind tokens (`text-primary`, `bg-crimson`, `hover:bg-crimson-dark`, …)
+> instead of hardcoded hex values. `npm run check:no-hex` enforces this.
+> Dynamic inline styles and print CSS import the same values from
+> `lib/tokens.ts`.
 
 #### Accessibility Considerations
 - Never use red/green alone to indicate status → pair with icons
@@ -108,7 +119,7 @@ Follow Tailwind's default breakpoints:
 
 #### Primary Button
 ```tsx
-<button className="px-4 py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors">
+<button className="px-4 py-2 bg-primary text-white rounded-md font-semibold hover:bg-primary-700 active:bg-primary-800 transition-colors">
   Action
 </button>
 ```
@@ -215,7 +226,7 @@ Follow Tailwind's default breakpoints:
 
 #### Evaluation Card
 ```tsx
-<div className="p-4 border-l-4 border-l-blue-600 bg-blue-50 rounded">
+<div className="p-4 border-l-4 border-l-primary bg-primary-50 rounded">
   <h3 className="font-semibold text-base mb-1">Communication</h3>
   <p className="text-sm text-gray-700 mb-3">Proficiency: Advanced</p>
   <p className="text-xs text-gray-600">From: Dr. Johnson • June 2026</p>
@@ -285,7 +296,7 @@ Follow Tailwind's default breakpoints:
 #### Mobile Bottom Navigation
 ```tsx
 <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around">
-  <button className="flex-1 py-3 flex flex-col items-center gap-1 text-gray-600 hover:text-blue-600 active:bg-blue-50">
+  <button className="flex-1 py-3 flex flex-col items-center gap-1 text-gray-600 hover:text-primary active:bg-primary-50">
     <IconHome size={24} />
     <span className="text-xs font-medium">Home</span>
   </button>
@@ -296,9 +307,9 @@ Follow Tailwind's default breakpoints:
 #### Breadcrumb Navigation
 ```tsx
 <nav className="flex items-center gap-2 text-sm mb-4">
-  <a href="/" className="text-blue-600 hover:underline">Home</a>
+  <a href="/" className="text-primary hover:underline">Home</a>
   <span className="text-gray-400">/</span>
-  <a href="/procedures" className="text-blue-600 hover:underline">Procedures</a>
+  <a href="/procedures" className="text-primary hover:underline">Procedures</a>
   <span className="text-gray-400">/</span>
   <span className="text-gray-600">New Entry</span>
 </nav>
@@ -365,7 +376,7 @@ Follow Tailwind's default breakpoints:
   <IconEmpty size={48} className="text-gray-400 mb-4" />
   <h3 className="font-semibold text-gray-900 mb-2">No procedures logged yet</h3>
   <p className="text-sm text-gray-600 mb-4">Start logging procedures to track your progress.</p>
-  <button className="px-4 py-2 bg-blue-600 text-white rounded-md">
+  <button className="px-4 py-2 bg-primary text-white rounded-md">
     Log First Procedure
   </button>
 </div>
@@ -495,8 +506,9 @@ When the design system matures, consider extracting tokens:
 ```json
 {
   "colors": {
-    "primary": "#0066CC",
-    "success": "#22C55E",
+    "primary": "#003A63",
+    "crimson": "#C8102E",
+    "success": "#16A34A",
     "warning": "#F97316",
     "error": "#EF4444"
   },
