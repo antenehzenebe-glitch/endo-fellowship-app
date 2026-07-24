@@ -46,13 +46,24 @@ This document defines the design principles, component library, visual identity,
 ### Color Palette
 
 #### Primary Colors
-| Color | Hex | Usage | Tailwind |
-|-------|-----|-------|----------|
-| **Howard Blue** | `#0066CC` | Buttons, links, primary CTAs | `blue-600` |
-| **Success Green** | `#22C55E` | Confirmations, completed items | `green-500` |
-| **Warning Orange** | `#F97316` | Alerts, incomplete items | `orange-500` |
-| **Error Red** | `#EF4444` | Destructive actions, errors | `red-500` |
+
+The canonical brand colors are **Howard navy `#003a63`** and **Howard crimson `#C8102E`** (audit P0-2, decision D3). They are defined once in `tailwind.config.ts` and must be referenced via theme tokens — never as hardcoded hexes.
+
+| Color | Hex | Usage | Tailwind token |
+|-------|-----|-------|----------------|
+| **Howard Navy** | `#003a63` | Buttons, links, primary CTAs, headings | `primary` (scale `primary-50`–`primary-900`; hover shade `primary-700` `#04263f`) |
+| **Howard Crimson** | `#C8102E` | Accents, active states, print bands | `crimson` (hover shade `crimson-dark` `#a50e26`) |
+| **Ink** | `#1B2733` | Primary body text | `ink` |
+| **Muted Slate** | `#5C6B7A` | Secondary text, captions | `muted` |
+| **Success Green** | `#16A34A` | Confirmations, completed items | `success` (dark shade `success-dark` `#15803d`) |
+| **Warning Orange** | `#F97316` | Alerts, incomplete items | `warning` |
+| **Error Red** | `#EF4444` | Destructive actions, errors | `error` |
 | **Neutral Gray** | `#6B7280` | Text, secondary elements | `gray-500` |
+
+**Rules:**
+- Use tokens (`text-primary`, `bg-crimson`, `border-primary/15`, `hover:bg-crimson-dark`, …) — never arbitrary-value hexes like `bg-[#003a63]`.
+- Where Tailwind classes can't reach (dynamic inline styles, SVG attributes), import the constant from `lib/tokens.ts` (`NAVY`, `CRIMSON`, `CRIMSON_DARK`, `INK`, `MUTED`, `SUCCESS`, `SUCCESS_DARK`) instead of a hex literal.
+- `npm run check:no-hex` fails the build if a canonical hex literal reappears outside `components/Landing.tsx` (migrates with its redesign), `lib/endocrine-emergencies.ts` (data), and `lib/tokens.ts` (the single source of truth).
 
 #### Accessibility Considerations
 - Never use red/green alone to indicate status → pair with icons
@@ -495,8 +506,9 @@ When the design system matures, consider extracting tokens:
 ```json
 {
   "colors": {
-    "primary": "#0066CC",
-    "success": "#22C55E",
+    "primary": "#003a63",
+    "crimson": "#c8102e",
+    "success": "#16a34a",
     "warning": "#F97316",
     "error": "#EF4444"
   },
