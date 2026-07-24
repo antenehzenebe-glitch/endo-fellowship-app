@@ -45,9 +45,8 @@ import {
   type WeekendCoverage,
   type WeeklyKind,
 } from '@/lib/schedule'
+import { NAVY, CRIMSON, SLATE_50, SLATE_300, SLATE_500, SLATE_600, SLATE_700 } from '@/lib/tokens'
 
-const NAVY = '#003a63'
-const CRIMSON = '#c8102e'
 const MONTHS = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
 
 const uid = (p: string) => `${p}${Math.random().toString(36).slice(2, 7)}`
@@ -400,7 +399,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
               <div className="flex gap-3 items-start">
                 <span
                   className="mt-2 w-1.5 h-8 rounded shrink-0"
-                  style={{ background: KIND_COLOR[row.kind] || '#475569' }}
+                  style={{ background: KIND_COLOR[row.kind] || SLATE_600 }}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap gap-2 items-center">
@@ -440,7 +439,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                           style={
                             on
                               ? { background: NAVY, color: 'white', borderColor: NAVY }
-                              : { background: 'white', color: '#64748b', borderColor: '#cbd5e1' }
+                              : { background: 'white', color: SLATE_500, borderColor: SLATE_300 }
                           }
                         >
                           {d}
@@ -534,7 +533,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
               <span
                 key={r}
                 className="inline-flex items-center gap-1.5 text-sm rounded-full pl-3 pr-2 py-1 border"
-                style={{ borderColor: '#cbd5e1', background: '#f8fafc' }}
+                style={{ borderColor: SLATE_300, background: SLATE_50 }}
               >
                 {r}
                 <button
@@ -641,7 +640,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                   <tr key={b.id} className={i % 2 ? 'bg-slate-50/60' : 'bg-white'}>
                     <td
                       className="px-3 py-2 align-top sticky left-0 z-10"
-                      style={{ background: i % 2 ? '#f8fafc' : 'white', minWidth: 140 }}
+                      style={{ background: i % 2 ? SLATE_50 : 'white', minWidth: 140 }}
                     >
                       <input
                         value={b.label}
@@ -717,7 +716,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
               style={
                 mo.id === selectedMonthId
                   ? { background: NAVY, color: 'white', borderColor: NAVY }
-                  : { background: 'white', color: '#334155', borderColor: '#cbd5e1' }
+                  : { background: 'white', color: SLATE_700, borderColor: SLATE_300 }
               }
             >
               {mo.label || mo.ym || 'Untitled'}
