@@ -243,7 +243,7 @@ export default function ThyroidQuiz({
         <div className={`text-5xl font-bold mt-3 ${passed ? 'text-green-700' : 'text-amber-700'}`}>
           {score}/{total}
         </div>
-        <p className="text-sm text-[#5C6B7A] mt-1">
+        <p className="text-sm text-muted mt-1">
           {pct}% &middot; pass mark {passPct}%
         </p>
 
@@ -262,10 +262,10 @@ export default function ThyroidQuiz({
           <p className="text-xs text-gray-400 mt-3">Self-check only &mdash; completions are recorded for fellows.</p>
         )}
 
-        <h3 className="font-bold text-[#003a63] text-lg mt-5">
+        <h3 className="font-bold text-primary text-lg mt-5">
           {passed ? 'Nicely done.' : 'Almost there.'}
         </h3>
-        <p className="text-sm text-[#1B2733] max-w-xl mx-auto mt-1 leading-relaxed">
+        <p className="text-sm text-ink max-w-xl mx-auto mt-1 leading-relaxed">
           {passed
             ? 'You can score a nodule, choose the next step, and reason through cytology and management. Revisit the lecture and the two procedure videos any time for reinforcement.'
             : 'Review the items below, then rewatch the relevant parts of the lecture and procedure videos and retake the check.'}
@@ -273,10 +273,10 @@ export default function ThyroidQuiz({
 
         {missed.length > 0 && (
           <div className="text-left max-w-xl mx-auto mt-6">
-            <h4 className="text-xs font-bold uppercase tracking-wide text-[#5C6B7A] mb-3">Review these</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wide text-muted mb-3">Review these</h4>
             {missed.map((o) => (
               <div key={o.q.id} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
-                <p className="text-sm font-semibold text-[#003a63]">
+                <p className="text-sm font-semibold text-primary">
                   {o.i + 1}. {o.q.stem}
                 </p>
                 <p className="text-sm text-green-700 mt-1">
@@ -289,7 +289,7 @@ export default function ThyroidQuiz({
 
         <button
           onClick={retake}
-          className="mt-6 inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-lg border-2 border-[#003a63] text-[#003a63] hover:bg-[#003a63] hover:text-white min-h-[44px]"
+          className="mt-6 inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-lg border-2 border-primary text-primary hover:bg-primary hover:text-white min-h-[44px]"
         >
           Retake the self-check
         </button>
@@ -310,32 +310,32 @@ export default function ThyroidQuiz({
       <div className="flex items-center gap-3 mb-4">
         <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className="h-full bg-[#c8102e] rounded-full transition-all"
+            className="h-full bg-crimson rounded-full transition-all"
             style={{ width: `${(idx / total) * 100}%` }}
           />
         </div>
-        <span className="text-xs font-semibold text-[#5C6B7A] whitespace-nowrap">
+        <span className="text-xs font-semibold text-muted whitespace-nowrap">
           {idx + 1} of {total}
         </span>
       </div>
 
-      <p className="text-[11px] font-bold uppercase tracking-wide text-[#c8102e]">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-crimson">
         {idx + 1} / {total} &middot; {q.tag}
       </p>
-      <p className="font-semibold text-[#003a63] mt-1 leading-snug">{q.stem}</p>
-      {q.vignette && <p className="text-sm text-[#1B2733] mt-2 leading-relaxed">{q.vignette}</p>}
+      <p className="font-semibold text-primary mt-1 leading-snug">{q.stem}</p>
+      {q.vignette && <p className="text-sm text-ink mt-2 leading-relaxed">{q.vignette}</p>}
 
       <div className="mt-4 space-y-2.5">
         {q.options.map((opt, i) => {
-          let cls = 'border-gray-200 bg-white hover:border-[#003a63]'
-          let chip = 'bg-gray-100 text-[#003a63]'
+          let cls = 'border-gray-200 bg-white hover:border-primary'
+          let chip = 'bg-gray-100 text-primary'
           if (isLocked) {
             if (i === q.correct) {
               cls = 'border-green-500 bg-green-50'
               chip = 'bg-green-600 text-white'
             } else if (i === sel) {
-              cls = 'border-[#c8102e] bg-red-50'
-              chip = 'bg-[#c8102e] text-white'
+              cls = 'border-crimson bg-red-50'
+              chip = 'bg-crimson text-white'
             } else {
               cls = 'border-gray-200 bg-white opacity-55'
             }
@@ -354,7 +354,7 @@ export default function ThyroidQuiz({
               >
                 {LETTERS[i]}
               </span>
-              <span className="text-[15px] text-[#1B2733] leading-snug">{opt}</span>
+              <span className="text-[15px] text-ink leading-snug">{opt}</span>
             </button>
           )
         })}
@@ -366,12 +366,12 @@ export default function ThyroidQuiz({
             isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
           }`}
         >
-          <p className={`font-bold text-sm flex items-center gap-2 ${isCorrect ? 'text-green-700' : 'text-[#c8102e]'}`}>
+          <p className={`font-bold text-sm flex items-center gap-2 ${isCorrect ? 'text-green-700' : 'text-crimson'}`}>
             {isCorrect ? '\u2713 Correct' : '\u2717 Not quite'}
           </p>
-          <p className="text-sm text-[#1B2733] mt-1.5 leading-relaxed">{q.rationale}</p>
-          <div className="mt-3 bg-white border border-red-200 rounded-lg p-3 text-[13px] text-[#1B2733] leading-relaxed">
-            <span className="font-semibold text-[#c8102e]">Board Pearl &middot;</span> {q.pearl}
+          <p className="text-sm text-ink mt-1.5 leading-relaxed">{q.rationale}</p>
+          <div className="mt-3 bg-white border border-red-200 rounded-lg p-3 text-[13px] text-ink leading-relaxed">
+            <span className="font-semibold text-crimson">Board Pearl &middot;</span> {q.pearl}
           </div>
         </div>
       )}
@@ -380,7 +380,7 @@ export default function ThyroidQuiz({
         <button
           onClick={next}
           disabled={!isLocked}
-          className="inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold rounded-lg bg-[#c8102e] text-white hover:bg-[#a50e26] disabled:opacity-40 disabled:cursor-default min-h-[44px]"
+          className="inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold rounded-lg bg-crimson text-white hover:bg-crimson-dark disabled:opacity-40 disabled:cursor-default min-h-[44px]"
         >
           {last ? 'See results' : 'Next question'}
         </button>
