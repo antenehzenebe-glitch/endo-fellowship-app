@@ -134,9 +134,10 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
     // so procedures stay informational until then. The bars still show progress
     // toward the full minimum — only status/blockers are paced.
     const pgyKnown = fellow.pgy_level === 'PGY-4' || fellow.pgy_level === 'PGY-5'
-    const expectedFraction = pgyKnown
-      ? EXPECTED_PROCEDURE_FRACTION[fellow.pgy_level]
-      : 0
+    const expectedFraction =
+      fellow.pgy_level === 'PGY-4' || fellow.pgy_level === 'PGY-5'
+        ? EXPECTED_PROCEDURE_FRACTION[fellow.pgy_level]
+        : 0
     const withTarget = procedures.filter((p) => p.min > 0)
     const proceduresMet = withTarget.filter((p) => p.done >= p.min).length
     // Unknown PGY: skip the pace check entirely. Without a year we cannot
