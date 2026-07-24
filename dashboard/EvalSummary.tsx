@@ -72,6 +72,11 @@ export default function EvalSummary({ summary }: { summary: EvalSummaryData }) {
         </div>
       ) : (
         <>
+          {!summary.hasAnyEvaluations ? (
+            <p className="text-sm text-gray-600">
+              New academic year — evaluations aren&apos;t due yet.
+            </p>
+          ) : null}
           <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
             <table className="w-full border-collapse text-sm">
               <caption className="sr-only">

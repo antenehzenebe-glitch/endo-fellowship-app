@@ -20,9 +20,12 @@ async function getLatestPublish(): Promise<LatestPublish> {
   } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data: rows } = await supabase
+  const { data: rows, error } = await supabase
     .from('program_schedule')
     .select('academic_year, blocks_published_at, months_published_at')
+  // Log, but keep the banner silent on failure — the schedule banner is
+  // informational chrome, never worth breaking the page over.
+  if (error) console.error('getLatestPublish:', error.message)
   if (!rows) return null
 
   let best: LatestPublish = null

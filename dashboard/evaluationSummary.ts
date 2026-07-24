@@ -32,6 +32,10 @@ export type FellowEvalRow = {
 export type EvalSummaryData = {
   fellows: FellowEvalRow[]
   academicYear: string
+  // True when no evaluation rows exist yet for the academic year (normal
+  // right after the July rollover) — lets the UI say so instead of leaving
+  // every cell at "Not started" with no context.
+  hasAnyEvaluations: boolean
 }
 
 // Academic year runs July 1 → June 30, written as "YYYY-YYYY" (e.g. 2025-2026).
@@ -87,5 +91,5 @@ export async function getEvalSummary(): Promise<EvalSummaryData> {
     endOfYear: cellFor(f.id, 'end_of_year'),
   }))
 
-  return { fellows: rows, academicYear }
+  return { fellows: rows, academicYear, hasAnyEvaluations: evals.length > 0 }
 }
