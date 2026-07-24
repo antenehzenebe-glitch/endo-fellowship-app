@@ -7,9 +7,18 @@
 // else the newest. "Today" (America/New_York) is computed server-side so the
 // current block + month + today's cell are stable across hydration.
 //
-// Staff + fellows also PUBLISH a year (migration 0016_schedule_publish_flags):
-// the block grid and the monthly calendar publish independently. Publish state +
-// publisher names are loaded here and handed to <PublishControls>.
+// Staff alone PUBLISH a year (migration 0016_schedule_publish_flags): publish is
+// ANNOUNCEMENT-ONLY (decision D1) — it posts the app-wide banner; it does NOT
+// gate what fellows/attendings see. The block grid and the monthly calendar
+// publish independently. Publish state + publisher names are loaded here and
+// handed to <PublishControls>, which is rendered for STAFF ONLY (the
+// publishSchedule action rejects non-staff, so showing it to fellows would just
+// render a button that always errors).
+//
+// When zero program_schedule rows exist there is NO fallback year: instead of a
+// phantom hardcoded year whose every Save would fail, the page shows a friendly
+// "create the first academic year" empty state with the YearSwitcher's create
+// affordance.
 //
 // Educational schedule only — continuity clinic, didactics, training, rotation
 // blocks, monthly didactic calendar. Not duty hours, not time-off. NO PHI.
@@ -62,7 +71,9 @@ export default async function SchedulePage({
     years[0] ??
     null
 
-  const academicYear = selected?.academic_year ?? '2026-2027'
+  // No phantom year: when no row exists, academicYear stays empty and the page
+  // renders the "create the first year" empty state instead of a broken editor.
+  const academicYear = selected?.academic_year ?? ''
   const config = asConfig(selected?.config)
   const updatedAt = selected?.updated_at ?? null
 
@@ -150,28 +161,46 @@ export default async function SchedulePage({
           years={yearOptions}
           selected={academicYear}
           canCreate={canEditSchedule}
-          canSetCurrent={staff}
+          canSetCurrent={staff && Boolean(selected)}
         />
-        {canEditSchedule && (
-          <PublishControls
-            academicYear={academicYear}
-            blocks={publish.blocks}
-            months={publish.months}
-          />
-        )}
-        {/* key={academicYear} forces a fresh mount when the year changes, so the
-            editor's/view's internal state resets to the newly selected year. */}
-        {canEditSchedule ? (
-          <ScheduleEditor key={academicYear} initial={initial} />
+        {!selected ? (
+          // Empty database: no phantom year, no editor. Point editors at the
+          // "+ New academic year" button in the YearSwitcher above.
+          <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
+            <h2 className="text-lg font-bold text-[#003a63]">No academic years exist yet</h2>
+            <p className="mt-2 text-sm text-[#5C6B7A] max-w-md mx-auto leading-relaxed">
+              The first step is creating the current academic year.
+              {canEditSchedule
+                ? ' Use “+ New academic year” above to create it — it starts from your fellows & rotations with an empty block grid you can fill in.'
+                : ' Once a program staff member creates it, the schedule will appear here.'}
+            </p>
+          </div>
         ) : (
-          <ScheduleView
-            key={academicYear}
-            config={config}
-            academicYear={academicYear}
-            today={today}
-            currentBlockId={currentBlockId}
-            updatedAt={updatedAt}
-          />
+          <>
+            {/* Publish is announcement-only (D1) and staff-only: the server
+                action rejects non-staff, so fellows never see these controls. */}
+            {staff && (
+              <PublishControls
+                academicYear={academicYear}
+                blocks={publish.blocks}
+                months={publish.months}
+              />
+            )}
+            {/* key={academicYear} forces a fresh mount when the year changes, so the
+                editor's/view's internal state resets to the newly selected year. */}
+            {canEditSchedule ? (
+              <ScheduleEditor key={academicYear} initial={initial} />
+            ) : (
+              <ScheduleView
+                key={academicYear}
+                config={config}
+                academicYear={academicYear}
+                today={today}
+                currentBlockId={currentBlockId}
+                updatedAt={updatedAt}
+              />
+            )}
+          </>
         )}
       </main>
     </div>

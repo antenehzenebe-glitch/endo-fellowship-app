@@ -1,13 +1,17 @@
 // app/schedule/PublishControls.tsx
-// Staff + fellow control to PUBLISH a year's schedule to the program. The
-// schedule has two independently-publishable views — the yearly block grid and
-// the monthly didactic calendar — so this renders one card per view, each
-// showing current publish status (when + by whom) and a Publish / Re-publish
-// button guarded by an inline confirm. Calls the publishSchedule server action
-// (EDITOR_ROLES; see actions.ts), which stamps the row and revalidates; we then
+// STAFF-ONLY control to PUBLISH a year's schedule to the program. The schedule
+// has two independently-publishable views — the yearly block grid and the
+// monthly didactic calendar — so this renders one card per view, each showing
+// current publish status (when + by whom) and a Publish / Re-publish button
+// guarded by an inline confirm. Calls the publishSchedule server action (staff
+// only; see actions.ts), which stamps the row and revalidates; we then
 // router.refresh() so the status updates in place.
 //
-// Only rendered for editors (staff + fellows) — see page.tsx. NO PHI.
+// Publish is ANNOUNCEMENT-ONLY (decision D1): it posts the app-wide banner. It
+// does NOT gate what fellows/attendings see — the schedule renders regardless
+// of publish state. Copy below must never imply visibility gating.
+//
+// Only rendered for staff — see page.tsx. NO PHI.
 'use client'
 
 import { useState, useTransition } from 'react'
@@ -43,8 +47,8 @@ export default function PublishControls({ academicYear, blocks, months }: Props)
         Share {academicYear} with the program
       </h2>
       <p className="mt-1 text-sm text-[#5C6B7A]">
-        Publishing posts an announcement across the app linking the live, printable
-        schedule. Re-publish after changes to re-notify everyone.
+        Publishing posts an announcement banner to fellows and faculty across the app,
+        linking the schedule. Re-publish after changes to re-notify everyone.
       </p>
       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <PublishCard academicYear={academicYear} scope="blocks" state={blocks} />
@@ -111,9 +115,9 @@ function PublishCard({
         {confirming ? (
           <div className="rounded-md bg-gray-50 border border-gray-200 p-3">
             <p className="text-sm text-[#1B2733]">
-              Publish the {academicYear} {meta.label.toLowerCase()}? This makes it the
-              live version your fellows and faculty see and posts an announcement
-              across the app.
+              Publish the {academicYear} {meta.label.toLowerCase()}? This posts an
+              announcement banner to fellows and faculty that this schedule was
+              updated.
             </p>
             <div className="mt-3 flex gap-2">
               <button
