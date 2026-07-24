@@ -16,6 +16,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { todayET } from '@/lib/dates'
 import type { Database } from '@/lib/supabase/database.types'
 
 export type ProcedureOutcome = Database['public']['Enums']['procedure_outcome']
@@ -51,7 +52,7 @@ export async function logProcedure(input: LogProcedureInput): Promise<ActionResu
   if (!input.date_performed) {
     return { ok: false, error: 'Choose the date the procedure was performed.' }
   }
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayET()
   if (input.date_performed > today) {
     return { ok: false, error: 'The date performed can’t be in the future.' }
   }
