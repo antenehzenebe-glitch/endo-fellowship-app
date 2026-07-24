@@ -44,6 +44,22 @@ const config: Config = {
           200: '#f3efdd',
           300: '#e7dfc4',
         },
+        // Howard gold — the landing's golden system. 50/100 are the warm
+        // parchment/mist backgrounds for content sections; 200 hairline rules;
+        // 300–400 metallic accents for decorative marks and text on navy;
+        // 600–700 are the AA-safe gold text shades on parchment (never use
+        // light gold as text on parchment — pair with navy/ink instead).
+        gold: {
+          DEFAULT: '#c9a44e',
+          50: '#fbf6e9',
+          100: '#f4ead0',
+          200: '#e9dab2',
+          300: '#dcc385',
+          400: '#c9a44e',
+          500: '#a9832f',
+          600: '#83671f',
+          700: '#66511a',
+        },
         success: { DEFAULT: '#16a34a', dark: '#15803d' },
         warning: '#F97316',
         error: '#EF4444',
