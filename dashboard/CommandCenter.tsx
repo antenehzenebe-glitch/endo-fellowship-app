@@ -10,7 +10,8 @@
 // Evaluations are intentionally NOT shown here anymore — they live in their own
 // Evaluation Summary tab under the New-Innovations-communication model.
 // Color is meaning-bearing only: navy = structure, crimson = identity (PGY),
-// green/amber/red = readiness state. Status by icon + text + color (never color alone).
+// green/amber/red = readiness state, gray = provisioning (PGY not set yet).
+// Status by icon + text + color (never color alone).
 import {
   type FellowReadiness,
   type ProcedureProgress,
@@ -23,14 +24,15 @@ const NAVY = '#003a63'
 /* -------------------------------------------------------------- status -- */
 const STATUS_META: Record<
   ReadinessStatus,
-  { label: string; pill: string; glyph: 'check' | 'alert' | 'cross'; rail: string }
+  { label: string; pill: string; glyph: 'check' | 'alert' | 'cross' | 'pending'; rail: string }
 > = {
   on_track: { label: 'On Track', pill: 'bg-green-600 text-white', glyph: 'check', rail: '#16a34a' },
   at_risk: { label: 'At Risk', pill: 'bg-amber-400 text-amber-950', glyph: 'alert', rail: '#f59e0b' },
   behind: { label: 'Behind', pill: 'bg-red-600 text-white', glyph: 'cross', rail: '#dc2626' },
+  provisioning: { label: 'Provisioning', pill: 'bg-gray-200 text-gray-700', glyph: 'pending', rail: '#9ca3af' },
 }
 
-function StatusGlyph({ glyph }: { glyph: 'check' | 'alert' | 'cross' }) {
+function StatusGlyph({ glyph }: { glyph: 'check' | 'alert' | 'cross' | 'pending' }) {
   const common = { width: 12, height: 12, viewBox: '0 0 16 16', 'aria-hidden': true } as const
   if (glyph === 'check') {
     return (
@@ -39,10 +41,19 @@ function StatusGlyph({ glyph }: { glyph: 'check' | 'alert' | 'cross' }) {
       </svg>
     )
   }
+  if (glyph === 'pending') {
+    return (
+      <svg {...common} fill="currentColor">
+        <circle cx={3} cy={8} r={1.3} />
+        <circle cx={8} cy={8} r={1.3} />
+        <circle cx={13} cy={8} r={1.3} />
+      </svg>
+    )
+  }
   if (glyph === 'cross') {
     return (
       <svg {...common} fill="none" stroke="currentColor" strokeWidth={2}>
-        <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round" />
+        <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     )
   }
@@ -190,6 +201,9 @@ export function ProgramSummary({ overview }: { overview: ReadinessOverview }) {
   const onTrack = overview.fellows.filter((f) => f.status === 'on_track').length
   const atRisk = overview.fellows.filter((f) => f.status === 'at_risk').length
   const behind = overview.fellows.filter((f) => f.status === 'behind').length
+  // Provisioning fellows (PGY not set) sit outside all three buckets — they are
+  // neither on track nor at risk until their year is known.
+  const provisioning = overview.fellows.filter((f) => f.status === 'provisioning').length
 
   return (
     <div className="mb-6 overflow-hidden rounded-2xl shadow-sm ring-1 ring-gray-900/5">
@@ -198,6 +212,7 @@ export function ProgramSummary({ overview }: { overview: ReadinessOverview }) {
         <p className="text-white/70 text-sm mt-0.5">
           {total} active {total === 1 ? 'fellow' : 'fellows'} ·{' '}
           {overview.procedureTypes.length} procedure types tracked
+          {provisioning > 0 ? ` · ${provisioning} provisioning` : ''}
         </p>
       </div>
       <div className="grid grid-cols-3 divide-x divide-gray-100 bg-white">
@@ -213,6 +228,7 @@ export function ProgramSummary({ overview }: { overview: ReadinessOverview }) {
 export function FellowCard({ fellow }: { fellow: FellowReadiness }) {
   const meta = STATUS_META[fellow.status]
   const severe = fellow.status === 'behind'
+  const provisioning = fellow.status === 'provisioning'
 
   // Aggregate procedure progress toward minimums (rewards partial progress).
   const withTarget = fellow.procedures.filter((p) => p.min > 0)
@@ -244,7 +260,9 @@ export function FellowCard({ fellow }: { fellow: FellowReadiness }) {
         <div className="flex flex-col items-center shrink-0">
           <ProcedureRing done={totalDone} total={totalMin} />
           <span className="mt-1.5 text-[11px] text-gray-500 tabular-nums">
-            {fellow.proceduresMet}/{fellow.proceduresWithTarget} mins met
+            {provisioning
+              ? 'PGY not set'
+              : `${fellow.proceduresMet}/${fellow.proceduresWithTarget} mins met`}
           </span>
         </div>
         <div className="grid grid-cols-2 gap-2 flex-1 content-start">
@@ -286,6 +304,12 @@ export function FellowCard({ fellow }: { fellow: FellowReadiness }) {
               ))}
             </ul>
           </section>
+        </div>
+      ) : provisioning ? (
+        <div className="px-5 pb-4 pt-2 border-t border-gray-50">
+          <p className="text-sm text-gray-500">
+            Provisioning — readiness tracking starts once the PGY level is set.
+          </p>
         </div>
       ) : (
         <div className="px-5 pb-4 pt-2 border-t border-gray-50">
