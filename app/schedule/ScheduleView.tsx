@@ -14,9 +14,7 @@ import {
   type ScheduleWeekly,
   type WeeklyKind,
 } from '@/lib/schedule'
-
-const NAVY = '#003a63'
-const CRIMSON = '#c8102e'
+import { NAVY, CRIMSON } from '@/lib/tokens'
 
 function fmtUpdated(iso: string | null): string | null {
   if (!iso) return null
