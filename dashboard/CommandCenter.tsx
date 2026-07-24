@@ -18,15 +18,15 @@ import {
   type ReadinessOverview,
   type ReadinessStatus,
 } from '@/dashboard/queries'
+import { NAVY, SUCCESS } from '@/lib/tokens'
 
-const NAVY = '#003a63'
 
 /* -------------------------------------------------------------- status -- */
 const STATUS_META: Record<
   ReadinessStatus,
   { label: string; pill: string; glyph: 'check' | 'alert' | 'cross' | 'pending'; rail: string }
 > = {
-  on_track: { label: 'On Track', pill: 'bg-green-600 text-white', glyph: 'check', rail: '#16a34a' },
+  on_track: { label: 'On Track', pill: 'bg-green-600 text-white', glyph: 'check', rail: SUCCESS },
   at_risk: { label: 'At Risk', pill: 'bg-amber-400 text-amber-950', glyph: 'alert', rail: '#f59e0b' },
   behind: { label: 'Behind', pill: 'bg-red-600 text-white', glyph: 'cross', rail: '#dc2626' },
   provisioning: { label: 'Provisioning', pill: 'bg-gray-200 text-gray-700', glyph: 'pending', rail: '#9ca3af' },
@@ -92,7 +92,7 @@ function ProcedureRing({ done, total }: { done: number; total: number }) {
           cy="32"
           r={r}
           fill="none"
-          stroke={complete ? '#16a34a' : NAVY}
+          stroke={complete ? SUCCESS : NAVY}
           strokeWidth="6"
           strokeLinecap="round"
           strokeDasharray={`${filled} ${circ - filled}`}
@@ -140,7 +140,7 @@ function ProcedureBar({ p }: { p: ProcedureProgress }) {
       >
         <div
           className="h-full rounded-full transition-[width] duration-500"
-          style={{ width: `${pct}%`, backgroundColor: met ? '#16a34a' : NAVY }}
+          style={{ width: `${pct}%`, backgroundColor: met ? SUCCESS : NAVY }}
         />
       </div>
     </div>
@@ -207,7 +207,7 @@ export function ProgramSummary({ overview }: { overview: ReadinessOverview }) {
 
   return (
     <div className="mb-6 overflow-hidden rounded-2xl shadow-sm ring-1 ring-gray-900/5">
-      <div className="bg-gradient-to-r from-[#003a63] to-[#00598f] px-5 py-4">
+      <div className="bg-gradient-to-r from-primary to-[#00598f] px-5 py-4">
         <h2 className="text-white font-semibold text-lg leading-tight">Graduation readiness</h2>
         <p className="text-white/70 text-sm mt-0.5">
           {total} active {total === 1 ? 'fellow' : 'fellows'} ·{' '}
@@ -245,7 +245,7 @@ export function FellowCard({ fellow }: { fellow: FellowReadiness }) {
         <div className="min-w-0">
           <h3 className="font-semibold text-lg text-gray-900 leading-tight truncate">{fellow.name}</h3>
           {fellow.pgyLevel ? (
-            <span className="mt-1 inline-block rounded-md bg-[#c8102e]/10 px-2 py-0.5 text-xs font-semibold text-[#c8102e]">
+            <span className="mt-1 inline-block rounded-md bg-crimson/10 px-2 py-0.5 text-xs font-semibold text-crimson">
               {fellow.pgyLevel}
             </span>
           ) : (
@@ -329,7 +329,7 @@ export function FellowCard({ fellow }: { fellow: FellowReadiness }) {
 export function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl bg-white shadow-sm ring-1 ring-gray-900/5">
-      <div className="w-12 h-12 rounded-full bg-blue-50 text-[#003a63] flex items-center justify-center mb-4">
+      <div className="w-12 h-12 rounded-full bg-blue-50 text-primary flex items-center justify-center mb-4">
         <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
           <path d="M16 21v-2a4 4 0 0 0-8 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
