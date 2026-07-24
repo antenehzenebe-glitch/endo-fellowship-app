@@ -49,7 +49,8 @@ export default async function StandingPage() {
       .limit(1),
   ])
 
-  const loadError = typesRes.error || targetsRes.error || logsRes.error || onbRes.error
+  const loadError =
+    typesRes.error || targetsRes.error || logsRes.error || onbRes.error || evalRes.error
 
   const types = typesRes.data ?? []
   const targets = targetsRes.data ?? []

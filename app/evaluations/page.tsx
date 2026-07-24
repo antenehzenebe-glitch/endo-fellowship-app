@@ -29,17 +29,21 @@ export default async function EvaluationsPage() {
 
   const supabase = await createClient()
 
-  const { data: people } = await supabase
+  const { data: people, error: peopleError } = await supabase
     .from('profiles')
     .select('id, full_name, role, pgy_level, is_active')
     .order('full_name')
   const byId = new Map((people ?? []).map((p) => [p.id, p]))
   const fellows = (people ?? []).filter((p) => p.role === 'fellow' && p.is_active)
 
-  const { data: evals } = await supabase
+  const { data: evals, error: evalsError } = await supabase
     .from('fellow_evaluations')
     .select('*')
     .order('updated_at', { ascending: false })
+
+  // An outage must never render as "No evaluations yet" — show the error panel.
+  const loadError = peopleError || evalsError
+  if (loadError) console.error('EvaluationsPage:', loadError.message)
 
   const rows: EvalRow[] = (evals ?? []).map((e) => ({
     ...e,
@@ -71,7 +75,9 @@ export default async function EvaluationsPage() {
           <span className="font-semibold text-slate-800">Note:</span> The official evaluation is
           completed in New Innovations; this is the program&rsquo;s summary.
         </p>
-        {author ? (
+        {loadError ? (
+          <ErrorPanel what="evaluations" />
+        ) : author ? (
           <EvaluationWorkspace
             fellows={fellows.map((f) => ({ id: f.id, name: f.full_name, pgy: f.pgy_level }))}
             rows={rows}
@@ -83,6 +89,20 @@ export default async function EvaluationsPage() {
           <ReadOnlyList rows={rows} fellow={fellow} />
         )}
       </main>
+    </div>
+  )
+}
+
+// Same shape as the dashboard's ErrorPanel: honest failure instead of a
+// fake "nothing here yet" empty state.
+function ErrorPanel({ what }: { what: string }) {
+  return (
+    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+      <h2 className="font-semibold text-red-900 mb-1">Couldn&apos;t load {what}</h2>
+      <p className="text-sm text-red-700">
+        The data didn&apos;t come back. Refresh the page; if it keeps failing, the
+        database connection may be down.
+      </p>
     </div>
   )
 }

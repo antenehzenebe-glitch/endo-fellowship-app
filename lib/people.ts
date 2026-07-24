@@ -40,7 +40,13 @@ type PeopleRow = {
 
 const PHOTO_BUCKET = 'people-photos'
 
-export async function getPublishedPeople(): Promise<DirectoryPerson[]> {
+// Discriminated result so callers can tell a failed query apart from a
+// genuinely empty directory — an outage must not silently render as "no one".
+export type PeopleResult =
+  | { ok: true; people: DirectoryPerson[] }
+  | { ok: false }
+
+export async function getPublishedPeople(): Promise<PeopleResult> {
   const supabase = await createClient()
   // select('*') + returns<>() keeps this compiling even though the generated
   // types predate the is_leadership column; regenerate database.types to tidy.
@@ -53,20 +59,23 @@ export async function getPublishedPeople(): Promise<DirectoryPerson[]> {
 
   if (error || !data) {
     if (error) console.error('getPublishedPeople:', error.message)
-    return []
+    return { ok: false }
   }
 
-  return data.map((p) => ({
-    id: p.id,
-    category: p.category as PersonCategory,
-    fullName: p.full_name,
-    credentials: p.credentials,
-    roleTitle: p.role_title,
-    isLeadership: p.is_leadership,
-    photoUrl: p.photo_path
-      ? supabase.storage.from(PHOTO_BUCKET).getPublicUrl(p.photo_path).data.publicUrl
-      : null,
-  }))
+  return {
+    ok: true,
+    people: data.map((p) => ({
+      id: p.id,
+      category: p.category as PersonCategory,
+      fullName: p.full_name,
+      credentials: p.credentials,
+      roleTitle: p.role_title,
+      isLeadership: p.is_leadership,
+      photoUrl: p.photo_path
+        ? supabase.storage.from(PHOTO_BUCKET).getPublicUrl(p.photo_path).data.publicUrl
+        : null,
+    })),
+  }
 }
 
 // Split the flat published list into the landing's three display tiers.

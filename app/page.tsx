@@ -23,6 +23,9 @@ export default async function Home() {
     redirect(STAFF_ROLES.includes(profile.role) ? '/dashboard' : '/log');
   }
 
-  const groups = groupDirectory(await getPublishedPeople());
-  return <Landing groups={groups} />;
+  // A failed directory query must not look like an empty directory: surface
+  // the failure to Landing so it can show a temporary-unavailable notice.
+  const result = await getPublishedPeople();
+  const groups = groupDirectory(result.ok ? result.people : []);
+  return <Landing groups={groups} directoryError={!result.ok} />;
 }
