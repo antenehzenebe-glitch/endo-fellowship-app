@@ -12,7 +12,10 @@ import SignOutButton from '@/components/SignOutButton'
 
 export const dynamic = 'force-dynamic'
 
-const SIGNED_URL_TTL = 600 // seconds
+// URLs are minted at page render, so the TTL must cover the whole page session:
+// 1 hour covers a normal session. The deeper fix (sign-on-click, minting a
+// fresh URL per click) is ticketed separately.
+const SIGNED_URL_TTL = 3600 // seconds
 
 export default async function ResourcesPage() {
   const profile = await requireProfile()
