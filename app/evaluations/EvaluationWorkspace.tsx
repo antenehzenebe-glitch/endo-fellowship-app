@@ -22,6 +22,27 @@ const AMBER = '#b45309'
 
 type FellowOpt = { id: string; name: string; pgy: string | null }
 
+// Current academic year as "YYYY-YYYY" (AY runs Jul 1 – Jun 30), computed in
+// the program's timezone. Kept local until the shared lib/dates.ts lands.
+function currentAcademicYearET(): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: 'numeric',
+  }).formatToParts(new Date())
+  const year = Number(parts.find((p) => p.type === 'year')?.value)
+  const month = Number(parts.find((p) => p.type === 'month')?.value)
+  return month >= 7 ? `${year}-${year + 1}` : `${year - 1}-${year}`
+}
+
+// Options for the academic-year select: the current AY ± 2 years. The AY was
+// a free-text field (audit P1); a typo like "2025-26" created a duplicate
+// period row that fragmented the completion matrix.
+function academicYearOptions(): string[] {
+  const start = Number(currentAcademicYearET().slice(0, 4))
+  return [-2, -1, 0, 1, 2].map((off) => `${start + off}-${start + off + 1}`)
+}
+
 // Two-step inline confirm state for actions that change an evaluation's
 // visibility to the fellow (audit P0-1). `evalId` is set for card-level
 // actions; the form-level "Finalize & share" omits it because the evaluation
@@ -184,6 +205,11 @@ export default function EvaluationWorkspace({
   const formFellowName = fellows.find((f) => f.id === fellowId)?.name ?? 'this fellow'
   const formFinalizeArmed = pendingAction?.kind === 'finalize' && !pendingAction.evalId
 
+  // Standard AY window (current ± 2). A legacy value outside the window (e.g.
+  // saved while this was free text) is appended so it still loads selected.
+  const yearOptions = academicYearOptions()
+  if (academicYear && !yearOptions.includes(academicYear)) yearOptions.push(academicYear)
+
   return (
     <div className="space-y-6">
       {/* ===== Form ===== */}
@@ -230,13 +256,18 @@ export default function EvaluationWorkspace({
               <label htmlFor="ev-year" className="block text-sm font-semibold text-slate-700 mb-1.5">
                 Academic year
               </label>
-              <input
+              <select
                 id="ev-year"
                 value={academicYear}
                 onChange={(e) => setAcademicYear(e.target.value)}
-                placeholder="2025-2026"
-                className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#003a63]"
-              />
+                className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#003a63] min-h-[44px]"
+              >
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
