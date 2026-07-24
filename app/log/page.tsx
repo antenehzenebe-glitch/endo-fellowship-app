@@ -77,7 +77,7 @@ export default async function LoggerPage() {
 
   const Header = (
     <header>
-      <div className="bg-gradient-to-r from-[#003a63] to-[#001f34] text-white border-b-4 border-[#c8102e]">
+      <div className="bg-gradient-to-r from-primary to-primary-900 text-white border-b-4 border-crimson">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <img
@@ -176,7 +176,7 @@ export default async function LoggerPage() {
 
           {/* Side rail: snapshot + the two "need-it-fast" destinations */}
           <aside className="space-y-4">
-            <div className="rounded-2xl bg-gradient-to-br from-[#003a63] to-[#06243b] p-5 text-white shadow-sm">
+            <div className="rounded-2xl bg-gradient-to-br from-primary to-primary-800 p-5 text-white shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wide text-white/70">At a glance</p>
               <div className="mt-2 flex items-end gap-2">
                 <span className="text-4xl font-bold leading-none">{totalLogged}</span>
@@ -203,8 +203,7 @@ export default async function LoggerPage() {
             <div className="grid grid-cols-2 gap-3">
               <Link
                 href="/schedule"
-                className="flex flex-col items-start gap-2 rounded-2xl p-4 text-white shadow-sm transition-transform active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                style={{ background: '#0f766e' }}
+                className="flex flex-col items-start gap-2 rounded-2xl bg-teal-700 p-4 text-white shadow-sm transition-transform active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               >
                 <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
@@ -214,8 +213,7 @@ export default async function LoggerPage() {
               </Link>
               <Link
                 href="/emergencies"
-                className="flex flex-col items-start gap-2 rounded-2xl p-4 text-white shadow-sm transition-transform active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                style={{ background: '#b91c1c' }}
+                className="flex flex-col items-start gap-2 rounded-2xl bg-red-700 p-4 text-white shadow-sm transition-transform active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               >
                 <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M12 4l9 16H3z" />
@@ -232,7 +230,7 @@ export default async function LoggerPage() {
             this fellow's completion state. Reuses the module page's own palette. */}
         {modules.length > 0 && (
           <section className="mt-6">
-            <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-[#003a63]">
+            <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-primary">
               Learning modules
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -244,10 +242,10 @@ export default async function LoggerPage() {
                   <Link
                     key={m.id}
                     href={`/modules/${m.key}`}
-                    className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-[#003a63]/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#003a63] focus-visible:ring-offset-2"
+                    className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-primary/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-[#c8102e]">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-crimson">
                         Module
                       </span>
                       {done && (
@@ -259,14 +257,14 @@ export default async function LoggerPage() {
                         </span>
                       )}
                     </div>
-                    <h3 className="mt-1 font-bold text-[#003a63] leading-snug">{m.title}</h3>
-                    {m.subtitle && <p className="mt-1 text-sm text-[#5C6B7A]">{m.subtitle}</p>}
+                    <h3 className="mt-1 font-bold text-primary leading-snug">{m.title}</h3>
+                    {m.subtitle && <p className="mt-1 text-sm text-muted">{m.subtitle}</p>}
                     {awaitingAttestation && (
-                      <p className="mt-2 text-xs font-medium text-[#b45309]">
+                      <p className="mt-2 text-xs font-medium text-amber-700">
                         Awaiting faculty attestation
                       </p>
                     )}
-                    <span className="mt-4 inline-flex min-h-[44px] items-center justify-center gap-1 self-start rounded-lg bg-[#003a63] px-4 py-2.5 text-sm font-semibold text-white transition-colors group-hover:bg-[#04263f]">
+                    <span className="mt-4 inline-flex min-h-[44px] items-center justify-center gap-1 self-start rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors group-hover:bg-primary-800">
                       {done ? 'Review module' : 'Start module'}
                       <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M5 12h14M13 6l6 6-6 6" />
