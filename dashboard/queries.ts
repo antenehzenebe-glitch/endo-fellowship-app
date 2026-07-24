@@ -15,7 +15,10 @@
 // in TypeScript — no pagination needed (see CLAUDE.md / ARCHITECTURE.md).
 import { createClient } from '@/lib/supabase/server'
 
-export type ReadinessStatus = 'on_track' | 'at_risk' | 'behind'
+// 'provisioning' = pgy_level not set yet (common right after new-year
+// provisioning): the fellow is never flagged at-risk/behind over procedure
+// minimums we can't calibrate without a year.
+export type ReadinessStatus = 'on_track' | 'at_risk' | 'behind' | 'provisioning'
 
 export type ProcedureProgress = {
   code: string
@@ -53,8 +56,6 @@ const EXPECTED_PROCEDURE_FRACTION: Record<'PGY-4' | 'PGY-5', number> = {
   'PGY-4': 0,
   'PGY-5': 1,
 }
-// Unknown PGY → conservative: hold to the full minimum so gaps aren't hidden.
-const DEFAULT_EXPECTED_FRACTION = 1
 export async function getReadinessOverview(): Promise<ReadinessOverview> {
   const supabase = await createClient()
 
@@ -132,15 +133,20 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
     // to the full minimum; first-years (PGY-4) are given the year to get there,
     // so procedures stay informational until then. The bars still show progress
     // toward the full minimum — only status/blockers are paced.
+    const pgyKnown = fellow.pgy_level === 'PGY-4' || fellow.pgy_level === 'PGY-5'
     const expectedFraction =
       fellow.pgy_level === 'PGY-4' || fellow.pgy_level === 'PGY-5'
         ? EXPECTED_PROCEDURE_FRACTION[fellow.pgy_level]
-        : DEFAULT_EXPECTED_FRACTION
+        : 0
     const withTarget = procedures.filter((p) => p.min > 0)
     const proceduresMet = withTarget.filter((p) => p.done >= p.min).length
-    const proceduresBehindPace = withTarget.filter(
-      (p) => p.done < Math.ceil(p.min * expectedFraction),
-    ).length
+    // Unknown PGY: skip the pace check entirely. Without a year we cannot
+    // calibrate minimums, and holding the fellow to the full target produced
+    // false "at risk"/"behind" flags right after new-year provisioning.
+    const proceduresBehindPace = pgyKnown
+      ? withTarget.filter((p) => p.done < Math.ceil(p.min * expectedFraction))
+          .length
+      : 0
 
     // ITE: most recent exam year on record.
     const fellowIte = ite
@@ -180,7 +186,8 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
     }
 
     let status: ReadinessStatus = 'on_track'
-    if (proceduresBehindPace >= 3) status = 'behind'
+    if (fellow.pgy_level === null) status = 'provisioning'
+    else if (proceduresBehindPace >= 3) status = 'behind'
     else if (blockers.length > 0) status = 'at_risk'
 
     return {
@@ -250,7 +257,7 @@ export async function getCoordinatorWorklist(): Promise<CoordinatorWorklist> {
       .eq('requires_ack', true)
       .eq('is_active', true),
     supabase.from('resource_acknowledgments').select('resource_id, fellow_id'),
-    supabase.from('ite_scores').select('fellow_id'),
+    supabase.from('ite_scores').select('fellow_id, exam_year'),
   ])
 
   const firstError =
@@ -296,9 +303,17 @@ export async function getCoordinatorWorklist(): Promise<CoordinatorWorklist> {
     }
   })
 
-  const fellowsWithIte = new Set(ite.map((s) => s.fellow_id))
+  // "Missing ITE" = no score for the *current* academic year, not no score
+  // ever — a lifetime score from a prior year must not clear the current one.
+  // ite_scores.exam_year is the calendar year the ITE is taken (the academic
+  // year's spring): Jul–Dec → next calendar year; Jan–Jun → this one.
+  const now = new Date()
+  const currentExamYear = now.getMonth() >= 6 ? now.getFullYear() + 1 : now.getFullYear()
+  const fellowsWithCurrentIte = new Set(
+    ite.filter((s) => s.exam_year === currentExamYear).map((s) => s.fellow_id),
+  )
   const missingIteNames = activeFellows
-    .filter((f) => !fellowsWithIte.has(f.id))
+    .filter((f) => !fellowsWithCurrentIte.has(f.id))
     .map((f) => f.full_name)
 
   return {
