@@ -767,7 +767,7 @@ function PersonCard({ person, lead }: { person: DirectoryPerson; lead?: boolean 
     <article className="group flex flex-col items-center gap-3 text-center">
       <div
         className={
-          'grid h-28 w-28 flex-none place-items-center overflow-hidden rounded-full ring-2 ring-offset-4 ring-offset-cream transition-shadow ' +
+          'grid h-28 w-28 flex-none place-items-center overflow-hidden rounded-full ring-2 ring-offset-4 ring-offset-cream transition-shadow md:h-32 md:w-32 ' +
           (lead ? 'bg-crimson/10 ring-crimson' : 'bg-primary-50 ring-primary-200')
         }
       >
