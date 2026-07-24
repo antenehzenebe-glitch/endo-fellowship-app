@@ -53,7 +53,7 @@ export default async function EvaluationsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="bg-[#003a63] text-white border-b-4 border-[#c8102e]">
+      <header className="bg-primary text-white border-b-4 border-crimson">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
           <div>
             <h1 className="text-lg font-bold">Evaluation Summary</h1>
@@ -154,7 +154,7 @@ function ReadOnlyList({ rows, fellow }: { rows: EvalRow[]; fellow: boolean }) {
                   )}
                   <Link
                     href={`/evaluations/${r.id}/print`}
-                    className="text-sm font-medium text-[#003a63] hover:underline"
+                    className="text-sm font-medium text-primary hover:underline"
                   >
                     Print
                   </Link>

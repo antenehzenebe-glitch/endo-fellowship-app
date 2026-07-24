@@ -121,7 +121,7 @@ export default async function SchedulePage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#003a63] text-white border-b-4 border-[#c8102e]">
+      <header className="bg-primary text-white border-b-4 border-crimson">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="py-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
@@ -138,7 +138,7 @@ export default async function SchedulePage({
             <div className="flex items-center gap-1 sm:gap-2">
               <Link
                 href={`/schedule/print?ay=${encodeURIComponent(academicYear)}`}
-                className="px-3 py-2 text-sm font-medium rounded-md bg-[#c8102e] text-white hover:bg-[#a50d26] transition-colors"
+                className="px-3 py-2 text-sm font-medium rounded-md bg-crimson text-white hover:bg-crimson-dark transition-colors"
               >
                 <span aria-hidden="true">🖨</span>
                 <span className="hidden sm:inline"> Print / PDF</span>
@@ -167,8 +167,8 @@ export default async function SchedulePage({
           // Empty database: no phantom year, no editor. Point editors at the
           // "+ New academic year" button in the YearSwitcher above.
           <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
-            <h2 className="text-lg font-bold text-[#003a63]">No academic years exist yet</h2>
-            <p className="mt-2 text-sm text-[#5C6B7A] max-w-md mx-auto leading-relaxed">
+            <h2 className="text-lg font-bold text-primary">No academic years exist yet</h2>
+            <p className="mt-2 text-sm text-muted max-w-md mx-auto leading-relaxed">
               The first step is creating the current academic year.
               {canEditSchedule
                 ? ' Use “+ New academic year” above to create it — it starts from your fellows & rotations with an empty block grid you can fill in.'
