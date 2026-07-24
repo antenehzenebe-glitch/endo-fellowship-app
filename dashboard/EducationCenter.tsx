@@ -19,8 +19,8 @@ import {
   type ModuleFellowStatus,
 } from '@/dashboard/moduleCompletion'
 import AttestControl from '@/dashboard/AttestControl'
+import { NAVY } from '@/lib/tokens'
 
-const NAVY = '#003a63'
 
 /* --------------------------------------------------------- status pill -- */
 type Tone = 'good' | 'warn' | 'idle'
@@ -89,7 +89,7 @@ function EducationSummary({ overview }: { overview: ModuleCompletionOverview }) 
 
   return (
     <div className="mb-6 overflow-hidden rounded-2xl shadow-sm ring-1 ring-gray-900/5">
-      <div className="bg-gradient-to-r from-[#003a63] to-[#00598f] px-5 py-4">
+      <div className="bg-gradient-to-r from-primary to-[#00598f] px-5 py-4">
         <h2 className="text-lg font-semibold leading-tight text-white">Learning modules</h2>
         <p className="mt-0.5 text-sm text-white/70">
           {moduleCount} published {moduleCount === 1 ? 'module' : 'modules'} ·{' '}
@@ -112,7 +112,7 @@ function ModuleCard({ mod, canAttest }: { mod: ModuleCompletion; canAttest: bool
       <header className="border-b border-gray-100 px-5 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <span className="text-xs font-semibold uppercase tracking-wide text-[#c8102e]">Module</span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-crimson">Module</span>
             <h3 className="truncate text-lg font-semibold leading-tight text-gray-900">{mod.title}</h3>
           </div>
           <div className="shrink-0 text-right">
@@ -146,7 +146,7 @@ function ModuleCard({ mod, canAttest }: { mod: ModuleCompletion; canAttest: bool
                       <p className="truncate text-sm font-medium text-gray-900">{s.fellowName}</p>
                       <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500">
                         {s.pgyLevel ? (
-                          <span className="rounded bg-[#c8102e]/10 px-1.5 py-0.5 font-semibold text-[#c8102e]">
+                          <span className="rounded bg-crimson/10 px-1.5 py-0.5 font-semibold text-crimson">
                             {s.pgyLevel}
                           </span>
                         ) : null}
@@ -206,7 +206,7 @@ function ModuleCard({ mod, canAttest }: { mod: ModuleCompletion; canAttest: bool
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl bg-white py-16 text-center shadow-sm ring-1 ring-gray-900/5">
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-[#003a63]">
+      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-primary">
         <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
           <path d="M12 7v13" strokeLinecap="round" />
           <path d="M3 6c2.5-1 6-1 9 .5C15 5 18.5 5 21 6v12c-2.5-1-6-1-9 .5C9 17 5.5 17 3 18V6Z" strokeLinecap="round" strokeLinejoin="round" />

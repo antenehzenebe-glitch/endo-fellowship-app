@@ -3,7 +3,7 @@
 // app/emergencies/EmergencyGuide.tsx
 // Fellows' Survival Guide — searchable, expandable quick-reference for endocrine
 // & electrolyte emergencies. Pure client render over the static EMERGENCIES data
-// (no fetching, no DB). DESIGN.md: Howard navy (#003a63) + crimson, status by
+// (no fetching, no DB). DESIGN.md: Howard navy (primary) + crimson, status by
 // icon + text + color (never color alone), 320px → desktop, 44px tap targets.
 import { useMemo, useState } from 'react'
 import {
@@ -13,8 +13,7 @@ import {
   type EmergencyCategory,
   type EmergencyTable,
 } from '@/lib/endocrine-emergencies'
-
-const NAVY = '#003a63'
+import { NAVY } from '@/lib/tokens'
 
 /* ----------------------------------------------------------------- icons -- */
 const iconSearch = (
@@ -39,7 +38,7 @@ function Section({ heading, items, accent }: { heading: string; items: string[];
   if (items.length === 0) return null
   return (
     <div>
-      <h4 className={`text-xs font-bold uppercase tracking-wide mb-1.5 ${accent ? 'text-[#c8102e]' : 'text-gray-500'}`}>
+      <h4 className={`text-xs font-bold uppercase tracking-wide mb-1.5 ${accent ? 'text-crimson' : 'text-gray-500'}`}>
         {heading}
       </h4>
       <ul className="space-y-1.5">
@@ -239,7 +238,7 @@ export default function EmergencyGuide() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search emergencies, symptoms, or management…"
           aria-label="Search emergencies"
-          className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-10 pr-3 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-[#003a63] focus:outline-none focus:ring-2 focus:ring-[#003a63]/20"
+          className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-10 pr-3 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
@@ -287,7 +286,7 @@ export default function EmergencyGuide() {
           <button
             type="button"
             onClick={toggleAll}
-            className="text-sm font-medium text-[#003a63] hover:underline"
+            className="text-sm font-medium text-primary hover:underline"
           >
             {allOpen ? 'Collapse all' : 'Expand all'}
           </button>
