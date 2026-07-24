@@ -379,7 +379,6 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
         )}
       </div>
 
-
       {/* shared rotation suggestions for the block grid */}
       <datalist id="rotation-suggestions">
         {config.rotations.map((r) => (
