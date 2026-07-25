@@ -11,7 +11,7 @@ import type { CoordinatorWorklist } from '@/dashboard/queries'
 
 function Column({ title, count, children }: { title: string; count: number; children: ReactNode }) {
   return (
-    <section aria-label={title} className="flex flex-col rounded-xl border border-gray-200 bg-gray-50/60">
+    <section aria-label={title} className="flex flex-col rounded-xl border border-gray-200 bg-gray-50/60 shadow-sm">
       <header className="flex items-center justify-between gap-2 border-b border-gray-200 px-4 py-3">
         <h2 className="font-semibold text-primary">{title}</h2>
         <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-white tabular-nums">
@@ -45,9 +45,12 @@ export default function CoordinatorCenter({ worklist }: { worklist: CoordinatorW
 
   return (
     <section aria-label="Operations worklist" className="space-y-4">
-      <p className="text-sm text-gray-600">
-        What needs chasing this week — onboarding to finish, policies to acknowledge, ITE scores to enter.
-      </p>
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Operations</p>
+        <p className="mt-1 text-sm text-gray-600">
+          What needs chasing this week — onboarding to finish, policies to acknowledge, ITE scores to enter.
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:items-start">
         {/* Onboarding */}

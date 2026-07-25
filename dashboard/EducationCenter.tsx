@@ -19,7 +19,7 @@ import {
   type ModuleFellowStatus,
 } from '@/dashboard/moduleCompletion'
 import AttestControl from '@/dashboard/AttestControl'
-import { NAVY } from '@/lib/tokens'
+import StatusPill, { type StatusTone } from '@/components/ui/StatusPill'
 
 
 /* --------------------------------------------------------- status pill -- */
@@ -34,33 +34,28 @@ function statusFor(
   return { label: requiresAttestation ? 'Attested' : 'Completed', tone: 'good' }
 }
 
-function StatusPill({ tone, label }: { tone: Tone; label: string }) {
-  const cls =
-    tone === 'good'
-      ? 'bg-green-600 text-white'
-      : tone === 'warn'
-        ? 'bg-amber-400 text-amber-950'
-        : 'bg-gray-100 text-gray-600'
+const TONE_MAP: Record<Tone, StatusTone> = { good: 'success', warn: 'warning', idle: 'neutral' }
+
+function ModuleStatusPill({ tone, label }: { tone: Tone; label: string }) {
+  const icon =
+    tone === 'good' ? (
+      <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+        <path d="M3 8.5l3.5 3.5L13 5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ) : tone === 'warn' ? (
+      <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+        <circle cx="8" cy="8" r="6" />
+        <path d="M8 5v3.5l2 1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ) : (
+      <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+        <path d="M4 8h8" strokeLinecap="round" />
+      </svg>
+    )
   return (
-    <span
-      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${cls}`}
-    >
-      {tone === 'good' ? (
-        <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-          <path d="M3 8.5l3.5 3.5L13 5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ) : tone === 'warn' ? (
-        <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-          <circle cx="8" cy="8" r="6" />
-          <path d="M8 5v3.5l2 1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ) : (
-        <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-          <path d="M4 8h8" strokeLinecap="round" />
-        </svg>
-      )}
+    <StatusPill tone={TONE_MAP[tone]} icon={icon}>
       {label}
-    </span>
+    </StatusPill>
   )
 }
 
@@ -68,11 +63,11 @@ function StatusPill({ tone, label }: { tone: Tone; label: string }) {
 function Stat({ label, value, sub }: { label: string; value: number; sub?: string }) {
   return (
     <div className="px-4 py-4 text-center">
-      <p className="text-3xl font-bold tabular-nums leading-none" style={{ color: NAVY }}>
+      <p className="text-3xl font-bold tabular-nums leading-none text-primary">
         {value}
       </p>
       <p className="mt-1.5 text-xs font-medium text-gray-500">{label}</p>
-      {sub ? <p className="mt-0.5 text-[11px] text-gray-400">{sub}</p> : null}
+      {sub ? <p className="mt-0.5 text-[11px] text-gray-500">{sub}</p> : null}
     </div>
   )
 }
@@ -88,8 +83,8 @@ function EducationSummary({ overview }: { overview: ModuleCompletionOverview }) 
   const possible = moduleCount * overview.totalFellows
 
   return (
-    <div className="mb-6 overflow-hidden rounded-2xl shadow-sm ring-1 ring-gray-900/5">
-      <div className="bg-gradient-to-r from-primary to-[#00598f] px-5 py-4">
+    <div className="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="bg-gradient-to-r from-primary to-primary-500 px-5 py-4">
         <h2 className="text-lg font-semibold leading-tight text-white">Learning modules</h2>
         <p className="mt-0.5 text-sm text-white/70">
           {moduleCount} published {moduleCount === 1 ? 'module' : 'modules'} ·{' '}
@@ -108,7 +103,7 @@ function EducationSummary({ overview }: { overview: ModuleCompletionOverview }) 
 /* ------------------------------------------------------- module card -- */
 function ModuleCard({ mod, canAttest }: { mod: ModuleCompletion; canAttest: boolean }) {
   return (
-    <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-900/5">
+    <article className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <header className="border-b border-gray-100 px-5 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -116,7 +111,7 @@ function ModuleCard({ mod, canAttest }: { mod: ModuleCompletion; canAttest: bool
             <h3 className="truncate text-lg font-semibold leading-tight text-gray-900">{mod.title}</h3>
           </div>
           <div className="shrink-0 text-right">
-            <p className="text-2xl font-bold leading-none tabular-nums" style={{ color: NAVY }}>
+            <p className="text-2xl font-bold leading-none tabular-nums text-primary">
               {mod.completedCount}
               <span className="text-base text-gray-400">/{mod.totalFellows}</span>
             </p>
@@ -162,7 +157,7 @@ function ModuleCard({ mod, canAttest }: { mod: ModuleCompletion; canAttest: bool
                         ) : null}
                       </div>
                     </div>
-                    <StatusPill tone={st.tone} label={st.label} />
+                    <ModuleStatusPill tone={st.tone} label={st.label} />
                   </div>
 
                   {/* Awaiting attestation -> inline faculty attest + feedback.
@@ -205,7 +200,7 @@ function ModuleCard({ mod, canAttest }: { mod: ModuleCompletion; canAttest: bool
 /* --------------------------------------------------------- empty state -- */
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl bg-white py-16 text-center shadow-sm ring-1 ring-gray-900/5">
+    <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white py-16 text-center shadow-sm">
       <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-primary">
         <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
           <path d="M12 7v13" strokeLinecap="round" />
