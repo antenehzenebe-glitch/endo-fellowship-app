@@ -125,12 +125,12 @@ function FellowNoteCard({
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-primary">{fellow.name}</span>
+          <span className="font-semibold text-ink">{fellow.name}</span>
           {fellow.pgyLevel ? (
-            <span className="inline-block rounded bg-primary/10 px-1.5 py-0.5 text-xs font-semibold text-primary">
+            <span className="inline-block rounded-md bg-crimson/10 px-2 py-0.5 text-xs font-semibold text-crimson">
               {fellow.pgyLevel}
             </span>
           ) : null}
@@ -155,7 +155,9 @@ function FellowNoteCard({
             </p>
           </div>
         ) : (
-          <p className="mt-2 text-sm text-gray-500">No note yet.</p>
+          <p className="mt-2 text-sm text-muted">
+            No note yet — add one when there&apos;s something worth remembering for the CCC.
+          </p>
         )
       ) : (
         <div className="mt-3 space-y-2">
@@ -272,19 +274,19 @@ export default function FacultyAddenda({
   if (data.fellows.length === 0) return null
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-4">
       <div className="flex items-baseline justify-between gap-3">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Addenda</p>
-          <h2 className="text-lg font-bold text-primary">Faculty notes</h2>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-crimson">Addenda</p>
+          <h2 className="mt-1 text-lg font-bold text-ink">Faculty notes</h2>
         </div>
-        <span className="text-sm text-gray-500">One short note per fellow</span>
+        <span className="text-sm text-muted">One short note per fellow</span>
       </div>
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted">
         A lightweight, free-text note alongside the summary — not a formal evaluation. Visible to
         program leadership only.
       </p>
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 gap-4">
         {data.fellows.map((f) => (
           <FellowNoteCard
             key={f.id}
