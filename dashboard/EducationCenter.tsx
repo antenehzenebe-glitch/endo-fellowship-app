@@ -105,7 +105,7 @@ function ModuleCard({ mod, canAttest }: { mod: ModuleCompletion; canAttest: bool
       <header className="border-b border-gray-100 px-5 py-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-crimson">Module</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted">Module</p>
             <h3 className="mt-1 truncate text-lg font-semibold leading-tight text-gray-900">{mod.title}</h3>
           </div>
           <div className="shrink-0 text-right">
@@ -139,7 +139,7 @@ function ModuleCard({ mod, canAttest }: { mod: ModuleCompletion; canAttest: bool
                       <p className="truncate text-sm font-medium text-gray-900">{s.fellowName}</p>
                       <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted">
                         {s.pgyLevel ? (
-                          <span className="rounded bg-crimson/10 px-1.5 py-0.5 font-semibold text-crimson">
+                          <span className="rounded bg-primary/10 px-1.5 py-0.5 font-semibold text-primary">
                             {s.pgyLevel}
                           </span>
                         ) : null}

@@ -130,7 +130,7 @@ function FellowNoteCard({
         <div className="flex items-center gap-2">
           <span className="font-semibold text-ink">{fellow.name}</span>
           {fellow.pgyLevel ? (
-            <span className="inline-block rounded-md bg-crimson/10 px-2 py-0.5 text-xs font-semibold text-crimson">
+            <span className="inline-block rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
               {fellow.pgyLevel}
             </span>
           ) : null}
@@ -277,7 +277,7 @@ export default function FacultyAddenda({
     <section className="space-y-4">
       <div className="flex items-baseline justify-between gap-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-crimson">Addenda</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-muted">Addenda</p>
           <h2 className="mt-1 text-lg font-bold text-ink">Faculty notes</h2>
         </div>
         <span className="text-sm text-muted">One short note per fellow</span>

@@ -50,7 +50,7 @@ function Group({
     <section aria-label={title} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-gray-100 px-5 py-4">
         <div className="flex min-w-0 items-baseline gap-2.5">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-crimson">{eyebrow}</span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-muted">{eyebrow}</span>
           <h2 className="truncate text-base font-semibold text-ink">{title}</h2>
           <span
             className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold tabular-nums ${

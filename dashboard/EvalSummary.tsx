@@ -115,16 +115,17 @@ export default function EvalSummary({ summary }: { summary: EvalSummaryData }) {
               </thead>
               <tbody>
                 {summary.fellows.map((f, i) => (
-                  <tr key={f.id} className={i % 2 === 1 ? 'bg-slate-50/60' : 'bg-white'}>
-                    {/* Sticky identity column: matches the zebra fill so the
-                        row reads as one strip while scrolling horizontally. */}
+                  <tr key={f.id} className={i % 2 === 1 ? 'bg-slate-50' : 'bg-white'}>
+                    {/* Sticky identity column: same SOLID background value as
+                        the row so no seam shows while scrolling horizontally;
+                        long names truncate instead of crushing the matrix. */}
                     <th
                       scope="row"
-                      className={`sticky left-0 z-10 border-b border-gray-100 px-4 py-4 text-left align-middle ${
+                      className={`sticky left-0 z-10 max-w-[10rem] border-b border-gray-100 px-4 py-4 text-left align-middle sm:max-w-none ${
                         i % 2 === 1 ? 'bg-slate-50' : 'bg-white'
                       }`}
                     >
-                      <span className="block font-semibold text-primary leading-snug">{f.name}</span>
+                      <span className="block truncate font-semibold text-primary leading-snug">{f.name}</span>
                       {f.pgyLevel ? (
                         <span className="mt-1 inline-block rounded bg-primary/10 px-1.5 py-0.5 text-xs font-semibold text-primary">
                           {f.pgyLevel}
