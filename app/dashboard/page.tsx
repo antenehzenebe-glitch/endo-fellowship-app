@@ -81,7 +81,7 @@ const TAB_ICONS: Record<View, ReactNode> = {
   operations: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
       <path d="M9 6h11M9 12h11M9 18h11" strokeLinecap="round" />
-      <path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2M3 18l1 1 2-2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
 }
@@ -193,72 +193,81 @@ export default async function DashboardPage({
     <div className="min-h-screen bg-slate-50">
       <header className="sticky top-0 z-30 bg-primary text-white border-b-4 border-crimson shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="py-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+          {/* Row 1: identity (logo, title, signed-in staff member) + sign out.
+              Kept separate from the nav row so the links below can wrap into
+              as many lines as a phone needs instead of overflowing. */}
+          <div className="pt-4 pb-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <img
                 src="/logo.png"
                 alt=""
                 className="w-10 h-10 shrink-0 object-contain bg-white rounded p-0.5"
               />
-              <div>
+              <div className="min-w-0">
                 <h1 className="text-xl font-bold leading-tight">Program Dashboard</h1>
-                <p className="text-sm text-white/70">
+                <p className="text-sm text-white/70 truncate">
                   {profile.full_name} · {profile.role.toUpperCase()}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2">
-              <Link
-                href="/onboarding"
-                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
-              >
-                Onboarding
-              </Link>
-              <Link
-                href="/resources"
-                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
-              >
-                Materials
-              </Link>
-              <Link
-                href="/emergencies"
-                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
-              >
-                Emergencies
-              </Link>
-              <Link
-                href="/schedule"
-                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
-              >
-                Schedule
-              </Link>
-              <Link
-                href="/admin/roster"
-                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
-              >
-                Roster
-              </Link>
-              <a
-                href={NEW_INNOVATIONS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="New Innovations (opens in a new tab)"
-                className="px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/10 transition-colors inline-flex items-center gap-1 rounded-md"
-              >
-                New Innovations
-                <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                  <path d="M7 17 17 7M9 7h8v8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </a>
-              <Link
-                href="/account"
-                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
-              >
-                Password
-              </Link>
+            <div className="shrink-0">
               <SignOutButton variant="onDark" />
             </div>
           </div>
+
+          {/* Row 2: app navigation. flex-wrap lets the eight links flow onto
+              two tidy lines on a phone; every link keeps a ≥44px target and a
+              visible focus ring on the navy bar. */}
+          <nav aria-label="Site" className="flex flex-wrap items-center gap-1 sm:gap-2 pb-3 border-t border-white/10 pt-2">
+            <Link
+              href="/onboarding"
+              className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              Onboarding
+            </Link>
+            <Link
+              href="/resources"
+              className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              Materials
+            </Link>
+            <Link
+              href="/emergencies"
+              className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              Emergencies
+            </Link>
+            <Link
+              href="/schedule"
+              className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              Schedule
+            </Link>
+            <Link
+              href="/admin/roster"
+              className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              Roster
+            </Link>
+            <a
+              href={NEW_INNOVATIONS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="New Innovations (opens in a new tab)"
+              className="inline-flex min-h-[44px] items-center gap-1 px-3 text-sm font-medium text-white/90 hover:bg-white/10 transition-colors rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              New Innovations
+              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                <path d="M7 17 17 7M9 7h8v8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </a>
+            <Link
+              href="/account"
+              className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              Password
+            </Link>
+          </nav>
 
           <nav aria-label="Dashboard views" className="flex gap-1 pb-2 overflow-x-auto">
             {TABS.map((tab) => {
@@ -268,7 +277,7 @@ export default async function DashboardPage({
                   key={tab.view}
                   href={`/dashboard?view=${tab.view}`}
                   aria-current={active ? 'page' : undefined}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold rounded-lg whitespace-nowrap transition-colors ${
+                  className={`inline-flex min-h-[44px] items-center gap-1.5 px-3.5 text-sm font-semibold rounded-lg whitespace-nowrap transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                     active
                       ? 'bg-crimson text-white shadow-sm'
                       : 'text-white/70 hover:text-white hover:bg-white/10'

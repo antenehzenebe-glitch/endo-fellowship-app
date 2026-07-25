@@ -18,18 +18,20 @@ import {
   type ReadinessOverview,
   type ReadinessStatus,
 } from '@/dashboard/queries'
-import { NAVY, SUCCESS } from '@/lib/tokens'
+import StatusPill, { type StatusTone } from '@/components/ui/StatusPill'
+import Meter from '@/components/ui/Meter'
+import { NAVY, SUCCESS, AMBER, RED, GRAY_400, GRAY_200 } from '@/lib/tokens'
 
 
 /* -------------------------------------------------------------- status -- */
 const STATUS_META: Record<
   ReadinessStatus,
-  { label: string; pill: string; glyph: 'check' | 'alert' | 'cross' | 'pending'; rail: string }
+  { label: string; tone: StatusTone; glyph: 'check' | 'alert' | 'cross' | 'pending'; rail: string }
 > = {
-  on_track: { label: 'On Track', pill: 'bg-green-600 text-white', glyph: 'check', rail: SUCCESS },
-  at_risk: { label: 'At Risk', pill: 'bg-amber-400 text-amber-950', glyph: 'alert', rail: '#f59e0b' },
-  behind: { label: 'Behind', pill: 'bg-red-600 text-white', glyph: 'cross', rail: '#dc2626' },
-  provisioning: { label: 'Provisioning', pill: 'bg-gray-200 text-gray-700', glyph: 'pending', rail: '#9ca3af' },
+  on_track: { label: 'On Track', tone: 'success', glyph: 'check', rail: SUCCESS },
+  at_risk: { label: 'At Risk', tone: 'warning', glyph: 'alert', rail: AMBER },
+  behind: { label: 'Behind', tone: 'danger', glyph: 'cross', rail: RED },
+  provisioning: { label: 'Provisioning', tone: 'neutral', glyph: 'pending', rail: GRAY_400 },
 }
 
 function StatusGlyph({ glyph }: { glyph: 'check' | 'alert' | 'cross' | 'pending' }) {
@@ -69,10 +71,9 @@ function StatusGlyph({ glyph }: { glyph: 'check' | 'alert' | 'cross' | 'pending'
 function ReadinessPill({ status }: { status: ReadinessStatus }) {
   const meta = STATUS_META[status]
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shrink-0 ${meta.pill}`}>
-      <StatusGlyph glyph={meta.glyph} />
+    <StatusPill tone={meta.tone} icon={<StatusGlyph glyph={meta.glyph} />}>
       {meta.label}
-    </span>
+    </StatusPill>
   )
 }
 
@@ -86,7 +87,7 @@ function ProcedureRing({ done, total }: { done: number; total: number }) {
   return (
     <div className="relative" style={{ width: 64, height: 64 }}>
       <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
-        <circle cx="32" cy="32" r={r} fill="none" stroke="#e5e7eb" strokeWidth="6" />
+        <circle cx="32" cy="32" r={r} fill="none" stroke={GRAY_200} strokeWidth="6" />
         <circle
           cx="32"
           cy="32"
@@ -108,7 +109,6 @@ function ProcedureRing({ done, total }: { done: number; total: number }) {
 /* ----------------------------------------------------------- proc bars -- */
 function ProcedureBar({ p }: { p: ProcedureProgress }) {
   const hasTarget = p.min > 0
-  const pct = hasTarget ? Math.min(100, Math.round((p.done / p.min) * 100)) : p.done > 0 ? 100 : 0
   const met = hasTarget && p.done >= p.min
 
   return (
@@ -130,19 +130,12 @@ function ProcedureBar({ p }: { p: ProcedureProgress }) {
           )}
         </span>
       </div>
-      <div
-        className="h-2 w-full rounded-full bg-gray-200 overflow-hidden"
-        role="progressbar"
-        aria-label={`${p.label}: ${p.done} logged${hasTarget ? ` of ${p.min} minimum` : ''}`}
-        aria-valuenow={p.done}
-        aria-valuemin={0}
-        aria-valuemax={hasTarget ? p.min : Math.max(p.done, 1)}
-      >
-        <div
-          className="h-full rounded-full transition-[width] duration-500"
-          style={{ width: `${pct}%`, backgroundColor: met ? SUCCESS : NAVY }}
-        />
-      </div>
+      <Meter
+        value={p.done}
+        max={hasTarget ? p.min : 0}
+        label={`${p.label}: ${p.done} logged${hasTarget ? ` of ${p.min} minimum` : ''}`}
+        tone={met ? 'success' : 'primary'}
+      />
     </div>
   )
 }
@@ -179,10 +172,12 @@ function BannerStat({
   value: number
   tone: 'good' | 'warn' | 'alert'
 }) {
-  // Color appears only where the bucket is non-empty; "0 behind" stays calm.
+  // Color appears only where the bucket is non-empty; "0 behind" stays calm —
+  // but every numeral keeps ≥4.5:1 contrast, zero included (gray-500, never
+  // the old near-invisible gray-300).
   const color =
     value === 0
-      ? 'text-gray-300'
+      ? 'text-gray-500'
       : tone === 'good'
         ? 'text-green-600'
         : tone === 'warn'
@@ -206,8 +201,8 @@ export function ProgramSummary({ overview }: { overview: ReadinessOverview }) {
   const provisioning = overview.fellows.filter((f) => f.status === 'provisioning').length
 
   return (
-    <div className="mb-6 overflow-hidden rounded-2xl shadow-sm ring-1 ring-gray-900/5">
-      <div className="bg-gradient-to-r from-primary to-[#00598f] px-5 py-4">
+    <div className="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="bg-gradient-to-r from-primary to-primary-500 px-5 py-4">
         <h2 className="text-white font-semibold text-lg leading-tight">Graduation readiness</h2>
         <p className="text-white/70 text-sm mt-0.5">
           {total} active {total === 1 ? 'fellow' : 'fellows'} ·{' '}
@@ -237,22 +232,22 @@ export function FellowCard({ fellow }: { fellow: FellowReadiness }) {
 
   return (
     <article
-      className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-900/5 border-l-4 overflow-hidden"
+      className="rounded-xl bg-white border border-gray-200 shadow-sm border-l-4 overflow-hidden"
       style={{ borderLeftColor: meta.rail }}
     >
-      {/* Header: identity + status */}
-      <header className="flex items-start justify-between gap-3 px-5 pt-4 pb-3">
-        <div className="min-w-0">
-          <h3 className="font-semibold text-lg text-gray-900 leading-tight truncate">{fellow.name}</h3>
+      {/* Status-first header: the readiness pill leads the card so the eye
+          lands on state before identity; name + PGY follow directly under. */}
+      <header className="px-5 pt-4 pb-3">
+        <div className="flex items-center justify-between gap-3">
+          <ReadinessPill status={fellow.status} />
           {fellow.pgyLevel ? (
-            <span className="mt-1 inline-block rounded-md bg-crimson/10 px-2 py-0.5 text-xs font-semibold text-crimson">
+            <span className="inline-block rounded-md bg-crimson/10 px-2 py-0.5 text-xs font-semibold text-crimson">
               {fellow.pgyLevel}
             </span>
-          ) : (
-            <p className="text-sm text-gray-500">Fellow</p>
-          )}
+          ) : null}
         </div>
-        <ReadinessPill status={fellow.status} />
+        <h3 className="mt-2 font-semibold text-lg text-gray-900 leading-tight truncate">{fellow.name}</h3>
+        {!fellow.pgyLevel ? <p className="text-sm text-gray-500">Fellow</p> : null}
       </header>
 
       {/* Ring (summary) + mini-metrics */}
@@ -290,14 +285,24 @@ export function FellowCard({ fellow }: { fellow: FellowReadiness }) {
         </div>
       </div>
 
-      {/* Needs-attention */}
+      {/* Needs-attention: tinted and flagged with an icon so it stands apart
+          from the calm "no blockers" footer — noticeable, not alarming. */}
       {fellow.blockers.length > 0 ? (
         <div className="px-5 pb-5">
           <section
             aria-label="Readiness blockers"
-            className={`rounded-lg border p-3 ${severe ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}
+            className={`rounded-lg border-l-4 p-3 ${
+              severe ? 'bg-red-50 border border-red-200 border-l-red-400' : 'bg-amber-50 border border-amber-200 border-l-amber-400'
+            }`}
           >
-            <p className={`text-xs font-semibold mb-1 ${severe ? 'text-red-900' : 'text-amber-900'}`}>Needs attention</p>
+            <p className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide mb-1 ${severe ? 'text-red-900' : 'text-amber-900'}`}>
+              <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+                <path d="M8 5v4" strokeLinecap="round" />
+                <circle cx="8" cy="11.5" r="0.9" fill="currentColor" stroke="none" />
+                <path d="M8 1.5 15 14H1L8 1.5Z" strokeLinejoin="round" />
+              </svg>
+              Needs attention
+            </p>
             <ul className={`list-disc list-inside text-sm space-y-0.5 ${severe ? 'text-red-800' : 'text-amber-800'}`}>
               {fellow.blockers.map((b) => (
                 <li key={b}>{b}</li>
@@ -328,7 +333,7 @@ export function FellowCard({ fellow }: { fellow: FellowReadiness }) {
 /* --------------------------------------------------------- empty state -- */
 export function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl bg-white shadow-sm ring-1 ring-gray-900/5">
+    <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl bg-white border border-gray-200 shadow-sm">
       <div className="w-12 h-12 rounded-full bg-blue-50 text-primary flex items-center justify-center mb-4">
         <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
           <path d="M16 21v-2a4 4 0 0 0-8 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" strokeLinecap="round" strokeLinejoin="round" />
