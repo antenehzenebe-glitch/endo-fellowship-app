@@ -47,11 +47,11 @@ export default function AttestControl({
 
   if (!open) {
     return (
-      <div className="mt-2">
+      <div className="mt-2.5">
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md border border-primary/30 bg-white px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-primary/30 bg-white px-3.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
             <path d="M3 8.5l3.5 3.5L13 5" strokeLinecap="round" strokeLinejoin="round" />
@@ -65,7 +65,7 @@ export default function AttestControl({
   const fieldId = `attest-note-${moduleId}-${fellowId}`
 
   return (
-    <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50/50 p-3">
+    <div className="mt-2.5 rounded-lg border border-amber-200 bg-amber-50/60 p-4">
       <label htmlFor={fieldId} className="block text-xs font-semibold text-slate-700">
         Feedback for {fellowName}{' '}
         <span className="font-normal text-slate-400">(optional — visible to the fellow)</span>
