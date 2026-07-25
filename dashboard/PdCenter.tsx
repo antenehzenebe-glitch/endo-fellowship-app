@@ -4,20 +4,15 @@
 // The formal ACGME milestone evaluation lives in New Innovations; the program's
 // mid/end-year summary lives in the Evaluation Summary tab. No legacy evaluations
 // are read here (the readiness layer dropped that dependency).
-// Mobile-first: gauges 2-up (4-up on lg); roster as a scroll-safe table.
+//
+// v2 STRUCTURAL redesign: the same card language as the command center —
+// overview band on top, a quiet program-wide stat strip, then the roster as
+// status-first fellow cards (shared FellowCard) instead of a data table.
 // Color is paired with text labels (never color alone) per DESIGN.md / WCAG.
-import { ProgramSummary } from '@/dashboard/CommandCenter'
-import StatusPill, { type StatusTone } from '@/components/ui/StatusPill'
-import type { FellowReadiness, ReadinessOverview, ReadinessStatus } from '@/dashboard/queries'
+import { FellowCard, ReadinessBand } from '@/dashboard/CommandCenter'
+import type { ReadinessOverview } from '@/dashboard/queries'
 
-const STATUS_META: Record<ReadinessStatus, { label: string; tone: StatusTone }> = {
-  on_track: { label: 'On track', tone: 'success' },
-  at_risk: { label: 'At risk', tone: 'warning' },
-  behind: { label: 'Behind', tone: 'danger' },
-  provisioning: { label: 'Provisioning', tone: 'neutral' },
-}
-
-function Gauge({
+function ProgramStat({
   label,
   value,
   sub,
@@ -30,56 +25,11 @@ function Gauge({
 }) {
   const valueColor = tone === 'good' ? 'text-green-700' : 'text-primary'
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
-      <p className={`text-3xl font-bold tabular-nums leading-none ${valueColor}`}>{value}</p>
-      <p className="mt-1.5 text-xs font-semibold text-gray-700">{label}</p>
-      {sub ? <p className="text-xs text-gray-500">{sub}</p> : null}
+    <div className="rounded-xl border border-gray-200 bg-white px-4 py-4 shadow-sm">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</p>
+      <p className={`mt-1 text-2xl font-bold tabular-nums leading-none ${valueColor}`}>{value}</p>
+      {sub ? <p className="mt-1 text-xs text-muted">{sub}</p> : null}
     </div>
-  )
-}
-
-function FellowStatusPill({ status }: { status: ReadinessStatus }) {
-  const m = STATUS_META[status]
-  return <StatusPill tone={m.tone} variant="soft">{m.label}</StatusPill>
-}
-
-function FellowRow({ f }: { f: FellowReadiness }) {
-  const ite =
-    f.latestIte && f.latestIte.percentile !== null
-      ? `${f.latestIte.percentile}%ile`
-      : f.latestIte
-        ? 'recorded'
-        : 'none'
-  return (
-    <tr className="align-top">
-      <th scope="row" className="px-3 py-3 text-left font-normal">
-        <span className="block font-semibold text-primary leading-snug">{f.name}</span>
-        {f.pgyLevel ? <span className="text-xs text-gray-500">{f.pgyLevel}</span> : null}
-      </th>
-      <td className="px-3 py-3">
-        <FellowStatusPill status={f.status} />
-      </td>
-      <td className="px-3 py-3 tabular-nums whitespace-nowrap">
-        {f.status === 'provisioning' ? (
-          <span className="text-gray-400">—</span>
-        ) : (
-          <>
-            <span className="font-semibold text-gray-900">{f.proceduresMet}</span>
-            <span className="text-gray-400">/{f.proceduresWithTarget} mins</span>
-          </>
-        )}
-      </td>
-      <td className="px-3 py-3 whitespace-nowrap text-gray-700">
-        {ite}
-        {f.latestIte ? <span className="text-gray-400"> · {f.latestIte.examYear}</span> : null}
-      </td>
-      <td className="px-3 py-3 whitespace-nowrap text-gray-700">
-        {f.scholarlyCompleted} done<span className="text-gray-400"> · {f.scholarlyActive} active</span>
-      </td>
-      <td className="px-3 py-3 tabular-nums whitespace-nowrap text-gray-700">
-        {f.onboardingTotal > 0 ? `${f.onboardingDone}/${f.onboardingTotal}` : '—'}
-      </td>
-    </tr>
   )
 }
 
@@ -99,54 +49,41 @@ export default function PdCenter({ overview }: { overview: ReadinessOverview }) 
 
   return (
     <section aria-label="Program oversight" className="space-y-6">
-      <ProgramSummary overview={overview} />
+      <ReadinessBand overview={overview} />
 
+      {/* Program-wide rollup: the four numbers a PD quotes in a CCC meeting. */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Gauge
+        <ProgramStat
           label="Procedure minimums met"
           value={`${procPct}%`}
           sub={`${totalMet} of ${totalWithTarget}`}
           tone={procPct >= 100 && totalWithTarget > 0 ? 'good' : 'navy'}
         />
-        <Gauge
+        <ProgramStat
           label="Onboarding complete"
           value={onbTotal > 0 ? `${onbPct}%` : '—'}
           sub={onbTotal > 0 ? `${onbDone} of ${onbTotal} tasks` : 'none assigned'}
           tone={onbPct >= 100 && onbTotal > 0 ? 'good' : 'navy'}
         />
-        <Gauge label="ITE on record" value={`${iteCount}/${fellows.length}`} sub="fellows" />
-        <Gauge label="Scholarly active" value={String(scholarlyActive)} sub="projects in progress" />
+        <ProgramStat label="ITE on record" value={`${iteCount}/${fellows.length}`} sub="fellows" />
+        <ProgramStat label="Scholarly active" value={String(scholarlyActive)} sub="projects in progress" />
       </div>
 
       <section aria-label="Fellow roster" className="space-y-3">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Roster</p>
-          <h2 className="font-semibold text-gray-900">Fellow roster</h2>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-crimson">Roster</p>
+          <h2 className="mt-1 text-lg font-semibold text-ink">Fellow by fellow</h2>
         </div>
         {fellows.length === 0 ? (
           <div className="rounded-xl border border-dashed border-gray-300 bg-white py-12 text-center shadow-sm">
             <p className="font-semibold text-gray-800">No active fellows yet</p>
+            <p className="mt-1 text-sm text-muted">Provision fellow accounts and their readiness will appear here.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-            <table className="w-full min-w-[640px] border-collapse text-sm">
-              <caption className="sr-only">Per-fellow readiness roster: status, procedures, ITE, scholarly, onboarding.</caption>
-              <thead>
-                <tr className="bg-gray-50 text-left text-gray-600">
-                  <th scope="col" className="px-3 py-2.5 font-semibold">Fellow</th>
-                  <th scope="col" className="px-3 py-2.5 font-semibold">Status</th>
-                  <th scope="col" className="px-3 py-2.5 font-semibold whitespace-nowrap">Procedures</th>
-                  <th scope="col" className="px-3 py-2.5 font-semibold whitespace-nowrap">Latest ITE</th>
-                  <th scope="col" className="px-3 py-2.5 font-semibold whitespace-nowrap">Scholarly</th>
-                  <th scope="col" className="px-3 py-2.5 font-semibold whitespace-nowrap">Onboarding</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {fellows.map((f) => (
-                  <FellowRow key={f.id} f={f} />
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {fellows.map((f) => (
+              <FellowCard key={f.id} fellow={f} />
+            ))}
           </div>
         )}
       </section>
