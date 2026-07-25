@@ -125,12 +125,12 @@ function FellowNoteCard({
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-primary">{fellow.name}</span>
+          <span className="font-semibold text-ink">{fellow.name}</span>
           {fellow.pgyLevel ? (
-            <span className="inline-block rounded bg-primary/10 px-1.5 py-0.5 text-xs font-semibold text-primary">
+            <span className="inline-block rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
               {fellow.pgyLevel}
             </span>
           ) : null}
@@ -139,7 +139,7 @@ function FellowNoteCard({
           <button
             type="button"
             onClick={startEditing}
-            className="min-h-[44px] rounded-md px-3 py-1.5 text-sm font-semibold text-crimson transition-colors hover:bg-crimson/[0.06]"
+            className="min-h-[44px] rounded-md px-3 py-1.5 text-sm font-semibold text-crimson transition-colors hover:bg-crimson/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson"
           >
             {note ? 'Edit' : 'Add a note'}
           </button>
@@ -155,7 +155,9 @@ function FellowNoteCard({
             </p>
           </div>
         ) : (
-          <p className="mt-2 text-sm text-gray-400">No note yet.</p>
+          <p className="mt-2 text-sm text-muted">
+            No note yet — add one when there&apos;s something worth remembering for the CCC.
+          </p>
         )
       ) : (
         <div className="mt-3 space-y-2">
@@ -185,7 +187,7 @@ function FellowNoteCard({
                   type="button"
                   onClick={remove}
                   disabled={busy}
-                  className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark disabled:opacity-50"
+                  className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson disabled:opacity-50"
                 >
                   {busy ? 'Deleting…' : 'Delete note'}
                 </button>
@@ -193,7 +195,7 @@ function FellowNoteCard({
                   type="button"
                   onClick={() => setConfirmingRemove(false)}
                   disabled={busy}
-                  className="min-h-[44px] rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-50"
+                  className="min-h-[44px] rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -207,7 +209,7 @@ function FellowNoteCard({
                   type="button"
                   onClick={cancel}
                   disabled={busy}
-                  className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark disabled:opacity-50"
+                  className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson disabled:opacity-50"
                 >
                   Discard
                 </button>
@@ -215,7 +217,7 @@ function FellowNoteCard({
                   type="button"
                   onClick={() => setConfirmingDiscard(false)}
                   disabled={busy}
-                  className="min-h-[44px] rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-50"
+                  className="min-h-[44px] rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
                 >
                   Keep editing
                 </button>
@@ -227,7 +229,7 @@ function FellowNoteCard({
                 type="button"
                 onClick={save}
                 disabled={busy || draft.trim().length === 0}
-                className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark disabled:opacity-50"
+                className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson disabled:opacity-50"
               >
                 {busy ? 'Saving…' : 'Save note'}
               </button>
@@ -235,7 +237,7 @@ function FellowNoteCard({
                 type="button"
                 onClick={requestCancel}
                 disabled={busy}
-                className="min-h-[44px] rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-50"
+                className="min-h-[44px] rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -247,7 +249,7 @@ function FellowNoteCard({
                     setConfirmingRemove(true)
                   }}
                   disabled={busy}
-                  className="ml-auto min-h-[44px] rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                  className="ml-auto min-h-[44px] rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson disabled:opacity-50"
                 >
                   Remove
                 </button>
@@ -272,16 +274,19 @@ export default function FacultyAddenda({
   if (data.fellows.length === 0) return null
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-4">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-lg font-bold text-primary">Faculty notes</h2>
-        <span className="text-sm text-gray-500">One short note per fellow</span>
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-muted">Addenda</p>
+          <h2 className="mt-1 text-lg font-bold text-ink">Faculty notes</h2>
+        </div>
+        <span className="text-sm text-muted">One short note per fellow</span>
       </div>
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted">
         A lightweight, free-text note alongside the summary — not a formal evaluation. Visible to
         program leadership only.
       </p>
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 gap-4">
         {data.fellows.map((f) => (
           <FellowNoteCard
             key={f.id}
