@@ -356,7 +356,7 @@ export default function Landing({
 
             <p className="mt-10 border-t border-white/10 pt-8 text-sm leading-relaxed text-white/75">
               <span className="font-bold uppercase tracking-[0.14em] text-gold-300">
-                Procedures you&apos;ll own
+                Procedures you&apos;ll be proficient in
               </span>
               <span aria-hidden="true"> — </span>
               thyroid ultrasound &amp; FNA, continuous glucose monitor interpretation,
@@ -457,7 +457,7 @@ export default function Landing({
                 <h3 className="mt-2 font-display text-2xl font-bold text-primary">Mastery</h3>
                 <ul className="mt-4 space-y-3 leading-relaxed text-muted">
                   <li>
-                    <strong className="font-semibold text-ink">Procedures you&apos;ll own</strong>{' '}
+                    <strong className="font-semibold text-ink">Procedures you&apos;ll be proficient in</strong>{' '}
                     — thyroid ultrasound &amp; FNA, CGM &amp; insulin pumps, and DXA
                     interpretation, logged and tracked against program targets in your hub.
                   </li>
