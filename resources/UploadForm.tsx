@@ -11,6 +11,11 @@ import type { ResourceCategory } from '@/resources/types'
 
 type Mode = 'file' | 'link'
 
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
 function safeName(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/-+/g, '-').toLowerCase()
 }
@@ -19,11 +24,18 @@ export default function UploadForm() {
   const supabase = createClient()
   const router = useRouter()
 
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  // Current year and 3 years back.
+  const YEAR_OPTIONS = [0, 1, 2, 3].map((back) => currentYear - back)
+
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<Mode>('file')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState<ResourceCategory>('policy')
+  const [meetingYear, setMeetingYear] = useState<number>(currentYear)
+  const [meetingMonth, setMeetingMonth] = useState<number>(now.getMonth() + 1)
   const [requiresAck, setRequiresAck] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [url, setUrl] = useState('')
@@ -32,6 +44,7 @@ export default function UploadForm() {
 
   function reset() {
     setTitle(''); setDescription(''); setCategory('policy'); setRequiresAck(false)
+    setMeetingYear(currentYear); setMeetingMonth(now.getMonth() + 1)
     setFile(null); setUrl(''); setError(''); setMode('file')
   }
 
@@ -39,13 +52,21 @@ export default function UploadForm() {
     e.preventDefault()
     setError(''); setBusy(true)
     try {
+      const isMinutes = category === 'minutes'
+      const meeting_year = isMinutes ? meetingYear : null
+      const meeting_month = isMinutes ? meetingMonth : null
+
       let storage_path: string | null = null
       let external_url: string | null = null
       let file_type: string | null = null
 
       if (mode === 'file') {
         if (!file) { setError('Choose a file to upload.'); setBusy(false); return }
-        const path = `${category}/${Date.now()}-${safeName(file.name)}`
+        // Minutes are filed under minutes/<year>/<mm>/ so storage mirrors the
+        // year → month folder presentation on the resources page.
+        const path = isMinutes
+          ? `minutes/${meetingYear}/${String(meetingMonth).padStart(2, '0')}/${Date.now()}-${safeName(file.name)}`
+          : `${category}/${Date.now()}-${safeName(file.name)}`
         const up = await supabase.storage.from('resources').upload(path, file, { upsert: false })
         if (up.error) { setError(`Upload failed: ${up.error.message}`); setBusy(false); return }
         storage_path = path
@@ -60,6 +81,8 @@ export default function UploadForm() {
         title: title.trim(),
         description: description.trim() || null,
         category,
+        meeting_year,
+        meeting_month,
         storage_path,
         external_url,
         file_type,
@@ -117,6 +140,24 @@ export default function UploadForm() {
             {CATEGORY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
+        {category === 'minutes' ? (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="m-year" className={labelCls}>Year</label>
+              <select id="m-year" className={fieldCls} required value={meetingYear}
+                onChange={(e) => setMeetingYear(Number(e.target.value))}>
+                {YEAR_OPTIONS.map((y) => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="m-month" className={labelCls}>Month</label>
+              <select id="m-month" className={fieldCls} required value={meetingMonth}
+                onChange={(e) => setMeetingMonth(Number(e.target.value))}>
+                {MONTH_NAMES.map((name, i) => <option key={name} value={i + 1}>{name}</option>)}
+              </select>
+            </div>
+          </div>
+        ) : null}
         {mode === 'file' ? (
           <div>
             <label htmlFor="m-file" className={labelCls}>File</label>

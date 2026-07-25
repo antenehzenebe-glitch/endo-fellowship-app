@@ -12,6 +12,7 @@ export const CATEGORY_LABELS: Record<ResourceCategory, string> = {
   onboarding: 'Onboarding',
   board_prep: 'Board prep',
   form: 'Form',
+  minutes: 'Meeting minutes',
   other: 'Other',
 }
 

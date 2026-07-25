@@ -853,6 +853,7 @@ export type Database = {
           },
         ]
       }
+      // hand-synced with 0017_meeting_minutes.sql — regenerate via supabase gen types when convenient
       resources: {
         Row: {
           category: Database["public"]["Enums"]["resource_category"]
@@ -862,6 +863,8 @@ export type Database = {
           file_type: string | null
           id: string
           is_active: boolean
+          meeting_month: number | null
+          meeting_year: number | null
           requires_ack: boolean
           storage_path: string | null
           title: string
@@ -876,6 +879,8 @@ export type Database = {
           file_type?: string | null
           id?: string
           is_active?: boolean
+          meeting_month?: number | null
+          meeting_year?: number | null
           requires_ack?: boolean
           storage_path?: string | null
           title: string
@@ -890,6 +895,8 @@ export type Database = {
           file_type?: string | null
           id?: string
           is_active?: boolean
+          meeting_month?: number | null
+          meeting_year?: number | null
           requires_ack?: boolean
           storage_path?: string | null
           title?: string
@@ -989,6 +996,7 @@ export type Database = {
         | "onboarding"
         | "board_prep"
         | "form"
+        | "minutes"
         | "other"
       scholarly_status: "planned" | "in_progress" | "completed"
       scholarly_type:
@@ -1155,6 +1163,7 @@ export const Constants = {
         "onboarding",
         "board_prep",
         "form",
+        "minutes",
         "other",
       ],
       scholarly_status: ["planned", "in_progress", "completed"],
