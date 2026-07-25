@@ -81,7 +81,7 @@ const TAB_ICONS: Record<View, ReactNode> = {
   operations: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
       <path d="M9 6h11M9 12h11M9 18h11" strokeLinecap="round" />
-      <path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2M3 18l1 1 2-2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
 }
