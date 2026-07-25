@@ -1,14 +1,14 @@
 // components/ExternalHub.tsx
-// Compact, prominent horizontal "launch bar" of the outbound destinations the
-// program uses constantly, so nobody juggles browser tabs in clinic, didactics,
-// or a CCC meeting. New Innovations is the crimson primary action (GME system of
-// record); the endocrine societies are navy reference chips. Color is the only-
-// meaningful kind: crimson = act here, navy = guideline reference. Every link
-// opens in a new tab and is keyboard/screen-reader labeled; the blurb rides in
-// title + aria-label so the bar stays scannable. Edit the arrays to change a
-// destination. includeSocieties={false} renders New-Innovations-only (the PC).
+// Slim quick-links toolbar — deliberately demoted from a card to a single
+// quiet line so it supports the page instead of competing with the centers.
+// One primary action (New Innovations, the GME system of record, filled
+// crimson) plus the endocrine societies as small text links separated by dots;
+// on a phone the society row scrolls horizontally (scroll-snap) instead of
+// wrapping into a wall of chips. Every link opens in a new tab and is
+// keyboard/screen-reader labeled; the blurb rides in title + aria-label so the
+// bar stays scannable. Edit the arrays to change a destination.
+// includeSocieties={false} renders New-Innovations-only (the PC).
 import { NEW_INNOVATIONS_URL } from '@/lib/links'
-import { NAVY } from '@/lib/tokens'
 
 type HubLink = { name: string; href: string; blurb: string }
 
@@ -31,7 +31,7 @@ const SOCIETIES: HubLink[] = [
 
 function LaunchGlyph() {
   return (
-    <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true" className="shrink-0 opacity-60">
+    <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true" className="shrink-0 opacity-70">
       <path d="M7 17 17 7M9 7h8v8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
@@ -39,51 +39,47 @@ function LaunchGlyph() {
 
 export default function ExternalHub({ includeSocieties = true }: { includeSocieties?: boolean }) {
   return (
-    <section aria-label="Quick links" className="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="flex items-center gap-2 border-b border-gray-100 bg-slate-50/70 px-4 py-2.5">
-        <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth={2} aria-hidden="true" className="shrink-0">
-          <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 1 0-7.07-7.07l-1.72 1.71" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 1 0 7.07 7.07l1.71-1.71" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <h2 className="text-xs font-bold uppercase tracking-wide text-primary">Quick links</h2>
-        <span className="hidden text-xs text-slate-400 sm:inline">- systems &amp; societies, each opens in a new tab</span>
-      </div>
+    <section aria-label="Quick links" className="flex flex-wrap items-center gap-x-5 gap-y-1">
+      {/* Primary action: the GME system of record. The only filled control in
+          the toolbar so it reads first; societies stay quiet text links. */}
+      <a
+        href={PROGRAM_SYSTEM.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={PROGRAM_SYSTEM.blurb}
+        aria-label={PROGRAM_SYSTEM.name + ' - ' + PROGRAM_SYSTEM.blurb + ' (opens in a new tab)'}
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg bg-crimson px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson focus-visible:ring-offset-2"
+      >
+        {PROGRAM_SYSTEM.name}
+        <LaunchGlyph />
+      </a>
 
-      <div className="flex flex-wrap items-stretch gap-2 p-3">
-        {/* Primary action: the GME system of record. Visually dominant (filled
-            crimson) so it reads first; the societies stay quiet outline chips. */}
-        <a
-          href={PROGRAM_SYSTEM.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={PROGRAM_SYSTEM.blurb}
-          aria-label={PROGRAM_SYSTEM.name + ' - ' + PROGRAM_SYSTEM.blurb + ' (opens in a new tab)'}
-          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg bg-crimson px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson focus-visible:ring-offset-2"
+      {includeSocieties ? (
+        <nav
+          aria-label="Endocrine societies"
+          className="flex min-w-0 flex-1 items-center gap-x-2 overflow-x-auto whitespace-nowrap snap-x snap-proximity [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {PROGRAM_SYSTEM.name}
-          <LaunchGlyph />
-        </a>
-
-        {includeSocieties ? (
-          <>
-            <span aria-hidden="true" className="hidden w-px self-stretch bg-gray-200 sm:block" />
-            {SOCIETIES.map((s) => (
+          {SOCIETIES.map((s, i) => (
+            <span key={s.href} className="inline-flex snap-start items-center gap-x-2">
+              {i > 0 ? (
+                <span aria-hidden="true" className="text-gray-300">
+                  ·
+                </span>
+              ) : null}
               <a
-                key={s.href}
                 href={s.href}
                 target="_blank"
                 rel="noopener noreferrer"
                 title={s.blurb}
                 aria-label={s.name + ' - ' + s.blurb + ' (opens in a new tab)'}
-                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-primary/20 bg-white px-3.5 text-sm font-medium text-primary transition-colors hover:border-primary/50 hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                className="inline-flex min-h-[44px] items-center rounded-md text-sm font-medium text-muted underline-offset-4 transition-colors hover:text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 {s.name}
-                <LaunchGlyph />
               </a>
-            ))}
-          </>
-        ) : null}
-      </div>
+            </span>
+          ))}
+        </nav>
+      ) : null}
     </section>
   )
 }
