@@ -51,7 +51,7 @@ export default function AttestControl({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex min-h-[34px] items-center gap-1.5 rounded-md border border-primary/30 bg-white px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/5"
+          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md border border-primary/30 bg-white px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
             <path d="M3 8.5l3.5 3.5L13 5" strokeLinecap="round" strokeLinejoin="round" />
@@ -90,7 +90,7 @@ export default function AttestControl({
           onClick={confirm}
           disabled={pending}
           aria-busy={pending}
-          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-md bg-success-dark px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#136a34] disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md bg-success-dark px-3.5 text-xs font-semibold text-white transition-colors hover:bg-success-deeper focus:outline-none focus-visible:ring-2 focus-visible:ring-success-dark focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {pending ? 'Saving…' : `Confirm attestation — ${fellowName}, ${moduleTitle}`}
         </button>
@@ -102,7 +102,7 @@ export default function AttestControl({
             setNote('')
           }}
           disabled={pending}
-          className="px-2 py-1 text-xs font-medium text-slate-500 transition-colors hover:text-slate-700 disabled:opacity-60"
+          className="inline-flex min-h-[44px] items-center rounded-md px-3 text-xs font-medium text-slate-500 transition-colors hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60"
         >
           Cancel
         </button>

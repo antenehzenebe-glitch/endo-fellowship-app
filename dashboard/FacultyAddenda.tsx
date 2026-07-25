@@ -125,7 +125,7 @@ function FellowNoteCard({
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-primary">{fellow.name}</span>
@@ -139,7 +139,7 @@ function FellowNoteCard({
           <button
             type="button"
             onClick={startEditing}
-            className="min-h-[44px] rounded-md px-3 py-1.5 text-sm font-semibold text-crimson transition-colors hover:bg-crimson/[0.06]"
+            className="min-h-[44px] rounded-md px-3 py-1.5 text-sm font-semibold text-crimson transition-colors hover:bg-crimson/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson"
           >
             {note ? 'Edit' : 'Add a note'}
           </button>
@@ -155,7 +155,7 @@ function FellowNoteCard({
             </p>
           </div>
         ) : (
-          <p className="mt-2 text-sm text-gray-400">No note yet.</p>
+          <p className="mt-2 text-sm text-gray-500">No note yet.</p>
         )
       ) : (
         <div className="mt-3 space-y-2">
@@ -185,7 +185,7 @@ function FellowNoteCard({
                   type="button"
                   onClick={remove}
                   disabled={busy}
-                  className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark disabled:opacity-50"
+                  className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson disabled:opacity-50"
                 >
                   {busy ? 'Deleting…' : 'Delete note'}
                 </button>
@@ -193,7 +193,7 @@ function FellowNoteCard({
                   type="button"
                   onClick={() => setConfirmingRemove(false)}
                   disabled={busy}
-                  className="min-h-[44px] rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-50"
+                  className="min-h-[44px] rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -207,7 +207,7 @@ function FellowNoteCard({
                   type="button"
                   onClick={cancel}
                   disabled={busy}
-                  className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark disabled:opacity-50"
+                  className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson disabled:opacity-50"
                 >
                   Discard
                 </button>
@@ -215,7 +215,7 @@ function FellowNoteCard({
                   type="button"
                   onClick={() => setConfirmingDiscard(false)}
                   disabled={busy}
-                  className="min-h-[44px] rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-50"
+                  className="min-h-[44px] rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
                 >
                   Keep editing
                 </button>
@@ -227,7 +227,7 @@ function FellowNoteCard({
                 type="button"
                 onClick={save}
                 disabled={busy || draft.trim().length === 0}
-                className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark disabled:opacity-50"
+                className="min-h-[44px] rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-crimson-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson disabled:opacity-50"
               >
                 {busy ? 'Saving…' : 'Save note'}
               </button>
@@ -235,7 +235,7 @@ function FellowNoteCard({
                 type="button"
                 onClick={requestCancel}
                 disabled={busy}
-                className="min-h-[44px] rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-50"
+                className="min-h-[44px] rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -247,7 +247,7 @@ function FellowNoteCard({
                     setConfirmingRemove(true)
                   }}
                   disabled={busy}
-                  className="ml-auto min-h-[44px] rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                  className="ml-auto min-h-[44px] rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson disabled:opacity-50"
                 >
                   Remove
                 </button>
@@ -274,7 +274,10 @@ export default function FacultyAddenda({
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-lg font-bold text-primary">Faculty notes</h2>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Addenda</p>
+          <h2 className="text-lg font-bold text-primary">Faculty notes</h2>
+        </div>
         <span className="text-sm text-gray-500">One short note per fellow</span>
       </div>
       <p className="text-sm text-gray-600">
