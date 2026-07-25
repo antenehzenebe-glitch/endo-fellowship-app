@@ -1,53 +1,43 @@
 'use client';
 
-// Public recruiting landing for the HUH Endocrinology, Diabetes & Metabolism Fellowship.
-// Self-contained: all styles are scoped under .hu-land so nothing leaks into the rest
-// of the app (or fights Tailwind). The logo lives at /public/logo.png -> referenced as /logo.png.
+// Public recruiting landing for the HUH Endocrinology, Diabetes & Metabolism
+// Fellowship — bold editorial redesign: a single flowing scroll in a Howard
+// navy + gold atmosphere — golden parchment content sections, deep-navy
+// feature bands and chrome, gold accents — with full-bleed program art.
 //
-// EDIT placeholders are marked with {/* EDIT: ... */}.
-//   • Intro video clips (Watch tab) — paste a YouTube/Vimeo <iframe>.
-//   • Program Coordinator name + email, and the three fellows (People tab).
-//   • Photos: drop headshots in /public/photos and swap the <span className="ph">XX</span>
-//     for <img src="/photos/name.jpg" alt="Dr. ..." />.
+// Fonts (Playfair Display + Open Sans) load via next/font in app/layout.tsx and
+// reach this page through the --font-display / --font-body CSS variables and the
+// font-display / font-body Tailwind tokens — no render-blocking @import here.
+// Colors come from the design tokens only (primary / gold / ink / muted);
+// npm run check:no-hex covers this file. Contrast rule of thumb: light gold is
+// decorative or sits on navy; on parchment, text is navy/ink or the dark
+// gold-600/700 shades — never light-gold text on parchment.
+//
+// Photography — the three program images are served from hosted URLs (see
+// LANDING_IMAGES below): hero-main — full-bleed hero; hero-columns — "Why
+// train here" backdrop; endocrine-constellation — "One interconnected system"
+// band art.
+//
+// EDIT placeholders are marked with {/* EDIT: ... */} / the LINKS map below.
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import type { DirectoryGroups, DirectoryPerson } from '@/lib/people';
-
-type TabId = 'overview' | 'watch' | 'training' | 'people' | 'policies';
-
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'watch', label: 'Watch' },
-  { id: 'training', label: 'Training' },
-  { id: 'people', label: 'People' },
-  { id: 'policies', label: 'Policies & Well-being' },
-];
 
 const ERAS =
   'https://students-residents.aamc.org/applying-fellowships-eras/apply-fellowships-eras-system';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// EDIT HERE — VIDEOS. Paste a YouTube or Vimeo link to make a tile play.
-// Accepts:  https://youtu.be/ID   ·   https://www.youtube.com/watch?v=ID
-//           https://vimeo.com/ID  ·   or a full embed URL.
-// Leave '' (empty) and the tile shows a tasteful "Video coming soon" state.
-// ─────────────────────────────────────────────────────────────────────────────
-const VIDEOS = {
-  welcome: '',        // featured intro
-  leadership: '',     // a message from leadership
-  clinic: '',         // a day in clinic
-  fellows: '',        // hear from our fellows
-  inActionClinic: '', // clinic & procedures
-  inActionConf: '',   // conferences & posters
-  inActionTeach: '',  // teaching & community
-  wellRetreat: '',    // retreat & socials
-  wellSupport: '',    // well-being & support
-  wellDC: '',         // life in D.C.
-};
+// Hosted image URLs. To self-host: drop the files into public/landing/ and
+// change these to '/landing/hero-main.jpg' etc.
+const LANDING_IMAGES = {
+  heroMain: 'https://www.kimi.com/apiv2-files/sign-obj/kimi-fs%2Ffiles%2Fblob%2F8c24a8f60deb65fa74bca11906f747bb114993e9360b4134e31b425aafb64d30?filename=hero-main.jpg&sig=Dl6tdR2cfMAYdlcHzrR-eOMAJ-JAXcEWFlAUkVRv3y4=&t=o',
+  heroColumns: 'https://www.kimi.com/apiv2-files/sign-obj/kimi-fs%2Ffiles%2Fblob%2Fe792d33e2444d5136b839116d2b46e56ac44b5480cdcf3adef8bf3a160519fba?filename=hero-columns.jpg&sig=zKFClQjxJ8nVGPUM1zGKkKTrh7LNZz5Hq1ZRs3XiwHE=&t=o',
+  constellation: 'https://www.kimi.com/apiv2-files/sign-obj/kimi-fs%2Ffiles%2Fblob%2F2e27a9c5f6a2cd208a6446b731cca5349167b2332618c2e15609b9bca405338c?filename=endocrine-constellation.jpg&sig=faooXEZLjVhElIT8HNnuibYfDn6reRh4jhM2TfpRTdw=&t=o',
+} as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // EDIT HERE — LINKS. Paste a URL to turn a "coming soon" resource into a live
-// link. Leave '' (empty) and the card stays a non-clickable placeholder.
+// link. Leave '' (empty) and the row stays a non-clickable placeholder.
 // ─────────────────────────────────────────────────────────────────────────────
 const LINKS = {
   endoReq: '',     // ACGME Endocrinology, Diabetes & Metabolism program-requirements PDF
@@ -58,432 +48,665 @@ const LINKS = {
   gme: '',         // Howard GME office policies
 };
 
-// Normalize a pasted YouTube/Vimeo URL (or bare ID) into an embeddable URL.
-function toEmbed(src?: string): string | null {
-  const s = (src ?? '').trim();
-  if (!s) return null;
-  if (/\/embed\/|player\.vimeo\.com/.test(s)) return s; // already an embed URL
-  const yt = s.match(/(?:youtu\.be\/|[?&]v=)([\w-]{6,})/);
-  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
-  const vm = s.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-  if (vm) return `https://player.vimeo.com/video/${vm[1]}`;
-  if (/^[\w-]{6,}$/.test(s)) return `https://www.youtube.com/embed/${s}`; // bare YT id
-  return s;
-}
+// Sticky subnav anchors, in page order.
+const NAV = [
+  { href: '#services', label: 'Services' },
+  { href: '#training', label: 'Training' },
+  { href: '#people', label: 'People' },
+  { href: '#policies', label: 'Policies' },
+];
 
-// A self-hosted video file (Supabase Storage, /public, or any direct URL) plays
-// in a native HTML5 <video>. Returns the URL if it looks like a video file, else null.
-function directVideo(src?: string): string | null {
-  const s = (src ?? '').trim();
-  if (!s) return null;
-  return /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(s) ? s : null;
-}
+// "By the numbers" — every fact below is taken from existing program copy.
+const FACTS = [
+  { value: '1867', label: 'Howard University founded on a mission of truth and service' },
+  { value: '2', label: 'Years — one integrated curriculum, PGY-4 through PGY-5' },
+  { value: 'ACGME', label: 'Accredited subspecialty fellowship' },
+  { value: 'Small', label: 'A handful of fellows — high-touch by design' },
+];
+
+// "One interconnected system" — the full breadth of endocrinology fellows train
+// across. Per the program owner there are no siloed specialty clinics: every
+// system is covered in one integrated curriculum.
+const SYSTEMS = [
+  'Pituitary',
+  'Thyroid',
+  'Adrenal',
+  'Pancreas & diabetes',
+  'Bone & calcium',
+  'Obesity & metabolic medicine',
+  'Reproductive endocrinology',
+];
+
+// "Why train here" — the program's four existing points, recomposed.
+const WHY = [
+  {
+    n: '01',
+    title: 'Breadth of pathology',
+    desc: 'High-volume diabetes and thyroid care plus pituitary, adrenal, gonadal, and metabolic bone disease in a diverse patient population.',
+  },
+  {
+    n: '02',
+    title: 'Close mentorship',
+    desc: 'A small class means you learn at the elbow of faculty — not buried in a large service.',
+  },
+  {
+    n: '03',
+    title: 'Scholarship & QI',
+    desc: 'Protected time for quality-improvement and research, with mentorship toward abstracts, presentations, and board readiness.',
+  },
+  {
+    n: '04',
+    title: 'A mission that matters',
+    desc: 'Care for the communities most affected by endocrine disease, at a historic academic medical center in Washington, D.C.',
+  },
+];
 
 export default function Landing({
   groups,
   directoryError = false,
 }: {
   groups: DirectoryGroups;
-  // True when the directory query failed — the People tab shows an honest
+  // True when the directory query failed — the People section shows an honest
   // "temporarily unavailable" notice instead of fake empty tiers.
   directoryError?: boolean;
 }) {
   const { leadership, faculty, fellows } = groups;
-  const [active, setActive] = useState<TabId>('overview');
-  const barRef = useRef<HTMLDivElement>(null);
+  const [navStuck, setNavStuck] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  function go(id: TabId, scroll = false) {
-    setActive(id);
-    if (scroll) barRef.current?.scrollIntoView({ block: 'start' });
-  }
-
-  function onTabKey(e: React.KeyboardEvent, i: number) {
-    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-    e.preventDefault();
-    const n =
-      e.key === 'ArrowRight' ? (i + 1) % TABS.length : (i - 1 + TABS.length) % TABS.length;
-    setActive(TABS[n].id);
-  }
+  // Flip the subnav's stuck state (shadow + border) once the hero scrolls past.
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => setNavStuck(!entry.isIntersecting), {
+      threshold: 0,
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   return (
-    <div className="hu-land">
+    <div className="hu-land bg-gold-50 font-body text-ink antialiased">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
-      <header className="topbar">
-        <div className="wrap topbar-inner">
-          <a className="brand" href="#top" aria-label="HUH Endocrinology Fellowship home">
-            <img className="brand-mark" src="/logo.png" alt="" aria-hidden="true" />
-            <span>
-              <b>HUH Endocrinology</b>
-              <span>Diabetes &amp; Metabolism Fellowship</span>
-            </span>
-          </a>
-        </div>
-      </header>
-      <span id="top" />
+      {/* ── 1 · HERO — full-bleed photograph, navy scrim, editorial headline ── */}
+      <div id="top" className="relative flex min-h-svh flex-col bg-primary-900">
+        <Image
+          src={LANDING_IMAGES.heroMain}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        {/* Navy gradient scrim for text contrast (left + bottom weighted). */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-r from-primary-900/95 via-primary-900/70 to-primary-700/25"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-primary-900/80 via-transparent to-primary-900/40"
+        />
 
-      <section className="hero">
-        <div className="wrap hero-inner">
-          <div className="hero-copy">
-            <p className="eyebrow">Howard University Hospital · Washington, D.C.</p>
-            <h1>
-              Become the endocrinologist your <u>community</u> needs.
-            </h1>
-            <p className="lead">
-              A subspecialty fellowship in Endocrinology, Diabetes &amp; Metabolism — rigorous
-              clinical training and scholarship at one of the nation&apos;s foremost academic
-              medical centers, rooted in a legacy of service and health equity.
+        {/* Slim top bar — wordmark + ghost Sign in, seated on the hero image. */}
+        <header className="relative z-10">
+          <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-5 py-4 sm:px-8">
+            <a
+              href="#top"
+              aria-label="HUH Endocrinology Fellowship — back to top"
+              className="mr-auto inline-flex items-center gap-3 no-underline"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="" aria-hidden="true" className="h-10 w-10 object-contain" />
+              <span className="leading-tight">
+                <span className="block font-display text-base font-bold text-white">
+                  HUH Endocrinology
+                </span>
+                <span className="block text-[0.68rem] tracking-wide text-primary-200">
+                  Diabetes &amp; Metabolism Fellowship
+                </span>
+              </span>
+            </a>
+            <a
+              href="/login"
+              className="inline-flex items-center justify-center rounded-lg border border-white/60 px-5 text-sm font-bold text-white no-underline transition-colors hover:bg-white/10"
+            >
+              Sign in
+            </a>
+          </div>
+        </header>
+
+        {/* Hero copy */}
+        <div className="relative z-10 flex flex-1 items-center">
+          <div className="mx-auto w-full max-w-6xl px-5 pb-20 pt-10 sm:px-8">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-300 sm:text-sm">
+              Howard University Hospital · Washington, D.C.
             </p>
-            <div className="hero-cta">
-              <a className="btn btn-red" href="/login">
-                Sign in
+            <h1 className="mt-5 max-w-3xl font-display text-[2.65rem] font-bold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
+              Become the endocrinologist your{' '}
+              <span className="relative z-0 inline-block">
+                community
+                <span
+                  aria-hidden="true"
+                  className="absolute -inset-x-1 bottom-[0.04em] -z-10 h-[0.3em] bg-gold-400"
+                />
+              </span>{' '}
+              needs.
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/85">
+              Rigorous clinical training and scholarship in Endocrinology, Diabetes &amp;
+              Metabolism — at one of the nation&apos;s foremost academic medical centers, rooted
+              in a legacy of service and health equity.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center gap-4">
+              <a
+                href={ERAS}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-lg bg-gold-400 px-7 text-base font-bold text-primary-900 no-underline transition-colors hover:bg-gold-300"
+              >
+                Apply through ERAS ↗
               </a>
               <a
-                className="btn btn-ghost-light"
-                href="#overview"
-                onClick={(e) => {
-                  e.preventDefault();
-                  go('overview', true);
-                }}
+                href="#intro"
+                className="inline-flex items-center justify-center rounded-lg border border-white/60 px-7 text-base font-bold text-white no-underline transition-colors hover:bg-white/10"
               >
-                Explore the program
+                Explore the program ↓
               </a>
             </div>
-            <div className="hero-meta">
-              <span>ACGME-accredited</span>
-              <span>·</span>
-              <span>PGY-4 / PGY-5</span>
-              <span>·</span>
-              <span>Two-year fellowship</span>
-            </div>
-          </div>
-          <div className="hero-emblem" aria-hidden="true">
-            <img src="/logo.png" alt="" />
+            <p className="mt-9 text-sm font-semibold tracking-wide text-white/70">
+              ACGME-accredited&nbsp;·&nbsp;PGY-4–PGY-5&nbsp;·&nbsp;Two-year curriculum
+            </p>
           </div>
         </div>
-      </section>
+      </div>
 
-      <nav className="tabsbar" aria-label="Sections" ref={barRef}>
-        <div className="wrap">
-          <div className="tablist" role="tablist" aria-label="Program sections">
-            {TABS.map((t, i) => (
-              <button
-                key={t.id}
-                className="tab"
-                role="tab"
-                aria-selected={active === t.id}
-                onClick={() => go(t.id)}
-                onKeyDown={(e) => onTabKey(e, i)}
+      {/* ── 2 · STICKY SUBNAV — appears once the hero scrolls away ── */}
+      <div ref={sentinelRef} aria-hidden="true" className="h-px" />
+      <nav
+        aria-label="Program sections"
+        className={
+          'sticky top-0 z-40 border-b bg-gold-50/95 backdrop-blur transition-shadow ' +
+          (navStuck ? 'border-gold-200 shadow-md' : 'border-transparent')
+        }
+      >
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-2 px-5 sm:px-8">
+          <a
+            href="#top"
+            aria-label="HUH Endocrinology Fellowship — back to top"
+            className="mr-2 inline-flex flex-none items-center no-underline"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="" aria-hidden="true" className="h-8 w-8 object-contain" />
+            <span className="ml-2 hidden font-display text-sm font-bold text-primary md:inline">
+              HUH Endocrinology
+            </span>
+          </a>
+          <div className="flex flex-1 items-center gap-1 overflow-x-auto">
+            {NAV.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="inline-flex flex-none items-center px-3 text-sm font-bold text-muted no-underline underline-offset-8 transition-colors hover:text-primary hover:underline"
               >
-                {t.label}
-              </button>
+                {item.label}
+              </a>
             ))}
           </div>
+          <a
+            href={ERAS}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden flex-none items-center justify-center rounded-lg bg-gold-400 px-4 text-sm font-bold text-primary-900 no-underline transition-colors hover:bg-gold-300 sm:inline-flex"
+          >
+            Apply ↗
+          </a>
         </div>
       </nav>
 
-      <main className="wrap">
-        {/* OVERVIEW */}
-        <section className="panel" role="tabpanel" hidden={active !== 'overview'}>
-          <div className="phead">
-            <p className="eyebrow">Why train here</p>
-            <h2>Train where the need — and the teaching — is greatest.</h2>
-          </div>
-          <div className="prose">
-            <p>
-              Howard University was founded in <strong>1867</strong> on a mission of{' '}
-              <strong>truth and service</strong>. Diabetes, thyroid, and metabolic bone disease fall
-              hardest on the communities Howard has always served — and there is no better place to
-              learn to treat them than alongside the patients and faculty of Howard University
-              Hospital in the nation&apos;s capital.
+      <main>
+        {/* ── 3 · THE PROGRAM + BY THE NUMBERS — golden parchment canvas ── */}
+        <section id="intro" aria-labelledby="intro-h" className="scroll-mt-20">
+          <div className="mx-auto w-full max-w-6xl px-5 py-24 sm:px-8 md:py-32">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-600">
+              The program
             </p>
-            <p>
-              This is a small, high-touch program: a handful of fellows, direct faculty mentorship,
-              broad pathology, and protected time for scholarship. You finish ready for the boards,
-              for independent practice, and for the patients who need you most.
+            <h2
+              id="intro-h"
+              className="mt-4 max-w-3xl font-display text-4xl font-bold leading-[1.08] tracking-tight text-primary sm:text-5xl"
+            >
+              A small, high-touch fellowship — rigorous training in the service of health equity.
+            </h2>
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
+              This is a small, high-touch program: a handful of fellows, direct faculty
+              mentorship, broad pathology, and protected time for scholarship. You finish ready
+              for the boards, for independent practice, and for the patients who need you most.
             </p>
+
+            <dl className="mt-16 grid grid-cols-2 gap-x-6 gap-y-10 border-t border-gold-200 pt-12 md:grid-cols-4">
+              {FACTS.map((f) => (
+                <div key={f.value} className="flex flex-col">
+                  <dt className="order-2 mt-3 text-sm font-semibold leading-snug text-muted">
+                    {f.label}
+                  </dt>
+                  <dd className="order-1 font-display text-4xl font-bold leading-none text-primary md:text-5xl">
+                    {f.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </div>
-          <div className="grid cards-top">
-            <div className="card">
-              <div className="ico"><IconBreadth /></div>
-              <h3>Breadth of pathology</h3>
-              <p>
-                High-volume diabetes and thyroid care plus pituitary, adrenal, gonadal, and
-                metabolic bone disease in a diverse patient population.
-              </p>
-            </div>
-            <div className="card">
-              <div className="ico"><IconUsers /></div>
-              <h3>Close mentorship</h3>
-              <p>A small class means you learn at the elbow of faculty — not buried in a large service.</p>
-            </div>
-            <div className="card">
-              <div className="ico"><IconCap /></div>
-              <h3>Scholarship &amp; QI</h3>
-              <p>
-                Protected time for quality-improvement and research, with mentorship toward
-                abstracts, presentations, and board readiness.
-              </p>
-            </div>
-            <div className="card">
-              <div className="ico red"><IconHeart /></div>
-              <h3>A mission that matters</h3>
-              <p>
-                Care for the communities most affected by endocrine disease, at a historic academic
-                medical center in Washington, D.C.
-              </p>
-            </div>
+        </section>
+
+        {/* ── 4 · ONE INTERCONNECTED SYSTEM — full-bleed navy constellation band ── */}
+        <section id="services" aria-labelledby="services-h" className="scroll-mt-20 bg-primary-900">
+          {/* Constellation art — full-width hero of the band, with slow-drifting
+              glow accents layered over it (disabled under prefers-reduced-motion). */}
+          <div className="relative overflow-hidden">
+            <Image
+              src={LANDING_IMAGES.constellation}
+              alt="Illustration of translucent, glowing endocrine organs — thyroid, pituitary, pancreas, and adrenal — floating in deep navy space and connected in a network by golden filaments of light."
+              width={2048}
+              height={1072}
+              sizes="100vw"
+              className="h-auto w-full"
+            />
+            <span aria-hidden="true" className="hu-glow hu-glow-1" />
+            <span aria-hidden="true" className="hu-glow hu-glow-2" />
+            <span aria-hidden="true" className="hu-glow hu-glow-3" />
+            {/* Blend the lower edge of the art into the navy content below. */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-primary-900 to-transparent"
+            />
           </div>
 
-          <div className="sub-row">
-            <h3>Program leadership</h3>
-            <button className="btn-link" onClick={() => go('people', true)}>
-              Meet the full team →
-            </button>
-          </div>
-          <div className="grid grid-3">
-            {leadership.map((p) => (
-              <PersonCard key={p.id} person={p} lead={p.category === 'faculty'} />
-            ))}
-          </div>
+          <div className="mx-auto w-full max-w-6xl px-5 pb-24 pt-14 sm:px-8 md:pb-32">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-300">
+              One interconnected system
+            </p>
+            <h2
+              id="services-h"
+              className="mt-4 max-w-3xl font-display text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-5xl"
+            >
+              Every endocrine system. One fellowship.
+            </h2>
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/85">
+              Endocrinology is one interconnected system — and that is exactly how you train
+              here. Fellows move across the full breadth of the discipline in one integrated
+              curriculum, with no siloed specialty clinics: every system is covered, and every
+              fellow graduates having seen it all.
+            </p>
 
-          <div className="band" style={{ marginTop: 46 }}>
-            <p className="eyebrow" style={{ color: '#9fc0dd' }}>
+            {/* The systems — gold node dots, dividers, not cards. */}
+            <ul className="mt-12 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
+              {SYSTEMS.map((s) => (
+                <li key={s} className="flex items-center gap-3 border-t border-white/10 py-4">
+                  <span
+                    aria-hidden="true"
+                    className="h-2 w-2 flex-none rounded-full bg-gold-400"
+                  />
+                  <span className="font-display text-xl font-bold leading-snug text-white">
+                    {s}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-10 border-t border-white/10 pt-8 text-sm leading-relaxed text-white/75">
+              <span className="font-bold uppercase tracking-[0.14em] text-gold-300">
+                Procedures you&apos;ll be proficient in
+              </span>
+              <span aria-hidden="true"> — </span>
+              thyroid ultrasound &amp; FNA, continuous glucose monitor interpretation,
+              insulin-pump management, and DXA interpretation — logged and tracked against
+              program targets in your hub.
+            </p>
+          </div>
+        </section>
+
+        {/* ── 5 · WHY TRAIN HERE — colonnade backdrop, four points ── */}
+        <section id="why" aria-labelledby="why-h" className="relative scroll-mt-20 bg-primary-900">
+          <Image
+            src={LANDING_IMAGES.heroColumns}
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover"
+          />
+          <div aria-hidden="true" className="absolute inset-0 bg-primary-900/85" />
+          <div className="relative mx-auto w-full max-w-6xl px-5 py-24 sm:px-8 md:py-32">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-300">
+              Why train here
+            </p>
+            <h2
+              id="why-h"
+              className="mt-4 max-w-3xl font-display text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-5xl"
+            >
+              Train where the need — and the teaching — is greatest.
+            </h2>
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/85">
+              Howard University was founded in <strong className="text-white">1867</strong> on a
+              mission of <strong className="text-white">truth and service</strong>. Diabetes,
+              thyroid, and metabolic bone disease fall hardest on the communities Howard has
+              always served — and there is no better place to learn to treat them than alongside
+              the patients and faculty of Howard University Hospital in the nation&apos;s capital.
+            </p>
+
+            <ol className="mt-14 grid gap-x-10 gap-y-12 md:grid-cols-2">
+              {WHY.map((w) => (
+                <li key={w.n} className="border-l-2 border-gold-400 pl-6">
+                  <span
+                    aria-hidden="true"
+                    className="font-display text-sm font-bold tracking-[0.2em] text-gold-300"
+                  >
+                    {w.n}
+                  </span>
+                  <h3 className="mt-2 font-display text-2xl font-bold leading-snug text-white">
+                    {w.title}
+                  </h3>
+                  <p className="mt-2 max-w-md leading-relaxed text-white/75">{w.desc}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* ── 6 · TRAINING — the two-year arc ── */}
+        <section id="training" aria-labelledby="training-h" className="scroll-mt-20">
+          <div className="mx-auto w-full max-w-6xl px-5 py-24 sm:px-8 md:py-32">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-600">
+              The experience
+            </p>
+            <h2
+              id="training-h"
+              className="mt-4 max-w-3xl font-display text-4xl font-bold leading-[1.08] tracking-tight text-primary sm:text-5xl"
+            >
+              What two years here looks like.
+            </h2>
+
+            <div className="mt-14 grid gap-12 md:grid-cols-2 md:gap-10">
+              <div className="border-l-2 border-gold-400 pl-6">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">
+                  Year one · PGY-4
+                </p>
+                <h3 className="mt-2 font-display text-2xl font-bold text-primary">Foundations</h3>
+                <ul className="mt-4 space-y-3 leading-relaxed text-muted">
+                  <li>
+                    <strong className="font-semibold text-ink">Continuity clinic</strong> — a panel
+                    you follow across both years: diabetes and general endocrinology, week in and
+                    week out.
+                  </li>
+                  <li>
+                    <strong className="font-semibold text-ink">Every-system clinics</strong> —
+                    thyroid &amp; nodule, diabetes technology, metabolic bone, pituitary–adrenal,
+                    and reproductive endocrinology — no siloed specialty clinics.
+                  </li>
+                  <li>
+                    <strong className="font-semibold text-ink">Inpatient consults</strong> — the
+                    endocrine consult service: DKA, dysnatremias, adrenal crisis, inpatient
+                    glycemic management.
+                  </li>
+                </ul>
+              </div>
+              <div className="border-l-2 border-gold-400 pl-6">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">
+                  Year two · PGY-5
+                </p>
+                <h3 className="mt-2 font-display text-2xl font-bold text-primary">Mastery</h3>
+                <ul className="mt-4 space-y-3 leading-relaxed text-muted">
+                  <li>
+                    <strong className="font-semibold text-ink">Procedures you&apos;ll be proficient in</strong>{' '}
+                    — thyroid ultrasound &amp; FNA, CGM &amp; insulin pumps, and DXA
+                    interpretation, logged and tracked against program targets in your hub.
+                  </li>
+                  <li>
+                    <strong className="font-semibold text-ink">Mentored scholarship</strong> — a QI
+                    or research project with faculty mentorship, aimed at regional and national
+                    presentation.
+                  </li>
+                  <li>
+                    <strong className="font-semibold text-ink">Board readiness</strong> — you
+                    finish ready for the boards, for independent practice, and for the patients
+                    who need you most.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-14 border-t border-gold-200 pt-8">
+              <p className="text-sm leading-relaxed text-muted">
+                <span className="font-bold uppercase tracking-[0.14em] text-primary">
+                  Didactics &amp; scholarship
+                </span>
+                <span aria-hidden="true"> — </span>
+                weekly case conference, journal club, and structured board review built into the
+                schedule, alongside protected time for quality-improvement and research.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── 7 · PEOPLE — the live program directory ── */}
+        <section id="people" aria-labelledby="people-h" className="scroll-mt-20">
+          <div className="mx-auto w-full max-w-6xl px-5 pb-24 sm:px-8 md:pb-32">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-600">
+              Who you&apos;ll work with
+            </p>
+            <h2
+              id="people-h"
+              className="mt-4 max-w-3xl font-display text-4xl font-bold leading-[1.08] tracking-tight text-primary sm:text-5xl"
+            >
+              Program leadership, faculty &amp; fellows.
+            </h2>
+
+            {directoryError ? (
+              <p className="mt-8 text-muted">
+                Our team directory is temporarily unavailable — please check back soon.
+              </p>
+            ) : (
+              <>
+                <DirectoryTier title="Leadership">
+                  {leadership.map((p) => (
+                    <PersonCard key={p.id} person={p} lead={p.category === 'faculty'} />
+                  ))}
+                </DirectoryTier>
+
+                <DirectoryTier title="Faculty">
+                  {faculty.length > 0 ? (
+                    faculty.map((p) => <PersonCard key={p.id} person={p} />)
+                  ) : (
+                    <p className="col-span-full text-muted">Faculty profiles coming soon.</p>
+                  )}
+                </DirectoryTier>
+
+                <DirectoryTier title="Current fellows">
+                  {fellows.length > 0 ? (
+                    fellows.map((p) => <PersonCard key={p.id} person={p} />)
+                  ) : (
+                    <p className="col-span-full text-muted">Fellow profiles coming soon.</p>
+                  )}
+                </DirectoryTier>
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* ── 8 · POLICIES & WELL-BEING ── */}
+        <section
+          id="policies"
+          aria-labelledby="policies-h"
+          className="scroll-mt-20 border-t border-gold-200"
+        >
+          <div className="mx-auto w-full max-w-6xl px-5 py-24 sm:px-8 md:py-32">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-600">
+              Standards &amp; support
+            </p>
+            <h2
+              id="policies-h"
+              className="mt-4 max-w-3xl font-display text-4xl font-bold leading-[1.08] tracking-tight text-primary sm:text-5xl"
+            >
+              Held to ACGME standards. Built around your well-being.
+            </h2>
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
+              The requirements we train to, and the resources every fellow should know about.
+            </p>
+
+            <div className="mt-14 grid gap-12 lg:grid-cols-3 lg:gap-10">
+              <PolicyGroup title="ACGME requirements & policies">
+                <LinkRow
+                  href="https://www.acgme.org/what-we-do/accreditation/common-program-requirements/"
+                  title="Common Program Requirements"
+                  desc="The standards every program meets — including Section VI on well-being."
+                />
+                <LinkRow
+                  href="https://www.acgme.org/about-us/policies-and-procedures/"
+                  title="ACGME Policies & Procedures"
+                  desc="How accreditation, review, and program oversight work."
+                />
+                <LinkRow
+                  href="https://www.acgme.org/residents-and-fellows/welcome/"
+                  title="For Residents & Fellows"
+                  desc="Your rights, how to raise a concern, and support from the ACGME."
+                />
+                <LinkRow
+                  href={LINKS.endoReq}
+                  title="Endo program requirements"
+                  desc="ACGME Endocrinology, Diabetes & Metabolism program requirements."
+                />
+              </PolicyGroup>
+
+              <PolicyGroup title="Fellow well-being">
+                <LinkRow
+                  href="https://www.acgme.org/education-and-resources/physician-well-being-resources/"
+                  title="ACGME Well-Being Resources"
+                  desc="Tools for burnout, mental health, and resilience — for individuals and programs."
+                />
+                <LinkRow
+                  href={LINKS.eap}
+                  title="Confidential counseling / EAP"
+                  desc="Howard GME / employee assistance — confidential, 24/7."
+                />
+                <LinkRow
+                  href={LINKS.wellness}
+                  title="Fellow wellness & time-away"
+                  desc="Program well-being policy and how to get covered."
+                />
+              </PolicyGroup>
+
+              <PolicyGroup title="Program materials">
+                <LinkRow
+                  href={LINKS.handbook}
+                  title="Fellow handbook"
+                  desc="The program handbook for current fellows."
+                />
+                <LinkRow
+                  href={LINKS.milestones}
+                  title="Milestones & evaluation guide"
+                  desc="How evaluations and ACGME milestones work here."
+                />
+                <LinkRow
+                  href={LINKS.gme}
+                  title="Howard GME office policies"
+                  desc="Institutional graduate medical education policies."
+                />
+              </PolicyGroup>
+            </div>
+          </div>
+        </section>
+
+        {/* ── 9 · PRIVATE HUB BAND ── */}
+        <section aria-labelledby="hub-h" className="bg-primary">
+          <div className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 md:py-24">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-300">
               For current fellows &amp; faculty
             </p>
-            <h3>The program runs on a private hub.</h3>
-            <p>
+            <h2
+              id="hub-h"
+              className="mt-4 font-display text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl"
+            >
+              The program runs on a private hub.
+            </h2>
+            <p className="mt-4 max-w-xl leading-relaxed text-white/80">
               Behind sign-in, fellows log procedures and track progress toward graduation, faculty
               complete evaluations, and each incoming class is onboarded — all in one place. No
               patient data; fellow records only.
             </p>
-            <a className="btn btn-red" href="/login">
+            <a
+              href="/login"
+              className="mt-8 inline-flex items-center justify-center rounded-lg bg-gold-400 px-7 text-base font-bold text-primary-900 no-underline transition-colors hover:bg-gold-300"
+            >
               Sign in
             </a>
           </div>
         </section>
-
-        {/* WATCH */}
-        <section className="panel" role="tabpanel" hidden={active !== 'watch'}>
-          <div className="phead">
-            <p className="eyebrow">In their words</p>
-            <h2>Meet the program.</h2>
-            <p>
-              A few minutes with the people you&apos;d train with — faculty, fellows, and a look
-              around Howard University Hospital.
-            </p>
-          </div>
-          <VideoTile featured label="Welcome to the program" src={VIDEOS.welcome} />
-          <div className="grid grid-3">
-            <VideoTile label="A message from leadership" src={VIDEOS.leadership} />
-            <VideoTile label="A day in clinic" src={VIDEOS.clinic} />
-            <VideoTile label="Hear from our fellows" src={VIDEOS.fellows} />
-          </div>
-
-          <h3 className="subhead">Fellows in action</h3>
-          <p style={{ color: '#6a808c', fontSize: '.98rem', margin: '0 0 14px', maxWidth: 680 }}>
-            Snapshots of training life — clinic and procedures, posters and conferences, teaching and community.
-          </p>
-          <div className="grid grid-3">
-            <VideoTile label="Clinic & procedures" src={VIDEOS.inActionClinic} />
-            <VideoTile label="Conferences & posters" src={VIDEOS.inActionConf} />
-            <VideoTile label="Teaching & community" src={VIDEOS.inActionTeach} />
-          </div>
-
-          <h3 className="subhead">Wellness</h3>
-          <p style={{ color: '#6a808c', fontSize: '.98rem', margin: '0 0 14px', maxWidth: 680 }}>
-            How the program looks after its people — retreats and socials, well-being and support, life in D.C.
-          </p>
-          <div className="grid grid-3">
-            <VideoTile label="Retreat & socials" src={VIDEOS.wellRetreat} />
-            <VideoTile label="Well-being & support" src={VIDEOS.wellSupport} />
-            <VideoTile label="Life in D.C." src={VIDEOS.wellDC} />
-          </div>
-
-        </section>
-
-        {/* TRAINING */}
-        <section className="panel" role="tabpanel" hidden={active !== 'training'}>
-          <div className="phead">
-            <p className="eyebrow">The experience</p>
-            <h2>What two years here looks like.</h2>
-          </div>
-          <h3 className="subhead" style={{ marginTop: 0 }}>
-            Clinical training
-          </h3>
-          <div className="grid">
-            <div className="card">
-              <h3>Continuity clinic</h3>
-              <p>A panel you follow across both years — diabetes and general endocrinology, week in and week out.</p>
-            </div>
-            <div className="card">
-              <h3>Subspecialty clinics</h3>
-              <p>Thyroid &amp; nodule, diabetes technology, metabolic bone, pituitary–adrenal, and reproductive endocrinology.</p>
-            </div>
-            <div className="card">
-              <h3>Inpatient consults</h3>
-              <p>Lead the endocrine consult service — DKA, dysnatremias, adrenal crisis, inpatient glycemic management.</p>
-            </div>
-          </div>
-          <h3 className="subhead">Procedures you&apos;ll own</h3>
-          <div className="grid">
-            <div className="card">
-              <h3>Thyroid ultrasound &amp; FNA</h3>
-              <p>Nodule evaluation and biopsy, logged and tracked against program targets in your hub.</p>
-            </div>
-            <div className="card">
-              <h3>CGM &amp; insulin pumps</h3>
-              <p>Continuous glucose monitor interpretation and pump management for modern diabetes care.</p>
-            </div>
-            <div className="card">
-              <h3>DXA interpretation</h3>
-              <p>Bone density reading for osteoporosis and metabolic bone disease.</p>
-            </div>
-          </div>
-          <h3 className="subhead">Didactics &amp; scholarship</h3>
-          <div className="grid grid-2">
-            <div className="card">
-              <h3>Weekly teaching</h3>
-              <p>Case conference, journal club, and structured board review built into the schedule.</p>
-            </div>
-            <div className="card">
-              <h3>Mentored scholarship</h3>
-              <p>A QI or research project with faculty mentorship, aimed at regional and national presentation.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* PEOPLE */}
-        <section className="panel" role="tabpanel" hidden={active !== 'people'}>
-          <div className="phead">
-            <p className="eyebrow">Who you&apos;ll work with</p>
-            <h2>Program leadership, faculty &amp; fellows.</h2>
-          </div>
-          {directoryError ? (
-            <p style={{ color: '#6a808c', margin: 0 }}>
-              Our team directory is temporarily unavailable — please check back soon.
-            </p>
-          ) : (
-          <>
-          <h3 className="subhead" style={{ marginTop: 0 }}>
-            Leadership
-          </h3>
-          <div className="grid">
-            {leadership.map((p) => (
-              <PersonCard key={p.id} person={p} lead={p.category === 'faculty'} />
-            ))}
-          </div>
-
-          <h3 className="subhead">Faculty</h3>
-          <div className="grid">
-            {faculty.length > 0 ? (
-              faculty.map((p) => <PersonCard key={p.id} person={p} />)
-            ) : (
-              <p style={{ color: '#6a808c', margin: 0 }}>Faculty profiles coming soon.</p>
-            )}
-          </div>
-
-          <h3 className="subhead">Current fellows</h3>
-          <div className="grid">
-            {fellows.length > 0 ? (
-              fellows.map((p) => <PersonCard key={p.id} person={p} />)
-            ) : (
-              <p style={{ color: '#6a808c', margin: 0 }}>Fellow profiles coming soon.</p>
-            )}
-          </div>
-          </>
-          )}
-        </section>
-
-        {/* POLICIES & WELL-BEING */}
-        <section className="panel" role="tabpanel" hidden={active !== 'policies'}>
-          <div className="phead">
-            <p className="eyebrow">Standards &amp; support</p>
-            <h2>Held to ACGME standards. Built around your well-being.</h2>
-            <p>The requirements we train to, and the resources every fellow should know about.</p>
-          </div>
-
-          <h3 className="subhead" style={{ marginTop: 0 }}>
-            ACGME requirements &amp; policies
-          </h3>
-          <div className="grid">
-            <LinkCard
-              href="https://www.acgme.org/what-we-do/accreditation/common-program-requirements/"
-              title="Common Program Requirements"
-              desc="The standards every program meets — including Section VI on well-being."
-            />
-            <LinkCard
-              href="https://www.acgme.org/about-us/policies-and-procedures/"
-              title="ACGME Policies & Procedures"
-              desc="How accreditation, review, and program oversight work."
-            />
-            <LinkCard
-              href="https://www.acgme.org/residents-and-fellows/welcome/"
-              title="For Residents & Fellows"
-              desc="Your rights, how to raise a concern, and support from the ACGME."
-            />
-            <LinkCard href={LINKS.endoReq} title="Endo program requirements" desc="ACGME Endocrinology, Diabetes & Metabolism program requirements." />
-          </div>
-
-          <h3 className="subhead">Fellow well-being</h3>
-          <div className="grid">
-            <LinkCard
-              href="https://www.acgme.org/education-and-resources/physician-well-being-resources/"
-              title="ACGME Well-Being Resources"
-              desc="Tools for burnout, mental health, and resilience — for individuals and programs."
-            />
-            <LinkCard href={LINKS.eap} title="Confidential counseling / EAP" desc="Howard GME / employee assistance — confidential, 24/7." />
-            <LinkCard href={LINKS.wellness} title="Fellow wellness & time-away" desc="Program well-being policy and how to get covered." />
-          </div>
-
-          <h3 className="subhead">Program materials</h3>
-          <div className="grid">
-            <LinkCard href={LINKS.handbook} title="Fellow handbook" desc="The program handbook for current fellows." />
-            <LinkCard href={LINKS.milestones} title="Milestones & evaluation guide" desc="How evaluations and ACGME milestones work here." />
-            <LinkCard href={LINKS.gme} title="Howard GME office policies" desc="Institutional graduate medical education policies." />
-          </div>
-        </section>
       </main>
 
-      <footer>
-        <div className="wrap">
-          <div className="foot-grid">
+      {/* ── 10 · FOOTER ── */}
+      <footer className="bg-primary-900 text-primary-100">
+        <div className="mx-auto w-full max-w-6xl px-5 pb-10 pt-16 sm:px-8">
+          <div className="grid gap-10 md:grid-cols-3">
             <div>
-              <b>Howard University Hospital</b>
-              <span className="line">Endocrinology, Diabetes &amp; Metabolism Fellowship</span>
+              <p className="font-display text-lg font-semibold text-white">
+                Howard University Hospital
+              </p>
+              <p className="mt-1 text-sm">Endocrinology, Diabetes &amp; Metabolism Fellowship</p>
               <a
-                className="line"
                 href="https://maps.google.com/?q=2041+Georgia+Ave+NW,+Washington,+DC+20060"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center text-sm text-primary-100 underline-offset-4 hover:text-white hover:underline"
               >
                 2041 Georgia Ave NW, Washington, DC 20060
               </a>
-              <a className="line" href="tel:+12028656100">
+              <br />
+              <a
+                href="tel:+12028656100"
+                className="inline-flex items-center text-sm text-primary-100 underline-offset-4 hover:text-white hover:underline"
+              >
                 (202) 865-6100
               </a>
             </div>
             <div>
-              <div className="ft">Apply</div>
-              <a className="line" href={ERAS} target="_blank" rel="noopener noreferrer">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-gold-300">
+                Apply
+              </p>
+              <a
+                href={ERAS}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center text-sm text-primary-100 underline-offset-4 hover:text-white hover:underline"
+              >
                 Applications are accepted through ERAS ↗
               </a>
-              <span className="line" style={{ color: 'rgba(255,255,255,.7)' }}>
-                Questions? <a href="mailto:jguzman@huhosp.org">Email the program coordinator</a>
-              </span>
+              <p className="mt-2 text-sm text-white/70">
+                Questions?{' '}
+                <a
+                  href="mailto:jguzman@huhosp.org"
+                  className="inline-flex items-center text-primary-100 underline-offset-4 hover:text-white hover:underline"
+                >
+                  Email the program coordinator
+                </a>
+              </p>
             </div>
             <div>
-              <div className="ft">Member hub</div>
-              <a className="line" href="/login">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-gold-300">
+                Member hub
+              </p>
+              <a
+                href="/login"
+                className="mt-2 inline-flex items-center text-sm text-primary-100 underline-offset-4 hover:text-white hover:underline"
+              >
                 Sign in
               </a>
-              <span className="line" style={{ color: 'rgba(255,255,255,.7)' }}>
+              <p className="mt-2 text-sm text-white/70">
                 Invite-only · No PHI · fellow records only
-              </span>
+              </p>
             </div>
           </div>
-          <div className="foot-bottom">
-            <span className="motto">Veritas et Utilitas — Truth and Service</span>
+          <div className="mt-12 flex flex-wrap justify-between gap-2 border-t border-white/10 pt-6 text-xs tracking-wide">
+            <span className="italic text-gold-300">Veritas et Utilitas — Truth and Service</span>
             <span>© 2026 Howard University Hospital · EDM Fellowship</span>
           </div>
         </div>
@@ -492,50 +715,27 @@ export default function Landing({
   );
 }
 
-function PlayIcon() {
+/* One labeled tier of the directory (Leadership / Faculty / Current fellows). */
+function DirectoryTier({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M8 5v14l11-7z" />
-    </svg>
+    <div className="mt-14">
+      <h3 className="border-b border-gold-200 pb-3 font-display text-xl font-bold text-primary">
+        {title}
+      </h3>
+      <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+        {children}
+      </div>
+    </div>
   );
 }
 
-/* Feature-card icons (stroke = currentColor; tint set by .ico in CSS) */
-function IconBreadth() {
+/* One labeled cluster of policy/resource rows. */
+function PolicyGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 3l9 5-9 5-9-5 9-5z" />
-      <path d="M3 13l9 5 9-5" />
-    </svg>
-  );
-}
-
-function IconUsers() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="9" cy="8" r="3.2" />
-      <path d="M3.5 20c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6" />
-      <path d="M16 4a3 3 0 0 1 0 6" />
-      <path d="M20.5 20c0-2.6-1.4-4.8-3.5-5.6" />
-    </svg>
-  );
-}
-
-function IconCap() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 4L2 9l10 5 10-5-10-5z" />
-      <path d="M6 11.5V16c0 1.2 2.7 3 6 3s6-1.8 6-3v-4.5" />
-      <path d="M22 9v5" />
-    </svg>
-  );
-}
-
-function IconHeart() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 20S3.5 15 3.5 8.8C3.5 6 5.6 4.3 8 4.3c1.7 0 3.1 1 4 2.2.9-1.2 2.3-2.2 4-2.2 2.4 0 4.5 1.7 4.5 4.5C20.5 15 12 20 12 20z" />
-    </svg>
+    <div>
+      <h3 className="font-display text-xl font-bold text-primary">{title}</h3>
+      <div className="mt-4">{children}</div>
+    </div>
   );
 }
 
@@ -547,260 +747,106 @@ function initialsOf(name: string): string {
   return (first + last).toUpperCase();
 }
 
-// One roster card: uploaded headshot when present, else an initials placeholder.
-// `lead` adds the red leadership ring.
+// One roster entry: uploaded headshot when present, else an initials placeholder.
+// `lead` swaps the navy ring for gold. Headshots carry a soft duotone cast
+// that lifts to full color on hover/focus-within.
 function PersonCard({ person, lead }: { person: DirectoryPerson; lead?: boolean }) {
   const name = person.fullName + (person.credentials ? `, ${person.credentials}` : '');
   return (
-    <article className="card person">
-      <div className={'headshot' + (lead ? ' lead' : '')}>
+    <article className="group flex flex-col items-center gap-3 text-center">
+      <div
+        className={
+          'grid h-28 w-28 flex-none place-items-center overflow-hidden rounded-full ring-2 ring-offset-4 ring-offset-gold-50 transition-shadow md:h-32 md:w-32 ' +
+          (lead ? 'bg-gold-500/10 ring-gold-500' : 'bg-primary-50 ring-primary-200')
+        }
+      >
         {person.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={person.photoUrl} alt={name} />
+          <img
+            src={person.photoUrl}
+            alt={name}
+            className="h-full w-full object-cover [object-position:50%_28%] saturate-[.82] transition-[filter] duration-200 group-hover:saturate-100"
+          />
         ) : (
-          <span className="ph">{initialsOf(person.fullName)}</span>
+          <span
+            aria-hidden="true"
+            className={
+              'font-display text-3xl font-bold ' + (lead ? 'text-gold-700' : 'text-primary')
+            }
+          >
+            {initialsOf(person.fullName)}
+          </span>
         )}
       </div>
       <div>
-        <div className="name">{name}</div>
-        {person.roleTitle ? <div className="role">{person.roleTitle}</div> : null}
+        <div className="font-display text-lg font-bold leading-snug text-primary">{name}</div>
+        {person.roleTitle ? (
+          <div className="mt-1 text-xs font-bold uppercase tracking-[0.08em] text-gold-700">
+            {person.roleTitle}
+          </div>
+        ) : null}
       </div>
     </article>
   );
 }
 
-function LinkCard({
-  href,
-  title,
-  desc,
-}: {
-  href?: string;
-  title: string;
-  desc: string;
-}) {
+// One policy/resource row. Empty href (see LINKS above) renders as a
+// non-clickable "coming soon" placeholder.
+function LinkRow({ href, title, desc }: { href?: string; title: string; desc: string }) {
   const todo = !href || !href.trim();
   return (
     <a
-      className={'card linkcard' + (todo ? ' todo' : '')}
       href={todo ? '#' : href}
       target={todo ? undefined : '_blank'}
-      rel={todo ? undefined : 'noopener'}
+      rel={todo ? undefined : 'noopener noreferrer'}
       aria-disabled={todo ? true : undefined}
       onClick={todo ? (e) => e.preventDefault() : undefined}
+      className={
+        'flex items-baseline justify-between gap-4 border-b border-gold-200 py-4 no-underline ' +
+        (todo ? 'cursor-default' : 'group')
+      }
     >
-      <span className="lk-t">{title}</span>
-      <span className="lk-d">{desc}</span>
+      <span>
+        <span className="block font-display text-lg font-bold leading-snug text-primary">
+          {title}
+        </span>
+        <span className="mt-1 block text-sm leading-relaxed text-muted">{desc}</span>
+      </span>
+      <span
+        aria-hidden="true"
+        className={
+          'flex-none font-display text-lg ' + (todo ? 'text-muted' : 'text-gold-600')
+        }
+      >
+        {todo ? '·' : '↗'}
+      </span>
     </a>
   );
 }
 
-function VideoTile({
-  label,
-  src,
-  featured,
-}: {
-  label: string;
-  src?: string;
-  featured?: boolean;
-}) {
-  const [playing, setPlaying] = useState(false);
-  const file = directVideo(src);              // self-hosted file?
-  const embed = file ? null : toEmbed(src);   // otherwise YouTube/Vimeo embed
-  const ready = Boolean(file || embed);       // is there anything to play?
-
-  return (
-    <div className={'video16x9' + (featured ? ' video-featured' : '')}>
-      {file && playing ? (
-        <video
-          src={file}
-          title={label}
-          controls
-          autoPlay
-          playsInline
-          preload="metadata"
-          style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#000' }}
-        />
-      ) : embed && playing ? (
-        <iframe
-          src={embed + (embed.includes('?') ? '&' : '?') + 'autoplay=1'}
-          title={label}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          loading="lazy"
-        />
-      ) : (
-        <button
-          type="button"
-          className={'video-ph' + (ready ? ' video-ready' : '')}
-          onClick={() => ready && setPlaying(true)}
-          disabled={!ready}
-          aria-label={ready ? 'Play video: ' + label : label + ' — video coming soon'}
-        >
-          <span className="play" aria-hidden="true">
-            <PlayIcon />
-          </span>
-          <span className="vlabel">{label}</span>
-          <span className="vhint">{ready ? 'Tap to play' : 'Video coming soon'}</span>
-        </button>
-      )}
-    </div>
-  );
-}
-
+// Scoped page behavior only — colors and type come from the design tokens.
+// Smooth anchor scrolling (disabled under prefers-reduced-motion) and a
+// high-contrast focus ring that follows the surrounding text color, so it
+// stays visible on both the golden parchment canvas and the navy chrome.
+//
+// .hu-glow dots — the "floating/flickering" accents over the constellation
+// band. Transform/opacity only (compositor-friendly, no layout/paint thrash):
+// two dots drift on a slow ~7s ±6px float, one flickers on a ~5s opacity
+// cycle. All animation is fully disabled under prefers-reduced-motion.
+// The rgb() glow matches the gold-300 token (rgb() so no raw hex lands in
+// this file — npm run check:no-hex covers it).
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:wght@500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&display=swap');
-.hu-land{--blue:#003a63;--blue-deep:#04263f;--blue-tint:#eef2f6;--red:#e51937;--red-btn:#c8102e;--red-ink:#b3142c;--gray:#6a808c;--ink:#16242f;--bg:#f6f8fa;--surface:#ffffff;--border:#e2e7ec;--shadow:0 1px 2px rgba(4,38,63,.05),0 10px 28px rgba(4,38,63,.07);background:var(--bg);color:var(--ink);font-family:"Open Sans",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
-.hu-land *{box-sizing:border-box}
-@media (prefers-reduced-motion:reduce){.hu-land{scroll-behavior:auto}.hu-land *{transition:none!important}}
-.hu-land .wrap{width:100%;max-width:1120px;margin:0 auto;padding:0 22px}
-.hu-land h1,.hu-land h2,.hu-land h3{font-family:"Source Serif 4",Georgia,serif;color:var(--blue);line-height:1.14;margin:0;font-weight:600}
-.hu-land .eyebrow{font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red-ink);margin:0 0 .65rem}
-.hu-land a{color:var(--blue)}
-.hu-land .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:"Open Sans",sans-serif;font-weight:700;font-size:.96rem;padding:12px 22px;border-radius:8px;border:1px solid transparent;text-decoration:none;cursor:pointer;min-height:46px;transition:background .15s,color .15s,border-color .15s}
-.hu-land .btn-red{background:var(--red-btn);color:#fff}.hu-land .btn-red:hover{background:#a50e26}
-.hu-land .btn-ghost-light{background:transparent;color:#fff;border-color:rgba(255,255,255,.55)}.hu-land .btn-ghost-light:hover{background:rgba(255,255,255,.12)}
-.hu-land .btn-link{background:none;border:none;color:var(--blue);font-weight:700;cursor:pointer;font-family:"Open Sans",sans-serif;font-size:.95rem;padding:8px 0}.hu-land .btn-link:hover{color:var(--red-ink)}
-.hu-land :focus-visible{outline:3px solid rgba(229,25,55,.5);outline-offset:2px;border-radius:6px}
-.hu-land .topbar{position:sticky;top:0;z-index:50;background:rgba(246,248,250,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
-.hu-land .topbar-inner{display:flex;align-items:center;gap:14px;min-height:66px}
-.hu-land .brand{display:flex;align-items:center;gap:11px;text-decoration:none;margin-right:auto}
-.hu-land .brand-mark{width:40px;height:40px;object-fit:contain;flex:none}
-.hu-land .brand b{font-family:"Source Serif 4",serif;font-weight:700;color:var(--blue);font-size:1rem;display:block;line-height:1.1}
-.hu-land .brand span{font-size:.67rem;color:var(--gray);letter-spacing:.02em}
-.hu-land .topbar .btn{padding:9px 18px;min-height:40px;font-size:.9rem}
-.hu-land .hero{position:relative;overflow:hidden;background:linear-gradient(160deg,var(--blue-deep),var(--blue));color:#fff;border-bottom:4px solid var(--red)}
-.hu-land .hero-inner{position:relative;z-index:1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:34px;padding:64px 0}
-.hu-land .hero-copy{flex:1 1 440px;max-width:640px}
-.hu-land .hero .eyebrow{color:#9fc0dd}
-.hu-land .hero h1{color:#fff;font-size:clamp(2.3rem,5.6vw,3.7rem);letter-spacing:-.01em}
-.hu-land .hero h1 u{text-decoration:none;box-shadow:inset 0 -.28em 0 var(--red)}
-.hu-land .hero .lead{color:rgba(255,255,255,.86);font-size:clamp(1.05rem,2.1vw,1.28rem);margin:20px 0 28px;max-width:600px}
-.hu-land .hero-cta{display:flex;flex-wrap:wrap;gap:12px}
-.hu-land .hero-meta{margin-top:26px;font-size:.8rem;color:rgba(255,255,255,.72);letter-spacing:.02em;display:flex;flex-wrap:wrap;gap:6px 16px}
-.hu-land .hero-emblem{flex:0 0 auto;width:clamp(190px,26vw,300px);display:grid;place-items:center}
-.hu-land .hero-emblem img{width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 18px 40px rgba(0,0,0,.42))}
-@media (max-width:720px){.hu-land .hero-emblem{order:-1;width:172px;margin-bottom:2px}}
-.hu-land .tabsbar{position:sticky;top:65px;z-index:40;background:var(--surface);border-bottom:1px solid var(--border)}
-.hu-land .tablist{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}.hu-land .tablist::-webkit-scrollbar{display:none}
-.hu-land .tab{flex:none;appearance:none;background:none;border:none;cursor:pointer;font-family:"Open Sans",sans-serif;font-size:.95rem;font-weight:700;color:var(--gray);padding:16px 16px;border-bottom:3px solid transparent;white-space:nowrap}
-.hu-land .tab:hover{color:var(--blue)}.hu-land .tab[aria-selected="true"]{color:var(--blue);border-bottom-color:var(--red)}
-.hu-land .panel{padding:56px 0}.hu-land .panel[hidden]{display:none}
-.hu-land .phead{max-width:680px;margin-bottom:36px}
-.hu-land .phead h2{font-size:clamp(1.7rem,4vw,2.35rem)}
-.hu-land .phead p{color:var(--gray);margin:12px 0 0;font-size:1.06rem}
-.hu-land .prose p{max-width:680px;margin:0 0 16px}.hu-land .prose p:last-child{margin-bottom:0}.hu-land .prose strong{color:var(--blue)}
-.hu-land .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
-.hu-land .grid-2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-.hu-land .grid-3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
-.hu-land .cards-top{margin-top:34px}
-.hu-land .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:var(--shadow)}
-.hu-land .card h3{font-size:1.18rem;margin-bottom:8px}.hu-land .card p{color:var(--gray);margin:0;font-size:.96rem}
-.hu-land .subhead{font-family:"Source Serif 4",serif;font-weight:600;color:var(--blue);font-size:1.15rem;margin:36px 0 14px}
-.hu-land .sub-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:46px 0 14px}
-.hu-land .sub-row h3{font-family:"Source Serif 4",serif;font-weight:600;color:var(--blue);font-size:1.15rem;margin:0}
-.hu-land .video16x9{position:relative;aspect-ratio:16/9;background:var(--blue-tint);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
-.hu-land .video16x9 iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.hu-land .video-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:16px}
-.hu-land .video-ph .play{width:62px;height:62px;border-radius:50%;background:var(--red-btn);display:grid;place-items:center;box-shadow:0 8px 20px rgba(4,38,63,.18)}
-.hu-land .video-ph .play svg{width:24px;height:24px;color:#fff;margin-left:3px}
-.hu-land .video-ph .vlabel{font-family:"Source Serif 4",serif;font-weight:700;font-size:1.05rem;color:var(--blue)}
-.hu-land .video-ph .vhint{font-size:.82rem;color:var(--gray);max-width:260px}
-.hu-land .video-featured{margin-bottom:18px}
-.hu-land .person{display:flex;gap:15px;align-items:flex-start}
-.hu-land .headshot{width:84px;height:84px;border-radius:16px;flex:none;background:var(--blue-tint);border:1px solid var(--border);display:grid;place-items:center;overflow:hidden}
-.hu-land .headshot .ph{font-family:"Source Serif 4",serif;font-weight:700;color:var(--blue);font-size:1.2rem;letter-spacing:.02em}
-.hu-land .headshot img{width:100%;height:100%;object-fit:cover}
-.hu-land .headshot.lead{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--red)}
-.hu-land .person .name{font-family:"Source Serif 4",serif;font-weight:700;color:var(--blue);font-size:1.1rem;line-height:1.2}
-.hu-land .person .role{font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--red-ink);margin-top:4px}
-.hu-land .person .focus{color:var(--gray);font-size:.93rem;margin-top:5px}
-.hu-land .person .meta{font-size:.85rem;margin-top:6px}.hu-land .person .meta a{color:var(--blue);font-weight:600}
-.hu-land .pgy{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.05em;color:var(--gray);border:1px solid var(--border);border-radius:999px;padding:2px 9px;margin-top:5px}
-.hu-land .linkcard{display:flex;flex-direction:column;gap:6px;text-decoration:none}
-.hu-land .linkcard .lk-t{font-family:"Source Serif 4",serif;font-weight:700;color:var(--blue);font-size:1.05rem;display:flex;align-items:center;gap:7px}
-.hu-land .linkcard .lk-d{color:var(--gray);font-size:.92rem}
-.hu-land .linkcard .lk-t::after{content:"↗";color:var(--red-ink);font-size:.85em}
-.hu-land .linkcard.todo .lk-t::after{content:"·";color:var(--gray)}
-.hu-land a.card:hover{border-color:#cdd8e1}
-.hu-land .band{background:var(--blue);color:#fff;border-radius:18px;padding:38px;margin-top:42px}
-.hu-land .band h3{color:#fff;font-size:1.5rem}
-.hu-land .band p{color:rgba(255,255,255,.82);max-width:560px;margin:10px 0 22px}
-.hu-land footer{background:var(--blue-deep);color:rgba(255,255,255,.78);padding:46px 0 36px;margin-top:8px}
-.hu-land .foot-grid{display:grid;gap:26px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
-.hu-land footer b{color:#fff;font-family:"Source Serif 4",serif;font-weight:600;font-size:1.05rem}
-.hu-land footer a{color:#cfe0ee;text-decoration:none}.hu-land footer a:hover{color:#fff;text-decoration:underline}
-.hu-land footer .ft{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9fc0dd;margin-bottom:10px}
-.hu-land footer .line{display:block;margin:3px 0;font-size:.93rem}
-.hu-land footer .motto{font-style:italic;color:#9fc0dd}
-.hu-land .foot-bottom{border-top:1px solid rgba(255,255,255,.12);margin-top:30px;padding-top:18px;font-size:.78rem;letter-spacing:.02em;display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between}
-
-/* ─── Hierarchy tune-up (screenshots 1–4) ─── */
-.hu-land .topbar-inner{min-height:76px}
-.hu-land .brand-mark{width:56px;height:56px}
-.hu-land .brand b{font-size:1.22rem}
-.hu-land .brand span{font-size:.74rem}
-.hu-land .hero .eyebrow{font-size:.86rem;letter-spacing:.16em;color:#bcd6ee}
-.hu-land .tabsbar{top:75px;box-shadow:0 6px 14px rgba(4,38,63,.06)}
-.hu-land .tab{font-size:1.02rem;color:var(--ink);padding:18px 20px;border-bottom-width:4px}
-.hu-land .tab:hover{color:var(--blue);background:rgba(0,58,99,.04)}
-.hu-land .tab[aria-selected="true"]{background:rgba(229,25,55,.05)}
-.hu-land .hero-meta{font-size:.9rem;font-weight:600;color:rgba(255,255,255,.85)}
-.hu-land .sub-row h3,
-.hu-land .subhead{font-size:1.6rem;position:relative;padding-left:16px}
-.hu-land .sub-row h3::before,
-.hu-land .subhead::before{content:"";position:absolute;left:0;top:.16em;bottom:.16em;width:5px;border-radius:3px;background:var(--red)}
-
-/* ─── Landing refinements (premium pass) ─── */
-/* softer card shadow */
-.hu-land{--shadow:0 1px 2px rgba(4,38,63,.04),0 8px 22px rgba(4,38,63,.06)}
-/* brand bar stays at the top but is NOT sticky -> it scrolls away instead of floating over the text */
-.hu-land .topbar{position:static;background:var(--surface)}
-/* with the header non-sticky, pin the section tabs to the very top */
-.hu-land .tabsbar{top:0}
-/* esteemed display serif for the big headings, tighter leading */
-.hu-land .hero h1{font-family:"Playfair Display","Source Serif 4",Georgia,serif;line-height:1.06;letter-spacing:-.012em}
-.hu-land .phead h2{font-family:"Playfair Display","Source Serif 4",Georgia,serif;line-height:1.1}
-/* Sign-in button: darker red + subtle lift on hover */
-.hu-land .btn-red{transition:background .15s,transform .15s,box-shadow .15s}
-.hu-land .btn-red:hover{background:#a50e26;transform:translateY(-1px);box-shadow:0 6px 16px rgba(200,16,46,.32)}
-/* hero emblem: drop the harsh glow for a soft, natural shadow */
-.hu-land .hero-emblem img{filter:drop-shadow(0 10px 22px rgba(0,0,0,.22))}
-/* let the Why-train-here prose breathe a little wider */
-.hu-land .prose p{max-width:760px}
-/* roomier, rounder feature cards */
-.hu-land .card{padding:28px;border-radius:16px}
-/* thematic icon chip atop a card */
-.hu-land .card .ico{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:var(--blue-tint);color:var(--blue);margin-bottom:15px}
-.hu-land .card .ico svg{width:24px;height:24px}
-.hu-land .card .ico.red{background:#fdecef;color:var(--red-ink)}
-/* leadership avatars: soft red tint, red initials, no harsh ring */
-.hu-land .headshot.lead{background:#fdecef;border-color:#f3c8ce;box-shadow:none}
-.hu-land .headshot.lead .ph{color:var(--red-ink)}
-/* people cards: centered, symmetrical (avatar over name/title) */
-.hu-land .person{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
-/* hero logo: it's a transparent PNG that disappears on navy -> seat it on a soft
-   white medallion (padded, gentle shadow) so it reads clearly, no harsh ring */
-.hu-land .hero-emblem{aspect-ratio:1;border-radius:50%;background:#fff;padding:26px;box-shadow:0 16px 40px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.6);width:clamp(180px,24vw,264px)}
-.hu-land .hero-emblem img{width:100%;height:100%;object-fit:contain;filter:none}
-@media (max-width:720px){.hu-land .hero-emblem{width:168px;padding:20px}}
-/* playable video tiles: the placeholder is now a real button */
-.hu-land button.video-ph{appearance:none;border:0;background:transparent;width:100%;height:100%;font:inherit;color:inherit;cursor:default}
-.hu-land button.video-ph.video-ready{cursor:pointer}
-.hu-land .video-ph .play{transition:transform .15s,box-shadow .15s}
-.hu-land button.video-ph.video-ready:hover .play{transform:scale(1.07);box-shadow:0 10px 26px rgba(4,38,63,.28)}
-.hu-land button.video-ph.video-ready:hover .vhint{color:var(--red-ink)}
-
-/* ─── Headshots — larger, face-aware crop, brand ring (premium pop) ─── */
-/* Source photos are full-resolution and correctly proportioned; the old 84px
-   square + center-crop made them look cramped. Bigger, circular, ringed, with a
-   crop biased toward the face so foreheads aren't clipped and wide shots center. */
-.hu-land .headshot{width:clamp(116px,15vw,132px);height:clamp(116px,15vw,132px);border-radius:50%;border:0;overflow:hidden;background:linear-gradient(160deg,#eef3f8,#dfe8f1);box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--blue),0 12px 26px rgba(4,38,63,.20);transition:transform .18s ease,box-shadow .18s ease}
-.hu-land .headshot img{width:100%;height:100%;object-fit:cover;object-position:50% 28%;display:block}
-.hu-land .headshot .ph{font-size:clamp(1.7rem,4.4vw,2.1rem);color:var(--blue)}
-.hu-land .headshot.lead{border:0;background:linear-gradient(160deg,#fdeef0,#f8d8dd);box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--red-btn),0 12px 26px rgba(200,16,46,.22)}
-.hu-land .headshot.lead .ph{color:var(--red-ink)}
-.hu-land .person{gap:14px}
-.hu-land .person .name{font-size:1.16rem}
-.hu-land .person:hover .headshot{transform:translateY(-3px) scale(1.03);box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--blue),0 16px 34px rgba(4,38,63,.26)}
-.hu-land .person:hover .headshot.lead{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--red-btn),0 16px 34px rgba(200,16,46,.28)}
+.hu-land{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){
+  .hu-land{scroll-behavior:auto}
+  .hu-land *{transition-duration:.01ms!important}
+  .hu-glow{animation:none!important}
+}
+.hu-land :focus-visible{outline:2px solid currentColor;outline-offset:3px;border-radius:4px}
+.hu-glow{position:absolute;z-index:1;width:10px;height:10px;border-radius:9999px;pointer-events:none;background-color:rgb(220 195 133);box-shadow:0 0 18px 6px rgb(220 195 133 / .45)}
+.hu-glow-1{top:24%;left:16%;animation:hu-float 7s ease-in-out infinite}
+.hu-glow-2{top:36%;right:20%;animation:hu-float 7s ease-in-out 1.4s infinite reverse}
+.hu-glow-3{top:58%;left:54%;width:7px;height:7px;animation:hu-flicker 5s ease-in-out infinite}
+@keyframes hu-float{0%,100%{transform:translateY(-6px)}50%{transform:translateY(6px)}}
+@keyframes hu-flicker{0%,100%{opacity:.3}50%{opacity:.85}}
 `;
