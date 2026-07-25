@@ -2,11 +2,13 @@
 // APD command center — graduation readiness. Pure render from a ReadinessOverview
 // (no fetching, no client state).
 //
-// Redesign: a readiness BOARD, not a vertical scroll.
-//   - Top: navy health banner with colored On-track / At-risk / Behind counts.
-//   - Below: fellow cards in a 2-up grid, each led by a status-colored left rail
-//     and a procedure completion ring (summary), with the per-procedure bars kept
-//     as the detail beneath.
+// v2 STRUCTURAL redesign: a status-first readiness board.
+//   - Top: a full-width overview band (shared OverviewBand) with large
+//     tone-coded numerals and a one-line plain-language takeaway.
+//   - Below: fellow cards led by identity + status, then ONE aggregate
+//     procedure-minimums meter, then a labeled stat row (ITE · scholarly ·
+//     procedure minimums · onboarding), then the per-procedure detail bars,
+//     then a tidy "Needs attention" list when blockers exist.
 // Evaluations are intentionally NOT shown here anymore — they live in their own
 // Evaluation Summary tab under the New-Innovations-communication model.
 // Color is meaning-bearing only: navy = structure, crimson = identity (PGY),
@@ -20,7 +22,8 @@ import {
 } from '@/dashboard/queries'
 import StatusPill, { type StatusTone } from '@/components/ui/StatusPill'
 import Meter from '@/components/ui/Meter'
-import { NAVY, SUCCESS, AMBER, RED, GRAY_400, GRAY_200 } from '@/lib/tokens'
+import OverviewBand from '@/components/ui/OverviewBand'
+import { SUCCESS, AMBER, RED, GRAY_400 } from '@/lib/tokens'
 
 
 /* -------------------------------------------------------------- status -- */
@@ -77,35 +80,6 @@ function ReadinessPill({ status }: { status: ReadinessStatus }) {
   )
 }
 
-/* ----------------------------------------------------------- proc ring -- */
-function ProcedureRing({ done, total }: { done: number; total: number }) {
-  const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0
-  const r = 24
-  const circ = 2 * Math.PI * r
-  const filled = (pct / 100) * circ
-  const complete = pct >= 100 && total > 0
-  return (
-    <div className="relative" style={{ width: 64, height: 64 }}>
-      <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
-        <circle cx="32" cy="32" r={r} fill="none" stroke={GRAY_200} strokeWidth="6" />
-        <circle
-          cx="32"
-          cy="32"
-          r={r}
-          fill="none"
-          stroke={complete ? SUCCESS : NAVY}
-          strokeWidth="6"
-          strokeLinecap="round"
-          strokeDasharray={`${filled} ${circ - filled}`}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-sm font-bold tabular-nums text-gray-900">{pct}%</span>
-      </div>
-    </div>
-  )
-}
-
 /* ----------------------------------------------------------- proc bars -- */
 function ProcedureBar({ p }: { p: ProcedureProgress }) {
   const hasTarget = p.min > 0
@@ -141,7 +115,7 @@ function ProcedureBar({ p }: { p: ProcedureProgress }) {
 }
 
 /* --------------------------------------------------------------- chips -- */
-// Kept (and exported) for the PD and Coordinator centers that import it.
+// Kept (and exported) for compatibility with any center that imports it.
 export function StatChip({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
@@ -152,46 +126,20 @@ export function StatChip({ label, value, sub }: { label: string; value: string; 
   )
 }
 
-function MiniStat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+// Compact stat with a REAL, plain-language label — one line of value + a
+// quiet sub-line of context.
+function LabeledStat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-lg bg-gray-50 px-3 py-2">
-      <p className="text-[11px] font-medium text-gray-500 leading-tight">{label}</p>
-      <p className="text-sm font-semibold text-gray-900 leading-tight mt-0.5">{value}</p>
-      {sub ? <p className="text-[11px] text-gray-500 leading-tight">{sub}</p> : null}
+    <div className="border-t border-gray-100 px-1 pt-2.5 first:border-t-0 sm:border-t-0 sm:px-0 sm:pt-0">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</p>
+      <p className="mt-0.5 text-sm font-semibold tabular-nums text-gray-900">{value}</p>
+      {sub ? <p className="text-xs text-muted">{sub}</p> : null}
     </div>
   )
 }
 
-/* ------------------------------------------------------- health banner -- */
-function BannerStat({
-  label,
-  value,
-  tone,
-}: {
-  label: string
-  value: number
-  tone: 'good' | 'warn' | 'alert'
-}) {
-  // Color appears only where the bucket is non-empty; "0 behind" stays calm —
-  // but every numeral keeps ≥4.5:1 contrast, zero included (gray-500, never
-  // the old near-invisible gray-300).
-  const color =
-    value === 0
-      ? 'text-gray-500'
-      : tone === 'good'
-        ? 'text-green-600'
-        : tone === 'warn'
-          ? 'text-amber-500'
-          : 'text-red-600'
-  return (
-    <div className="px-4 py-4 text-center">
-      <p className={`text-3xl font-bold tabular-nums leading-none ${color}`}>{value}</p>
-      <p className="text-xs font-medium text-gray-500 mt-1.5">{label}</p>
-    </div>
-  )
-}
-
-export function ProgramSummary({ overview }: { overview: ReadinessOverview }) {
+/* -------------------------------------------------------- overview band -- */
+export function ReadinessBand({ overview }: { overview: ReadinessOverview }) {
   const total = overview.fellows.length
   const onTrack = overview.fellows.filter((f) => f.status === 'on_track').length
   const atRisk = overview.fellows.filter((f) => f.status === 'at_risk').length
@@ -199,23 +147,27 @@ export function ProgramSummary({ overview }: { overview: ReadinessOverview }) {
   // Provisioning fellows (PGY not set) sit outside all three buckets — they are
   // neither on track nor at risk until their year is known.
   const provisioning = overview.fellows.filter((f) => f.status === 'provisioning').length
+  const needAttention = atRisk + behind
 
   return (
-    <div className="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="bg-gradient-to-r from-primary to-primary-500 px-5 py-4">
-        <h2 className="text-white font-semibold text-lg leading-tight">Graduation readiness</h2>
-        <p className="text-white/70 text-sm mt-0.5">
-          {total} active {total === 1 ? 'fellow' : 'fellows'} ·{' '}
-          {overview.procedureTypes.length} procedure types tracked
-          {provisioning > 0 ? ` · ${provisioning} provisioning` : ''}
-        </p>
-      </div>
-      <div className="grid grid-cols-3 divide-x divide-gray-100 bg-white">
-        <BannerStat label="On track" value={onTrack} tone="good" />
-        <BannerStat label="At risk" value={atRisk} tone="warn" />
-        <BannerStat label="Behind" value={behind} tone="alert" />
-      </div>
-    </div>
+    <OverviewBand
+      eyebrow="Readiness"
+      title="Graduation readiness"
+      takeaway={
+        total === 0
+          ? 'No fellows are enrolled yet — readiness rolls up here once they are.'
+          : needAttention > 0
+            ? `${needAttention} ${needAttention === 1 ? 'fellow needs' : 'fellows need'} attention this block.`
+            : 'Everyone is on track this block.'
+      }
+      aside={`${total} active ${total === 1 ? 'fellow' : 'fellows'} · ${overview.procedureTypes.length} procedure types tracked`}
+      stats={[
+        { label: 'On track', value: onTrack, tone: 'success' },
+        { label: 'At risk', value: atRisk, tone: 'warning' },
+        { label: 'Behind', value: behind, tone: 'danger' },
+        ...(provisioning > 0 ? [{ label: 'Provisioning', value: provisioning }] : []),
+      ]}
+    />
   )
 }
 
@@ -229,55 +181,86 @@ export function FellowCard({ fellow }: { fellow: FellowReadiness }) {
   const withTarget = fellow.procedures.filter((p) => p.min > 0)
   const totalMin = withTarget.reduce((s, p) => s + p.min, 0)
   const totalDone = withTarget.reduce((s, p) => s + Math.min(p.done, p.min), 0)
+  const pct = totalMin > 0 ? Math.min(100, Math.round((totalDone / totalMin) * 100)) : 0
+  const allMet = !provisioning && totalMin > 0 && totalDone >= totalMin
+
+  const iteValue =
+    fellow.latestIte && fellow.latestIte.percentile !== null
+      ? `${fellow.latestIte.percentile}%ile`
+      : '—'
+  const iteSub = fellow.latestIte ? `${fellow.latestIte.examYear}` : 'no score on record'
 
   return (
     <article
-      className="rounded-xl bg-white border border-gray-200 shadow-sm border-l-4 overflow-hidden"
+      className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm border-l-4"
       style={{ borderLeftColor: meta.rail }}
     >
-      {/* Status-first header: the readiness pill leads the card so the eye
-          lands on state before identity; name + PGY follow directly under. */}
-      <header className="px-5 pt-4 pb-3">
-        <div className="flex items-center justify-between gap-3">
-          <ReadinessPill status={fellow.status} />
-          {fellow.pgyLevel ? (
-            <span className="inline-block rounded-md bg-crimson/10 px-2 py-0.5 text-xs font-semibold text-crimson">
-              {fellow.pgyLevel}
-            </span>
-          ) : null}
+      {/* Header row: identity first, state immediately beside it. */}
+      <header className="flex items-start justify-between gap-3 px-5 pt-5">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <h3 className="text-lg font-semibold leading-tight text-gray-900">{fellow.name}</h3>
+            {fellow.pgyLevel ? (
+              <span className="inline-block rounded-md bg-crimson/10 px-2 py-0.5 text-xs font-semibold text-crimson">
+                {fellow.pgyLevel}
+              </span>
+            ) : (
+              <span className="text-xs text-muted">PGY not set</span>
+            )}
+          </div>
         </div>
-        <h3 className="mt-2 font-semibold text-lg text-gray-900 leading-tight truncate">{fellow.name}</h3>
-        {!fellow.pgyLevel ? <p className="text-sm text-gray-500">Fellow</p> : null}
+        <ReadinessPill status={fellow.status} />
       </header>
 
-      {/* Ring (summary) + mini-metrics */}
-      <div className="flex gap-4 px-5 pb-4">
-        <div className="flex flex-col items-center shrink-0">
-          <ProcedureRing done={totalDone} total={totalMin} />
-          <span className="mt-1.5 text-[11px] text-gray-500 tabular-nums">
-            {provisioning
-              ? 'PGY not set'
-              : `${fellow.proceduresMet}/${fellow.proceduresWithTarget} mins met`}
+      {/* Aggregate procedure-minimums progress: one meter, one % label. */}
+      <div className="px-5 pt-4">
+        <div className="mb-1.5 flex items-baseline justify-between gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted">
+            Procedure minimums
           </span>
+          {provisioning ? (
+            <span className="text-xs text-muted">starts once PGY is set</span>
+          ) : (
+            <span className="text-sm font-bold tabular-nums text-gray-900">{pct}%</span>
+          )}
         </div>
-        <div className="grid grid-cols-2 gap-2 flex-1 content-start">
-          <MiniStat
-            label="Latest ITE"
-            value={fellow.latestIte && fellow.latestIte.percentile !== null ? `${fellow.latestIte.percentile}%ile` : '—'}
-            sub={fellow.latestIte ? `${fellow.latestIte.examYear}` : 'no score'}
-          />
-          <MiniStat label="Scholarly" value={`${fellow.scholarlyCompleted} done`} sub={`${fellow.scholarlyActive} active`} />
-          <MiniStat
-            label="Onboarding"
-            value={fellow.onboardingTotal > 0 ? `${fellow.onboardingDone}/${fellow.onboardingTotal}` : '—'}
-            sub={fellow.onboardingTotal > 0 ? 'tasks done' : 'none assigned'}
-          />
-        </div>
+        <Meter
+          value={provisioning ? 0 : totalDone}
+          max={totalMin}
+          label={
+            provisioning
+              ? 'Procedure minimums: tracking starts once the PGY level is set'
+              : `Procedure minimums: ${pct}% of the cumulative minimums reached`
+          }
+          tone={allMet ? 'success' : 'primary'}
+        />
       </div>
 
-      {/* Procedure breakdown (detail) */}
-      <div className="px-5 pb-4">
-        <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Procedures</h4>
+      {/* Labeled stat row: the four signals a reviewer scans for. */}
+      <div className="grid grid-cols-1 gap-x-4 gap-y-2 px-5 pt-4 sm:grid-cols-2">
+        <LabeledStat label="ITE percentile" value={iteValue} sub={iteSub} />
+        <LabeledStat
+          label="Scholarly work"
+          value={`${fellow.scholarlyCompleted} completed`}
+          sub={`${fellow.scholarlyActive} active`}
+        />
+        <LabeledStat
+          label="Procedure minimums"
+          value={provisioning ? '—' : `${fellow.proceduresMet} of ${fellow.proceduresWithTarget} met`}
+          sub={provisioning ? 'PGY not set' : 'with targets set'}
+        />
+        <LabeledStat
+          label="Onboarding"
+          value={fellow.onboardingTotal > 0 ? `${fellow.onboardingDone} of ${fellow.onboardingTotal} tasks` : '—'}
+          sub={fellow.onboardingTotal > 0 ? 'completed' : 'none assigned'}
+        />
+      </div>
+
+      {/* Per-procedure breakdown (detail). */}
+      <div className="px-5 pt-5">
+        <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
+          Procedures
+        </h4>
         <div className="grid grid-cols-1 gap-y-2">
           {fellow.procedures.map((p) => (
             <ProcedureBar key={p.code} p={p} />
@@ -285,17 +268,16 @@ export function FellowCard({ fellow }: { fellow: FellowReadiness }) {
         </div>
       </div>
 
-      {/* Needs-attention: tinted and flagged with an icon so it stands apart
-          from the calm "no blockers" footer — noticeable, not alarming. */}
+      {/* Needs-attention: a tidy flagged list, distinct from the calm footer. */}
       {fellow.blockers.length > 0 ? (
-        <div className="px-5 pb-5">
+        <div className="px-5 pb-5 pt-4">
           <section
             aria-label="Readiness blockers"
             className={`rounded-lg border-l-4 p-3 ${
-              severe ? 'bg-red-50 border border-red-200 border-l-red-400' : 'bg-amber-50 border border-amber-200 border-l-amber-400'
+              severe ? 'border border-red-200 border-l-red-400 bg-red-50' : 'border border-amber-200 border-l-amber-400 bg-amber-50'
             }`}
           >
-            <p className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide mb-1 ${severe ? 'text-red-900' : 'text-amber-900'}`}>
+            <p className={`mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${severe ? 'text-red-900' : 'text-amber-900'}`}>
               <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
                 <path d="M8 5v4" strokeLinecap="round" />
                 <circle cx="8" cy="11.5" r="0.9" fill="currentColor" stroke="none" />
@@ -303,7 +285,7 @@ export function FellowCard({ fellow }: { fellow: FellowReadiness }) {
               </svg>
               Needs attention
             </p>
-            <ul className={`list-disc list-inside text-sm space-y-0.5 ${severe ? 'text-red-800' : 'text-amber-800'}`}>
+            <ul className={`list-disc list-inside space-y-0.5 text-sm ${severe ? 'text-red-800' : 'text-amber-800'}`}>
               {fellow.blockers.map((b) => (
                 <li key={b}>{b}</li>
               ))}
@@ -311,13 +293,13 @@ export function FellowCard({ fellow }: { fellow: FellowReadiness }) {
           </section>
         </div>
       ) : provisioning ? (
-        <div className="px-5 pb-4 pt-2 border-t border-gray-50">
-          <p className="text-sm text-gray-500">
+        <div className="mt-4 border-t border-gray-100 px-5 py-3.5">
+          <p className="text-sm text-muted">
             Provisioning — readiness tracking starts once the PGY level is set.
           </p>
         </div>
       ) : (
-        <div className="px-5 pb-4 pt-2 border-t border-gray-50">
+        <div className="mt-4 border-t border-gray-100 px-5 py-3.5">
           <p className="inline-flex items-center gap-1.5 text-sm text-green-700">
             <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
               <path d="M3 8.5l3.5 3.5L13 5" strokeLinecap="round" strokeLinejoin="round" />
@@ -333,14 +315,14 @@ export function FellowCard({ fellow }: { fellow: FellowReadiness }) {
 /* --------------------------------------------------------- empty state -- */
 export function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl bg-white border border-gray-200 shadow-sm">
-      <div className="w-12 h-12 rounded-full bg-blue-50 text-primary flex items-center justify-center mb-4">
+    <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white py-16 text-center shadow-sm">
+      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
         <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
           <path d="M16 21v-2a4 4 0 0 0-8 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
-      <h3 className="font-semibold text-gray-900 mb-1">No fellows enrolled yet</h3>
-      <p className="text-sm text-gray-600 max-w-sm">
+      <h3 className="mb-1 font-semibold text-gray-900">No fellows enrolled yet</h3>
+      <p className="max-w-sm text-sm text-muted">
         Once you provision fellow accounts, each fellow&apos;s procedure progress, ITE scores, scholarly work,
         and onboarding will roll up here.
       </p>
@@ -351,12 +333,12 @@ export function EmptyState() {
 /* --------------------------------------------------------------- root -- */
 export default function CommandCenter({ overview }: { overview: ReadinessOverview }) {
   return (
-    <section aria-label="Graduation readiness">
-      <ProgramSummary overview={overview} />
+    <section aria-label="Graduation readiness" className="space-y-6">
+      <ReadinessBand overview={overview} />
       {overview.fellows.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {overview.fellows.map((fellow) => (
             <FellowCard key={fellow.id} fellow={fellow} />
           ))}
