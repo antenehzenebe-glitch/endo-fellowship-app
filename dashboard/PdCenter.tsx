@@ -7,13 +7,14 @@
 // Mobile-first: gauges 2-up (4-up on lg); roster as a scroll-safe table.
 // Color is paired with text labels (never color alone) per DESIGN.md / WCAG.
 import { ProgramSummary } from '@/dashboard/CommandCenter'
+import StatusPill, { type StatusTone } from '@/components/ui/StatusPill'
 import type { FellowReadiness, ReadinessOverview, ReadinessStatus } from '@/dashboard/queries'
 
-const STATUS_META: Record<ReadinessStatus, { label: string; pill: string }> = {
-  on_track: { label: 'On track', pill: 'bg-green-100 text-green-800' },
-  at_risk: { label: 'At risk', pill: 'bg-amber-100 text-amber-900' },
-  behind: { label: 'Behind', pill: 'bg-red-100 text-red-800' },
-  provisioning: { label: 'Provisioning', pill: 'bg-gray-100 text-gray-700' },
+const STATUS_META: Record<ReadinessStatus, { label: string; tone: StatusTone }> = {
+  on_track: { label: 'On track', tone: 'success' },
+  at_risk: { label: 'At risk', tone: 'warning' },
+  behind: { label: 'Behind', tone: 'danger' },
+  provisioning: { label: 'Provisioning', tone: 'neutral' },
 }
 
 function Gauge({
@@ -29,17 +30,17 @@ function Gauge({
 }) {
   const valueColor = tone === 'good' ? 'text-green-700' : 'text-primary'
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 text-center">
+    <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
       <p className={`text-3xl font-bold tabular-nums leading-none ${valueColor}`}>{value}</p>
       <p className="mt-1.5 text-xs font-semibold text-gray-700">{label}</p>
-      {sub ? <p className="text-xs text-gray-400">{sub}</p> : null}
+      {sub ? <p className="text-xs text-gray-500">{sub}</p> : null}
     </div>
   )
 }
 
-function StatusPill({ status }: { status: ReadinessStatus }) {
+function FellowStatusPill({ status }: { status: ReadinessStatus }) {
   const m = STATUS_META[status]
-  return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${m.pill}`}>{m.label}</span>
+  return <StatusPill tone={m.tone} variant="soft">{m.label}</StatusPill>
 }
 
 function FellowRow({ f }: { f: FellowReadiness }) {
@@ -56,7 +57,7 @@ function FellowRow({ f }: { f: FellowReadiness }) {
         {f.pgyLevel ? <span className="text-xs text-gray-500">{f.pgyLevel}</span> : null}
       </th>
       <td className="px-3 py-3">
-        <StatusPill status={f.status} />
+        <FellowStatusPill status={f.status} />
       </td>
       <td className="px-3 py-3 tabular-nums whitespace-nowrap">
         {f.status === 'provisioning' ? (
@@ -118,14 +119,17 @@ export default function PdCenter({ overview }: { overview: ReadinessOverview }) 
       </div>
 
       <section aria-label="Fellow roster" className="space-y-3">
-        <h2 className="font-semibold text-gray-900">Fellow roster</h2>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Roster</p>
+          <h2 className="font-semibold text-gray-900">Fellow roster</h2>
+        </div>
         {fellows.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gray-300 bg-white py-12 text-center">
+          <div className="rounded-xl border border-dashed border-gray-300 bg-white py-12 text-center shadow-sm">
             <p className="font-semibold text-gray-800">No active fellows yet</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-            <table className="w-full border-collapse text-sm">
+          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+            <table className="w-full min-w-[640px] border-collapse text-sm">
               <caption className="sr-only">Per-fellow readiness roster: status, procedures, ITE, scholarly, onboarding.</caption>
               <thead>
                 <tr className="bg-gray-50 text-left text-gray-600">

@@ -7,6 +7,7 @@
 // per DESIGN.md / WCAG. De-identified educational records — NO PHI.
 import type { ReactNode } from 'react'
 import type { EvalCell, EvalSummaryData } from '@/dashboard/evaluationSummary'
+import StatusPill from '@/components/ui/StatusPill'
 
 /* ------------------------------------------------------------- icons -- */
 const iconCheck = (
@@ -59,7 +60,10 @@ export default function EvalSummary({ summary }: { summary: EvalSummaryData }) {
   return (
     <section className="space-y-4">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-lg font-bold text-primary">Evaluation Summary</h2>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Evaluations</p>
+          <h2 className="text-lg font-bold text-primary">Evaluation Summary</h2>
+        </div>
         <span className="text-sm text-gray-500">Academic year {summary.academicYear}</span>
       </div>
       <p className="text-sm text-gray-600">
@@ -77,8 +81,8 @@ export default function EvalSummary({ summary }: { summary: EvalSummaryData }) {
               New academic year — evaluations aren&apos;t due yet.
             </p>
           ) : null}
-          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-            <table className="w-full border-collapse text-sm">
+          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+            <table className="w-full min-w-[520px] border-collapse text-sm">
               <caption className="sr-only">
                 Mid-year and end-of-year evaluation status for each active fellow, academic year {summary.academicYear}.
               </caption>
@@ -108,10 +112,12 @@ export default function EvalSummary({ summary }: { summary: EvalSummaryData }) {
             </table>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-gray-500">
-            <span className="inline-flex items-center gap-1.5"><span className="text-green-700" aria-hidden="true">{iconCheck}</span>Completed</span>
-            <span className="inline-flex items-center gap-1.5"><span className="text-amber-700" aria-hidden="true">{iconProgress}</span>In progress (draft saved)</span>
-            <span className="inline-flex items-center gap-1.5"><span className="text-gray-400" aria-hidden="true">{iconPending}</span>Not started</span>
+          {/* Legend uses the same shared pills as the rest of the dashboard so
+              the three states read identically everywhere. */}
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusPill tone="success" variant="soft" icon={iconCheck}>Completed</StatusPill>
+            <StatusPill tone="warning" variant="soft" icon={iconProgress}>In progress (draft saved)</StatusPill>
+            <StatusPill tone="neutral" variant="soft" icon={iconPending}>Not started</StatusPill>
           </div>
         </>
       )}
