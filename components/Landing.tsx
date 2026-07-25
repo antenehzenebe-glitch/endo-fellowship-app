@@ -48,10 +48,44 @@ const LINKS = {
   gme: '',         // Howard GME office policies
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// EDIT HERE — FELLOWS IN ACTION VIDEOS. Paste a URL to make a tile play:
+//   • a direct video-file URL — MP4/WebM (Supabase Storage, /public, anywhere)
+//   • or a YouTube / Vimeo link (watch, share, or embed form all work)
+// Leave '' (empty) and the tile shows a tasteful "Video coming soon" state.
+// ─────────────────────────────────────────────────────────────────────────────
+const ACTION_VIDEOS = {
+  clinicProcedures: '', // clinic & procedures
+  conferencesPosters: '', // conferences & posters
+  teachingCommunity: '', // teaching & community
+};
+
+// A self-hosted video file (Supabase Storage, /public, or any direct URL) plays
+// in a native HTML5 <video>. Returns the URL if it looks like a video file, else null.
+function directVideo(src?: string): string | null {
+  const s = (src ?? '').trim();
+  if (!s) return null;
+  return /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(s) ? s : null;
+}
+
+// Normalize a pasted YouTube/Vimeo URL (or bare ID) into an embeddable URL.
+function toEmbed(src?: string): string | null {
+  const s = (src ?? '').trim();
+  if (!s) return null;
+  if (/\/embed\/|player\.vimeo\.com/.test(s)) return s; // already an embed URL
+  const yt = s.match(/(?:youtu\.be\/|[?&]v=)([\w-]{6,})/);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+  const vm = s.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vm) return `https://player.vimeo.com/video/${vm[1]}`;
+  if (/^[\w-]{6,}$/.test(s)) return `https://www.youtube.com/embed/${s}`; // bare YT id
+  return s;
+}
+
 // Sticky subnav anchors, in page order.
 const NAV = [
   { href: '#services', label: 'Services' },
   { href: '#training', label: 'Training' },
+  { href: '#in-action', label: 'In action' },
   { href: '#people', label: 'People' },
   { href: '#policies', label: 'Policies' },
 ];
@@ -488,7 +522,31 @@ export default function Landing({
           </div>
         </section>
 
-        {/* ── 7 · PEOPLE — the live program directory ── */}
+        {/* ── 7 · FELLOWS IN ACTION — video tiles (MP4 / YouTube / Vimeo) ── */}
+        <section id="in-action" aria-labelledby="in-action-h" className="scroll-mt-20 bg-primary-900">
+          <div className="mx-auto w-full max-w-6xl px-5 py-24 sm:px-8 md:py-32">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-300">
+              Fellows in action
+            </p>
+            <h2
+              id="in-action-h"
+              className="mt-4 max-w-3xl font-display text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-5xl"
+            >
+              Training life, on film.
+            </h2>
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/85">
+              Snapshots of training life — clinic and procedures, posters and conferences,
+              teaching and community.
+            </p>
+            <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <ActionVideoTile label="Clinic & procedures" src={ACTION_VIDEOS.clinicProcedures} />
+              <ActionVideoTile label="Conferences & posters" src={ACTION_VIDEOS.conferencesPosters} />
+              <ActionVideoTile label="Teaching & community" src={ACTION_VIDEOS.teachingCommunity} />
+            </div>
+          </div>
+        </section>
+
+        {/* ── 8 · PEOPLE — the live program directory ── */}
         <section id="people" aria-labelledby="people-h" className="scroll-mt-20">
           <div className="mx-auto w-full max-w-6xl px-5 pb-24 sm:px-8 md:pb-32">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-600">
@@ -533,7 +591,7 @@ export default function Landing({
           </div>
         </section>
 
-        {/* ── 8 · POLICIES & WELL-BEING ── */}
+        {/* ── 9 · POLICIES & WELL-BEING ── */}
         <section
           id="policies"
           aria-labelledby="policies-h"
@@ -616,7 +674,7 @@ export default function Landing({
           </div>
         </section>
 
-        {/* ── 9 · PRIVATE HUB BAND ── */}
+        {/* ── 10 · PRIVATE HUB BAND ── */}
         <section aria-labelledby="hub-h" className="bg-primary">
           <div className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 md:py-24">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-300">
@@ -643,7 +701,7 @@ export default function Landing({
         </section>
       </main>
 
-      {/* ── 10 · FOOTER ── */}
+      {/* ── 11 · FOOTER ── */}
       <footer className="bg-primary-900 text-primary-100">
         <div className="mx-auto w-full max-w-6xl px-5 pb-10 pt-16 sm:px-8">
           <div className="grid gap-10 md:grid-cols-3">
@@ -752,11 +810,17 @@ function initialsOf(name: string): string {
 // that lifts to full color on hover/focus-within.
 function PersonCard({ person, lead }: { person: DirectoryPerson; lead?: boolean }) {
   const name = person.fullName + (person.credentials ? `, ${person.credentials}` : '');
+  // Headshots arrive in every shape — tight portraits, wide environmental
+  // shots. Portrait/square photos COVER a 4:5 portrait frame with a top bias
+  // so faces are never clipped; a genuinely landscape photo switches to a
+  // soft branded matte (object-contain) so the whole photograph is always
+  // visible — no crop can cut a colleague out of their own headshot.
+  const [landscape, setLandscape] = useState(false);
   return (
     <article className="group flex flex-col items-center gap-3 text-center">
       <div
         className={
-          'grid h-28 w-28 flex-none place-items-center overflow-hidden rounded-full ring-2 ring-offset-4 ring-offset-gold-50 transition-shadow md:h-32 md:w-32 ' +
+          'grid aspect-[4/5] w-28 flex-none place-items-center overflow-hidden rounded-2xl ring-2 ring-offset-4 ring-offset-gold-50 transition-shadow md:w-32 ' +
           (lead ? 'bg-gold-500/10 ring-gold-500' : 'bg-primary-50 ring-primary-200')
         }
       >
@@ -765,7 +829,16 @@ function PersonCard({ person, lead }: { person: DirectoryPerson; lead?: boolean 
           <img
             src={person.photoUrl}
             alt={name}
-            className="h-full w-full object-cover [object-position:50%_28%] saturate-[.82] transition-[filter] duration-200 group-hover:saturate-100"
+            onLoad={(e) => {
+              const img = e.currentTarget;
+              setLandscape(img.naturalWidth > img.naturalHeight * 1.15);
+            }}
+            className={
+              'h-full w-full saturate-[.82] transition-[filter] duration-200 group-hover:saturate-100 ' +
+              (landscape
+                ? 'bg-gradient-to-b from-primary-50 to-gold-100 object-contain'
+                : 'object-cover [object-position:50%_18%]')
+            }
           />
         ) : (
           <span
@@ -787,6 +860,68 @@ function PersonCard({ person, lead }: { person: DirectoryPerson; lead?: boolean 
         ) : null}
       </div>
     </article>
+  );
+}
+
+// One "Fellows in action" video tile. Direct video files (MP4/WebM) play in a
+// native HTML5 player; YouTube/Vimeo links load their embed on tap; an empty
+// URL (see ACTION_VIDEOS above) renders a non-clickable "coming soon" tile.
+// The player only mounts after the tap, so nothing heavy loads upfront.
+function ActionVideoTile({ label, src }: { label: string; src?: string }) {
+  const [playing, setPlaying] = useState(false);
+  const file = directVideo(src);
+  const embed = file ? null : toEmbed(src);
+  const ready = Boolean(file || embed);
+
+  return (
+    <div className="relative aspect-video overflow-hidden rounded-xl bg-primary-800 shadow-lg ring-1 ring-white/10">
+      {file && playing ? (
+        <video
+          src={file}
+          title={label}
+          controls
+          autoPlay
+          playsInline
+          preload="metadata"
+          className="absolute inset-0 h-full w-full bg-black object-contain"
+        />
+      ) : embed && playing ? (
+        <iframe
+          src={embed + (embed.includes('?') ? '&' : '?') + 'autoplay=1'}
+          title={label}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          loading="lazy"
+          className="absolute inset-0 h-full w-full border-0"
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => ready && setPlaying(true)}
+          disabled={!ready}
+          aria-label={ready ? `Play video: ${label}` : `${label} — video coming soon`}
+          className="group/tile absolute inset-0 flex flex-col items-center justify-center gap-3 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
+        >
+          <span
+            aria-hidden="true"
+            className={
+              'grid h-14 w-14 place-items-center rounded-full border-2 transition-colors ' +
+              (ready
+                ? 'border-gold-300 text-gold-300 group-hover/tile:bg-gold-300 group-hover/tile:text-primary-900'
+                : 'border-white/25 text-white/40')
+            }
+          >
+            <svg width={20} height={20} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </span>
+          <span className="font-display text-lg font-bold text-white">{label}</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/50">
+            {ready ? 'Tap to play' : 'Video coming soon'}
+          </span>
+        </button>
+      )}
+    </div>
   );
 }
 
