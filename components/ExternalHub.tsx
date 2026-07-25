@@ -39,8 +39,8 @@ function LaunchGlyph() {
 
 export default function ExternalHub({ includeSocieties = true }: { includeSocieties?: boolean }) {
   return (
-    <section aria-label="Quick links" className="mb-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-900/5">
-      <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/70 px-4 py-2.5">
+    <section aria-label="Quick links" className="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="flex items-center gap-2 border-b border-gray-100 bg-slate-50/70 px-4 py-2.5">
         <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth={2} aria-hidden="true" className="shrink-0">
           <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 1 0-7.07-7.07l-1.72 1.71" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 1 0 7.07 7.07l1.71-1.71" strokeLinecap="round" strokeLinejoin="round" />
@@ -49,7 +49,9 @@ export default function ExternalHub({ includeSocieties = true }: { includeSociet
         <span className="hidden text-xs text-slate-400 sm:inline">- systems &amp; societies, each opens in a new tab</span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 p-3">
+      <div className="flex flex-wrap items-stretch gap-2 p-3">
+        {/* Primary action: the GME system of record. Visually dominant (filled
+            crimson) so it reads first; the societies stay quiet outline chips. */}
         <a
           href={PROGRAM_SYSTEM.href}
           target="_blank"
@@ -62,8 +64,10 @@ export default function ExternalHub({ includeSocieties = true }: { includeSociet
           <LaunchGlyph />
         </a>
 
-        {includeSocieties
-          ? SOCIETIES.map((s) => (
+        {includeSocieties ? (
+          <>
+            <span aria-hidden="true" className="hidden w-px self-stretch bg-gray-200 sm:block" />
+            {SOCIETIES.map((s) => (
               <a
                 key={s.href}
                 href={s.href}
@@ -71,13 +75,14 @@ export default function ExternalHub({ includeSocieties = true }: { includeSociet
                 rel="noopener noreferrer"
                 title={s.blurb}
                 aria-label={s.name + ' - ' + s.blurb + ' (opens in a new tab)'}
-                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-primary/20 bg-white px-3 text-sm font-medium text-primary transition-colors hover:border-primary/50 hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-primary/20 bg-white px-3.5 text-sm font-medium text-primary transition-colors hover:border-primary/50 hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
                 {s.name}
                 <LaunchGlyph />
               </a>
-            ))
-          : null}
+            ))}
+          </>
+        ) : null}
       </div>
     </section>
   )

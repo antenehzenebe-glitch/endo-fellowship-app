@@ -36,7 +36,7 @@ const config: Config = {
         // Ink & muted slate for body/secondary text
         ink: '#1B2733',
         muted: '#5C6B7A',
-        success: { DEFAULT: '#16a34a', dark: '#15803d' },
+        success: { DEFAULT: '#16a34a', dark: '#15803d', deeper: '#136a34' },
         warning: '#F97316',
         error: '#EF4444',
       },
