@@ -60,7 +60,7 @@ const config: Config = {
           600: '#83671f',
           700: '#66511a',
         },
-        success: { DEFAULT: '#16a34a', dark: '#15803d' },
+        success: { DEFAULT: '#16a34a', dark: '#15803d', deeper: '#136a34' },
         warning: '#F97316',
         error: '#EF4444',
       },
