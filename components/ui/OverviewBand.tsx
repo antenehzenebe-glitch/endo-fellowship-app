@@ -5,10 +5,12 @@
 // numerals (text-3xl+, tabular-nums) that answer "how many?" before any card
 // or table below.
 //
-// Tones mirror StatusPill: success = green, warning = amber, danger = crimson,
+// Tones mirror StatusPill: success = green, warning = amber, danger = red,
 // default = navy. A zero count stays calm gray-500 (still ≥4.5:1 on white) so
 // "0 behind" never shouts — the tone only appears when the bucket is non-empty.
 // Color is never the only signal: every numeral is paired with its label.
+// Brand crimson is reserved for true brand moments (header rule, active tab,
+// the New Innovations button) — never for a semantic tone or an eyebrow.
 import type { ReactNode } from 'react'
 
 export type BandStat = {
@@ -23,7 +25,7 @@ const TONE_CLASS: Record<NonNullable<BandStat['tone']>, string> = {
   default: 'text-primary',
   success: 'text-green-700',
   warning: 'text-amber-700',
-  danger: 'text-crimson',
+  danger: 'text-red-700',
 }
 
 function numeralClass(stat: BandStat): string {
@@ -47,15 +49,18 @@ export default function OverviewBand({
   /** Optional right-aligned context next to the title (e.g. academic year). */
   aside?: ReactNode
 }) {
+  // Server component, so no useId — derive a stable id from the title (each
+  // band title is unique per screen).
+  const titleId = `band-title-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
   return (
     <section
-      aria-label={`${title} overview`}
+      aria-labelledby={titleId}
       className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
     >
       <div className="border-b border-gray-100 px-5 pb-4 pt-5 sm:px-6">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-crimson">{eyebrow}</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-muted">{eyebrow}</p>
         <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h2 className="text-xl font-bold leading-tight text-ink">{title}</h2>
+          <h2 id={titleId} className="text-xl font-bold leading-tight text-ink">{title}</h2>
           {aside ? <span className="text-sm text-muted">{aside}</span> : null}
         </div>
         <p className="mt-1.5 text-sm leading-relaxed text-muted">{takeaway}</p>

@@ -1,10 +1,11 @@
 // components/ui/Meter.tsx
 // The ONE progress meter for the staff dashboard. Replaces the inline
 // progress-bar markup so every bar carries proper role="progressbar" semantics
-// and the same track/fill treatment. Fill color is token-driven (navy in
-// progress, green when the target is met); percentages are derived from
-// value/max, clamped to 100. A zero max (no target set) falls back to a
-// "logged anything at all" full/empty bar, matching the previous behavior.
+// and the same track/fill treatment. Fill color is token-driven (navy while in
+// progress, green when the caller marks the target met); percentages are
+// derived from value/max, clamped to 100. A zero max (no target set) falls
+// back to a "logged anything at all" full/empty bar in the caller's tone —
+// there is no special zero-target color.
 import { NAVY, SUCCESS } from '@/lib/tokens'
 
 export default function Meter({

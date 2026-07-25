@@ -2,8 +2,10 @@
 // The ONE status pill for the staff dashboard. Replaces the per-center inline
 // pill implementations (CommandCenter, PdCenter, EducationCenter, EvalSummary
 // legend) so a given state always looks the same everywhere:
-//   success = green, warning = amber, danger = crimson/red, neutral = gray,
+//   success = green, warning = amber, danger = red (red-600), neutral = gray,
 //   info    = primary navy.
+// Brand crimson deliberately stays OUT of the semantic tones so a status never
+// camouflages as decoration (or vice versa).
 // `solid` (default) is the high-emphasis treatment used on cards; `soft` is
 // the low-emphasis tinted treatment used inside tables. Color is never the
 // only signal — callers pair the pill with an icon and/or the label text.
@@ -14,7 +16,7 @@ export type StatusTone = 'success' | 'warning' | 'danger' | 'neutral' | 'info'
 const SOLID: Record<StatusTone, string> = {
   success: 'bg-green-600 text-white',
   warning: 'bg-amber-400 text-amber-950',
-  danger: 'bg-crimson text-white',
+  danger: 'bg-red-600 text-white',
   neutral: 'bg-gray-200 text-gray-700',
   info: 'bg-primary text-white',
 }

@@ -12,6 +12,9 @@
 import { FellowCard, ReadinessBand } from '@/dashboard/CommandCenter'
 import type { ReadinessOverview } from '@/dashboard/queries'
 
+// Program rollup stat — the SAME numeral/label language as the OverviewBand
+// stat cells (one numeral system per screen), so the band and this strip read
+// as one system instead of two competing stat styles.
 function ProgramStat({
   label,
   value,
@@ -25,10 +28,12 @@ function ProgramStat({
 }) {
   const valueColor = tone === 'good' ? 'text-green-700' : 'text-primary'
   return (
-    <div className="rounded-xl border border-gray-200 bg-white px-4 py-4 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</p>
-      <p className={`mt-1 text-2xl font-bold tabular-nums leading-none ${valueColor}`}>{value}</p>
-      {sub ? <p className="mt-1 text-xs text-muted">{sub}</p> : null}
+    <div className="flex items-baseline gap-3 rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm sm:flex-col sm:items-start sm:gap-1.5">
+      <p className={`order-first text-3xl font-bold tabular-nums leading-none sm:text-4xl ${valueColor}`}>{value}</p>
+      <p className="text-sm font-medium text-gray-600">
+        {label}
+        {sub ? <span className="block text-xs font-normal text-muted">{sub}</span> : null}
+      </p>
     </div>
   )
 }
@@ -71,7 +76,7 @@ export default function PdCenter({ overview }: { overview: ReadinessOverview }) 
 
       <section aria-label="Fellow roster" className="space-y-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-crimson">Roster</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-muted">Roster</p>
           <h2 className="mt-1 text-lg font-semibold text-ink">Fellow by fellow</h2>
         </div>
         {fellows.length === 0 ? (
