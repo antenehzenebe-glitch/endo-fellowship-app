@@ -13,10 +13,10 @@
 // decorative or sits on navy; on parchment, text is navy/ink or the dark
 // gold-600/700 shades — never light-gold text on parchment.
 //
-// Photography (uploaded by the program owner to /public/landing):
-//   /landing/hero-main.jpg             — full-bleed hero
-//   /landing/hero-columns.jpg          — "Why train here" backdrop
-//   /landing/endocrine-constellation.jpg — "One interconnected system" band art
+// Photography — the three program images are served from hosted URLs (see
+// LANDING_IMAGES below): hero-main — full-bleed hero; hero-columns — "Why
+// train here" backdrop; endocrine-constellation — "One interconnected system"
+// band art.
 //
 // EDIT placeholders are marked with {/* EDIT: ... */} / the LINKS map below.
 
@@ -26,6 +26,14 @@ import type { DirectoryGroups, DirectoryPerson } from '@/lib/people';
 
 const ERAS =
   'https://students-residents.aamc.org/applying-fellowships-eras/apply-fellowships-eras-system';
+
+// Hosted image URLs. To self-host: drop the files into public/landing/ and
+// change these to '/landing/hero-main.jpg' etc.
+const LANDING_IMAGES = {
+  heroMain: 'https://www.kimi.com/apiv2-files/sign-obj/kimi-fs%2Ffiles%2Fblob%2F8c24a8f60deb65fa74bca11906f747bb114993e9360b4134e31b425aafb64d30?filename=hero-main.jpg&sig=Dl6tdR2cfMAYdlcHzrR-eOMAJ-JAXcEWFlAUkVRv3y4=&t=o',
+  heroColumns: 'https://www.kimi.com/apiv2-files/sign-obj/kimi-fs%2Ffiles%2Fblob%2Fe792d33e2444d5136b839116d2b46e56ac44b5480cdcf3adef8bf3a160519fba?filename=hero-columns.jpg&sig=zKFClQjxJ8nVGPUM1zGKkKTrh7LNZz5Hq1ZRs3XiwHE=&t=o',
+  constellation: 'https://www.kimi.com/apiv2-files/sign-obj/kimi-fs%2Ffiles%2Fblob%2F2e27a9c5f6a2cd208a6446b731cca5349167b2332618c2e15609b9bca405338c?filename=endocrine-constellation.jpg&sig=faooXEZLjVhElIT8HNnuibYfDn6reRh4jhM2TfpRTdw=&t=o',
+} as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // EDIT HERE — LINKS. Paste a URL to turn a "coming soon" resource into a live
@@ -124,7 +132,7 @@ export default function Landing({
       {/* ── 1 · HERO — full-bleed photograph, navy scrim, editorial headline ── */}
       <div id="top" className="relative flex min-h-svh flex-col bg-primary-900">
         <Image
-          src="/landing/hero-main.jpg"
+          src={LANDING_IMAGES.heroMain}
           alt=""
           fill
           priority
@@ -297,7 +305,7 @@ export default function Landing({
               glow accents layered over it (disabled under prefers-reduced-motion). */}
           <div className="relative overflow-hidden">
             <Image
-              src="/landing/endocrine-constellation.jpg"
+              src={LANDING_IMAGES.constellation}
               alt="Illustration of translucent, glowing endocrine organs — thyroid, pituitary, pancreas, and adrenal — floating in deep navy space and connected in a network by golden filaments of light."
               width={2048}
               height={1072}
@@ -361,7 +369,7 @@ export default function Landing({
         {/* ── 5 · WHY TRAIN HERE — colonnade backdrop, four points ── */}
         <section id="why" aria-labelledby="why-h" className="relative scroll-mt-20 bg-primary-900">
           <Image
-            src="/landing/hero-columns.jpg"
+            src={LANDING_IMAGES.heroColumns}
             alt=""
             fill
             sizes="100vw"

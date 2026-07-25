@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/landing/hero-main.jpg',
+        url: 'https://www.kimi.com/apiv2-files/sign-obj/kimi-fs%2Ffiles%2Fblob%2F8c24a8f60deb65fa74bca11906f747bb114993e9360b4134e31b425aafb64d30?filename=hero-main.jpg&sig=Dl6tdR2cfMAYdlcHzrR-eOMAJ-JAXcEWFlAUkVRv3y4=&t=o',
         width: 2048,
         height: 1072,
         alt: 'Howard University Hospital — Endocrinology, Diabetes & Metabolism Fellowship',
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Endocrinology, Diabetes & Metabolism Fellowship | Howard University Hospital',
     description: DESCRIPTION,
-    images: ['/landing/hero-main.jpg'],
+    images: ['https://www.kimi.com/apiv2-files/sign-obj/kimi-fs%2Ffiles%2Fblob%2F8c24a8f60deb65fa74bca11906f747bb114993e9360b4134e31b425aafb64d30?filename=hero-main.jpg&sig=Dl6tdR2cfMAYdlcHzrR-eOMAJ-JAXcEWFlAUkVRv3y4=&t=o'],
   },
 };
 
