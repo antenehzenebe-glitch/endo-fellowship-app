@@ -281,7 +281,7 @@ export type Database = {
         }
         Insert: {
           academic_year?: string | null
-          assessment_date?: string
+          assessment_date: string
           attending_id: string
           comments?: string | null
           competency: Database["public"]["Enums"]["acgme_competency"]
@@ -338,7 +338,7 @@ export type Database = {
           attestation_note?: string | null
           attested_at?: string | null
           attested_by?: string | null
-          completed_at?: string
+          completed_at: string
           fellow_id: string
           id?: string
           module_id: string
@@ -558,7 +558,7 @@ export type Database = {
           fellow_id: string
           id?: string
           notes?: string | null
-          outcome?: Database["public"]["Enums"]["procedure_outcome"]
+          outcome: Database["public"]["Enums"]["procedure_outcome"]
           procedure_type: string
           supervising_attending_id?: string | null
           supervising_supervisor_id?: string | null
@@ -578,15 +578,15 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "procedure_logs_fellow_id_fkey"
-            columns: ["fellow_id"]
+            foreignKeyName: "procedure_logs_attending_id_fkey"
+            columns: ["supervising_attending_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "procedure_logs_supervising_attending_id_fkey"
-            columns: ["supervising_attending_id"]
+            foreignKeyName: "procedure_logs_fellow_id_fkey"
+            columns: ["fellow_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -699,7 +699,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           full_name: string
-          id: string
+          id?: string
           is_active?: boolean
           pgy_level?: Database["public"]["Enums"]["pgy_level"] | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -735,7 +735,7 @@ export type Database = {
           blocks_published_at?: string | null
           blocks_published_by?: string | null
           config?: Json
-          id: string
+          id?: string
           is_current?: boolean
           months_published_at?: string | null
           months_published_by?: string | null
@@ -853,6 +853,7 @@ export type Database = {
           },
         ]
       }
+      // hand-synced with 0017_meeting_minutes.sql — regenerate via supabase gen types when convenient
       resources: {
         Row: {
           category: Database["public"]["Enums"]["resource_category"]
@@ -862,6 +863,8 @@ export type Database = {
           file_type: string | null
           id: string
           is_active: boolean
+          meeting_month: number | null
+          meeting_year: number | null
           requires_ack: boolean
           storage_path: string | null
           title: string
@@ -876,6 +879,8 @@ export type Database = {
           file_type?: string | null
           id?: string
           is_active?: boolean
+          meeting_month?: number | null
+          meeting_year?: number | null
           requires_ack?: boolean
           storage_path?: string | null
           title: string
@@ -890,6 +895,8 @@ export type Database = {
           file_type?: string | null
           id?: string
           is_active?: boolean
+          meeting_month?: number | null
+          meeting_year?: number | null
           requires_ack?: boolean
           storage_path?: string | null
           title?: string
@@ -989,6 +996,7 @@ export type Database = {
         | "onboarding"
         | "board_prep"
         | "form"
+        | "minutes"
         | "other"
       scholarly_status: "planned" | "in_progress" | "completed"
       scholarly_type:
@@ -1155,6 +1163,7 @@ export const Constants = {
         "onboarding",
         "board_prep",
         "form",
+        "minutes",
         "other",
       ],
       scholarly_status: ["planned", "in_progress", "completed"],
