@@ -138,7 +138,8 @@ export default async function SchedulePage({
             <div className="flex items-center gap-1 sm:gap-2">
               <Link
                 href={`/schedule/print?ay=${encodeURIComponent(academicYear)}`}
-                className="px-3 py-2 text-sm font-medium rounded-md bg-crimson text-white hover:bg-crimson-dark transition-colors"
+                aria-label="Print / PDF"
+                className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md bg-crimson text-white hover:bg-crimson-dark transition-colors"
               >
                 <span aria-hidden="true">🖨</span>
                 <span className="hidden sm:inline"> Print / PDF</span>
