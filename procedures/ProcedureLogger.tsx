@@ -15,7 +15,7 @@
 // the session, so RLS is the enforcer. No PHI: notes are teaching context only.
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { logProcedure, deleteProcedure, type ProcedureOutcome } from '@/procedures/actions'
 import { NAVY, CRIMSON } from '@/lib/tokens'
@@ -148,8 +148,7 @@ export function ProcedureLogger({
                   key={p.code}
                   type="button"
                   onClick={() => openCard(p)}
-                  className="text-left rounded-xl border bg-white p-4 shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
-                  style={{ borderColor: met ? '#86efac' : '#e5e7eb' }}
+                  className={`text-left rounded-xl border bg-white p-4 shadow-sm hover:shadow-md transition-all active:scale-[0.98] ${met ? 'border-green-300' : 'border-gray-200'}`}
                 >
                   <div className="flex items-start justify-between gap-1">
                     <span className="font-semibold text-gray-900 text-sm leading-snug">{p.label}</span>
@@ -161,7 +160,10 @@ export function ProcedureLogger({
                   </div>
                   {p.min > 0 ? (
                     <div className="h-1.5 w-full rounded-full bg-gray-200 overflow-hidden mt-2">
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: met ? '#22c55e' : NAVY }} />
+                      <div
+                        className={`h-full rounded-full ${met ? 'bg-green-500' : 'bg-primary'}`}
+                        style={{ width: `${pct}%` }}
+                      />
                     </div>
                   ) : (
                     <div className="h-1.5 mt-2" />
@@ -196,7 +198,7 @@ export function ProcedureLogger({
 
       {toast ? (
         <div className="fixed inset-x-0 bottom-5 flex justify-center px-4 pointer-events-none z-50">
-          <div className="text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg" style={{ background: NAVY }}>
+          <div role="status" className="text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg" style={{ background: NAVY }}>
             {toast}
           </div>
         </div>
@@ -238,6 +240,8 @@ function QuickEntrySheet({
   const [showNote, setShowNote] = useState(false)
   const [note, setNote] = useState('')
   const [shown, setShown] = useState(false)
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const r = requestAnimationFrame(() => setShown(true))
@@ -248,6 +252,48 @@ function QuickEntrySheet({
     setShown(false)
     setTimeout(onClose, 180)
   }
+
+  // Keep the latest close() available to the one-time keyboard listener below.
+  const closeFnRef = useRef(close)
+  closeFnRef.current = close
+
+  // Dialog behavior: Escape closes, Tab is trapped inside the sheet, focus
+  // starts on the close button, and focus returns to the opener on unmount.
+  useEffect(() => {
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
+    closeButtonRef.current?.focus()
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        closeFnRef.current()
+        return
+      }
+      if (e.key !== 'Tab' || !sheetRef.current) return
+      const focusables = sheetRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      )
+      const visible = Array.from(focusables).filter((el) => !el.hasAttribute('disabled'))
+      if (visible.length === 0) return
+      const first = visible[0]
+      const last = visible[visible.length - 1]
+      const current = document.activeElement
+      if (e.shiftKey && (current === first || !sheetRef.current.contains(current))) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && (current === last || !sheetRef.current.contains(current))) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      previouslyFocused?.focus()
+    }
+  }, [])
 
   const dateChips = [
     { key: 'today', lbl: 'Today', val: todayStr },
@@ -264,6 +310,7 @@ function QuickEntrySheet({
         aria-hidden="true"
       />
       <div
+        ref={sheetRef}
         role="dialog"
         aria-modal="true"
         aria-label={`Log ${procedure.label}`}
@@ -277,7 +324,7 @@ function QuickEntrySheet({
               <p className="text-xs font-medium uppercase tracking-wide" style={{ color: CRIMSON }}>Log procedure</p>
               <h2 className="text-lg font-bold text-gray-900 leading-tight">{procedure.label}</h2>
             </div>
-            <button onClick={close} className="w-9 h-9 grid place-items-center rounded-full text-gray-400 hover:bg-gray-100" aria-label="Close">✕</button>
+            <button ref={closeButtonRef} onClick={close} className="w-11 h-11 grid place-items-center rounded-full text-gray-400 hover:bg-gray-100" aria-label="Close">✕</button>
           </div>
 
           {/* When */}

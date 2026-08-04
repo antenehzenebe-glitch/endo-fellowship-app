@@ -15,9 +15,7 @@ import {
   type EvalPeriod,
   type EvalRating,
 } from '@/lib/evaluations'
-import { NAVY, CRIMSON, SUCCESS_DARK } from '@/lib/tokens'
-
-const AMBER = '#b45309'
+import { AMBER_DARK, NAVY, CRIMSON } from '@/lib/tokens'
 
 type FellowOpt = { id: string; name: string; pgy: string | null }
 
@@ -249,6 +247,7 @@ export default function EvaluationWorkspace({
                     key={p.value}
                     type="button"
                     onClick={() => setPeriod(p.value)}
+                    aria-pressed={active}
                     className="px-4 py-2 text-sm font-medium"
                     style={
                       active
@@ -273,6 +272,7 @@ export default function EvaluationWorkspace({
                     key={r.value}
                     type="button"
                     onClick={() => setRating(r.value)}
+                    aria-pressed={active}
                     className="px-4 py-2 text-sm font-semibold rounded-lg border"
                     style={
                       active
@@ -301,8 +301,8 @@ export default function EvaluationWorkspace({
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          {savedMsg && <p className="text-sm text-green-700">{savedMsg}</p>}
+          {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+          {savedMsg && <p role="status" className="text-sm text-green-700">{savedMsg}</p>}
 
           <div className="flex flex-wrap gap-2 pt-1">
             <button
@@ -451,12 +451,9 @@ function EvalCard({
             {ratingLabel(r.overall_rating)}
           </span>
           <span
-            className="text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded"
-            style={
-              isFinal
-                ? { background: '#dcfce7', color: SUCCESS_DARK }
-                : { background: '#fef3c7', color: '#b45309' }
-            }
+            className={`text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded ${
+              isFinal ? 'bg-green-100 text-success-dark' : 'bg-amber-100 text-amber-700'
+            }`}
           >
             {isFinal ? 'Final' : 'Draft'}
           </span>
@@ -470,7 +467,7 @@ function EvalCard({
       <div className="flex items-center gap-3 flex-wrap mt-3 pt-3 border-t border-slate-100">
         <Link
           href={`/evaluations/${r.id}/print`}
-          className="text-sm font-medium text-primary hover:underline"
+          className="-my-2 inline-flex min-h-[44px] items-center text-sm font-medium text-primary hover:underline"
         >
           Print / PDF
         </Link>
@@ -496,7 +493,7 @@ function EvalCard({
                       onClick={onReopen}
                       disabled={pending}
                       className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-lg text-white disabled:opacity-50 min-h-[44px]"
-                      style={{ background: AMBER }}
+                      style={{ background: AMBER_DARK }}
                     >
                       {pending ? 'Reopening…' : 'Yes, reopen'}
                     </button>
