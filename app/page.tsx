@@ -16,6 +16,7 @@ const DESCRIPTION =
   'A two-year, ACGME-accredited Endocrinology, Diabetes & Metabolism fellowship at Howard University Hospital in Washington, D.C. — rigorous clinical training, close mentorship, and scholarship rooted in a legacy of service and health equity. Apply through ERAS.';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://endo-fellowship-app.netlify.app'),
   title: 'Endocrinology, Diabetes & Metabolism Fellowship | Howard University Hospital',
   description: DESCRIPTION,
   openGraph: {
@@ -24,9 +25,9 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://www.kimi.com/apiv2-files/sign-obj/kimi-fs%2Ffiles%2Fblob%2F8c24a8f60deb65fa74bca11906f747bb114993e9360b4134e31b425aafb64d30?filename=hero-main.jpg&sig=Dl6tdR2cfMAYdlcHzrR-eOMAJ-JAXcEWFlAUkVRv3y4=&t=o',
+        url: 'https://xousmzkftledlkwtpavb.supabase.co/storage/v1/object/public/landing-images/hero-main.jpg',
         width: 2048,
-        height: 1072,
+        height: 1002,
         alt: 'Howard University Hospital — Endocrinology, Diabetes & Metabolism Fellowship',
       },
     ],
@@ -35,7 +36,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Endocrinology, Diabetes & Metabolism Fellowship | Howard University Hospital',
     description: DESCRIPTION,
-    images: ['https://www.kimi.com/apiv2-files/sign-obj/kimi-fs%2Ffiles%2Fblob%2F8c24a8f60deb65fa74bca11906f747bb114993e9360b4134e31b425aafb64d30?filename=hero-main.jpg&sig=Dl6tdR2cfMAYdlcHzrR-eOMAJ-JAXcEWFlAUkVRv3y4=&t=o'],
+    images: ['https://xousmzkftledlkwtpavb.supabase.co/storage/v1/object/public/landing-images/hero-main.jpg'],
   },
 };
 
