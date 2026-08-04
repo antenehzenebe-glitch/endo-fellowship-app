@@ -10,7 +10,16 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { NEW_INNOVATIONS_URL } from '@/lib/links'
-import { CRIMSON } from '@/lib/tokens'
+import {
+  AMBER_DARK,
+  BLUE_700,
+  CRIMSON,
+  EMERALD_700,
+  RED_700,
+  SLATE_700,
+  TEAL_700,
+  VIOLET_700,
+} from '@/lib/tokens'
 import type { ReactNode } from 'react'
 
 type NavItem = { href: string; label: string; color: string; icon: ReactNode }
@@ -18,13 +27,13 @@ type NavItem = { href: string; label: string; color: string; icon: ReactNode }
 // Accent colors are chosen dark enough for white text on the active (filled) pill.
 const ITEMS: NavItem[] = [
   { href: '/log', label: 'Logger', color: CRIMSON, icon: <PathIcon name="logger" /> },
-  { href: '/standing', label: 'Progress', color: '#047857', icon: <PathIcon name="progress" /> },
-  { href: '/onboarding', label: 'Checklist', color: '#b45309', icon: <PathIcon name="checklist" /> },
-  { href: '/evaluations', label: 'Evaluations', color: '#6d28d9', icon: <PathIcon name="star" /> },
-  { href: '/resources', label: 'Materials', color: '#1d4ed8', icon: <PathIcon name="book" /> },
-  { href: '/emergencies', label: 'Emergencies', color: '#b91c1c', icon: <PathIcon name="alert" /> },
-  { href: '/schedule', label: 'Schedule', color: '#0f766e', icon: <PathIcon name="calendar" /> },
-  { href: '/account', label: 'Password', color: '#334155', icon: <PathIcon name="lock" /> },
+  { href: '/standing', label: 'Progress', color: EMERALD_700, icon: <PathIcon name="progress" /> },
+  { href: '/onboarding', label: 'Checklist', color: AMBER_DARK, icon: <PathIcon name="checklist" /> },
+  { href: '/evaluations', label: 'Evaluations', color: VIOLET_700, icon: <PathIcon name="star" /> },
+  { href: '/resources', label: 'Materials', color: BLUE_700, icon: <PathIcon name="book" /> },
+  { href: '/emergencies', label: 'Emergencies', color: RED_700, icon: <PathIcon name="alert" /> },
+  { href: '/schedule', label: 'Schedule', color: TEAL_700, icon: <PathIcon name="calendar" /> },
+  { href: '/account', label: 'Password', color: SLATE_700, icon: <PathIcon name="lock" /> },
 ]
 
 export default function FellowNav() {

@@ -8,25 +8,12 @@ import { requireFellow } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import SignOutButton from '@/components/SignOutButton'
 import FellowNav from '@/components/FellowNav'
+import Meter from '@/components/ui/Meter'
 import { periodLabel, ratingLabel, ratingTone } from '@/lib/evaluations'
-import { NAVY, SUCCESS_DARK } from '@/lib/tokens'
 
 export const dynamic = 'force-dynamic'
 
 type Bar = { label: string; done: number; min: number }
-
-function Meter({ done, min }: { done: number; min: number }) {
-  const pct = min > 0 ? Math.min(100, Math.round((done / min) * 100)) : done > 0 ? 100 : 0
-  const met = min > 0 && done >= min
-  return (
-    <div className="h-2 rounded-full bg-gray-100 overflow-hidden" aria-hidden="true">
-      <div
-        className="h-full rounded-full"
-        style={{ width: `${pct}%`, background: met ? SUCCESS_DARK : NAVY }}
-      />
-    </div>
-  )
-}
 
 export default async function StandingPage() {
   const profile = await requireFellow()
@@ -125,7 +112,7 @@ export default async function StandingPage() {
         <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 flex items-baseline justify-between">
             <h2 className="font-bold text-gray-900">Procedures</h2>
-            <Link href="/log" className="text-sm font-medium text-primary hover:underline">Log →</Link>
+            <Link href="/log" className="-my-2 inline-flex min-h-[44px] items-center text-sm font-medium text-primary hover:underline">Log →</Link>
           </div>
           <div className="p-4 space-y-4">
             <p className="text-sm text-gray-600">
@@ -151,7 +138,12 @@ export default async function StandingPage() {
                           {met ? <span className="sr-only"> (minimum met)</span> : null}
                         </span>
                       </div>
-                      <Meter done={b.done} min={b.min} />
+                      <Meter
+                        value={b.done}
+                        max={b.min}
+                        label={`${b.label}: ${b.done} logged${b.min > 0 ? ` of ${b.min} minimum` : ''}`}
+                        tone={met ? 'success' : 'primary'}
+                      />
                     </li>
                   )
                 })}
@@ -164,7 +156,7 @@ export default async function StandingPage() {
         <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 flex items-baseline justify-between">
             <h2 className="font-bold text-gray-900">Onboarding &amp; milestones</h2>
-            <Link href="/onboarding" className="text-sm font-medium text-primary hover:underline">Open →</Link>
+            <Link href="/onboarding" className="-my-2 inline-flex min-h-[44px] items-center text-sm font-medium text-primary hover:underline">Open →</Link>
           </div>
           <div className="p-4 space-y-4">
             {onbTotal === 0 ? (
@@ -180,7 +172,12 @@ export default async function StandingPage() {
                       <span className="text-gray-700">Institutional Onboarding</span>
                       <span className="text-gray-500 tabular-nums">{instDone} / {inst.length}</span>
                     </div>
-                    <Meter done={instDone} min={inst.length} />
+                    <Meter
+                      value={instDone}
+                      max={inst.length}
+                      label={`Institutional Onboarding: ${instDone} of ${inst.length} complete`}
+                      tone={instDone >= inst.length ? 'success' : 'primary'}
+                    />
                   </div>
                 )}
                 {train.length > 0 && (
@@ -189,7 +186,12 @@ export default async function StandingPage() {
                       <span className="text-gray-700">Training &amp; Development</span>
                       <span className="text-gray-500 tabular-nums">{trainDone} / {train.length}</span>
                     </div>
-                    <Meter done={trainDone} min={train.length} />
+                    <Meter
+                      value={trainDone}
+                      max={train.length}
+                      label={`Training & Development: ${trainDone} of ${train.length} complete`}
+                      tone={trainDone >= train.length ? 'success' : 'primary'}
+                    />
                   </div>
                 )}
               </>
@@ -201,7 +203,7 @@ export default async function StandingPage() {
         <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 flex items-baseline justify-between">
             <h2 className="font-bold text-gray-900">Faculty evaluation</h2>
-            <Link href="/evaluations" className="text-sm font-medium text-primary hover:underline">All →</Link>
+            <Link href="/evaluations" className="-my-2 inline-flex min-h-[44px] items-center text-sm font-medium text-primary hover:underline">All →</Link>
           </div>
           <div className="p-4 space-y-3">
             {latestEval ? (
@@ -223,7 +225,7 @@ export default async function StandingPage() {
                   </span>
                   <Link
                     href={`/evaluations/${latestEval.id}/print`}
-                    className="text-sm font-medium text-primary hover:underline"
+                    className="-my-2 inline-flex min-h-[44px] items-center text-sm font-medium text-primary hover:underline"
                   >
                     Read
                   </Link>

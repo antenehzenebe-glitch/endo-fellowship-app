@@ -2,6 +2,7 @@
 // Shared types + helpers for the fellow evaluation feature.
 // De-identified educational records only — NO PHI.
 import { todayET } from '@/lib/dates'
+import { AMBER_DARK, NAVY, SLATE_600, SUCCESS_DARK } from '@/lib/tokens'
 import type { Database } from '@/lib/supabase/database.types'
 
 export type EvalPeriod = Database['public']['Enums']['eval_period'] // 'mid_year' | 'end_of_year'
@@ -22,9 +23,9 @@ export const PERIODS: { value: EvalPeriod; label: string }[] = [
 ]
 
 export const RATINGS: { value: EvalRating; label: string; tone: string }[] = [
-  { value: 'below', label: 'Below level', tone: '#b45309' }, // amber-700
-  { value: 'at', label: 'At level', tone: '#15803d' }, // green-700
-  { value: 'above', label: 'Above level', tone: '#003a63' }, // Howard navy
+  { value: 'below', label: 'Below level', tone: AMBER_DARK }, // amber-700
+  { value: 'at', label: 'At level', tone: SUCCESS_DARK }, // green-700
+  { value: 'above', label: 'Above level', tone: NAVY }, // Howard navy
 ]
 
 export function periodLabel(p: string): string {
@@ -34,7 +35,7 @@ export function ratingLabel(r: string): string {
   return RATINGS.find((x) => x.value === r)?.label ?? r
 }
 export function ratingTone(r: string): string {
-  return RATINGS.find((x) => x.value === r)?.tone ?? '#475569'
+  return RATINGS.find((x) => x.value === r)?.tone ?? SLATE_600
 }
 
 // Current academic year as "YYYY-YYYY" (July–June, rolled over at midnight
