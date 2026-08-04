@@ -5,7 +5,7 @@
 // Meeting minutes (category 'minutes') are presented folder-style, grouped by
 // year then month; everything else is grouped under category section headers.
 import Link from 'next/link'
-import { requireProfile, isStaff } from '@/lib/auth'
+import { requireProfile, isStaff, roleHome } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { CATEGORY_LABELS } from '@/resources/types'
 import type { Resource, ResourceCategory } from '@/resources/types'
@@ -36,6 +36,10 @@ function postedDate(iso: string): string {
 export default async function ResourcesPage() {
   const profile = await requireProfile()
   const staff = isStaff(profile.role)
+  // Home link goes where the user actually has a home (/dashboard is staff-only;
+  // attendings land on /attending, fellows on /log).
+  const homeHref = roleHome(profile.role)
+  const homeLabel = staff ? 'Dashboard' : profile.role === 'attending' ? 'Faculty Home' : 'Logger'
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -99,35 +103,35 @@ export default async function ResourcesPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-primary text-white border-b-4 border-crimson">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="py-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+          <div className="py-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <img
                 src="/logo.png"
                 alt=""
                 className="w-10 h-10 shrink-0 object-contain bg-white rounded p-0.5"
               />
-              <div>
-                <h1 className="text-xl font-bold leading-tight">Program Materials</h1>
-                <p className="text-sm text-white/70">
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold leading-tight truncate">Program Materials</h1>
+                <p className="text-sm text-white/70 truncate">
                   {profile.full_name} · {profile.role.toUpperCase()}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2">
+            <nav aria-label="Materials shortcuts" className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
               <Link
-                href="/dashboard"
-                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
+                href={homeHref}
+                className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
               >
-                Dashboard
+                {homeLabel}
               </Link>
               <Link
                 href="/account"
-                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
+                className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
               >
                 Password
               </Link>
               <SignOutButton variant="onDark" />
-            </div>
+            </nav>
           </div>
         </div>
       </header>

@@ -55,14 +55,21 @@ export default async function EvaluationsPage() {
     <div className="min-h-screen bg-slate-50">
       <header className="bg-primary text-white border-b-4 border-crimson">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-lg font-bold">Evaluation Summary</h1>
-            <p className="text-xs text-white/70">
-              Endocrinology, Diabetes &amp; Metabolism Fellowship
-            </p>
+          <div className="flex items-center gap-3 min-w-0">
+            <img
+              src="/logo.png"
+              alt=""
+              className="w-10 h-10 shrink-0 object-contain bg-white rounded p-0.5"
+            />
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold truncate">Evaluation Summary</h1>
+              <p className="text-xs text-white/70 truncate">
+                Endocrinology, Diabetes &amp; Metabolism Fellowship
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href={roleHome(role)} className="text-sm text-white/90 hover:text-white">
+          <div className="flex shrink-0 items-center gap-3">
+            <Link href={roleHome(role)} className="-my-2 inline-flex min-h-[44px] items-center text-sm text-white/90 hover:text-white">
               ← Back
             </Link>
             <SignOutButton variant="onDark" />

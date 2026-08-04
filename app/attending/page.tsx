@@ -48,36 +48,36 @@ export default async function AttendingHome() {
     <div className="min-h-screen bg-slate-50">
       <header className="bg-primary text-white border-b-4 border-crimson">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="py-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+          <div className="py-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <img
                 src="/logo.png"
                 alt=""
                 className="w-10 h-10 shrink-0 object-contain bg-white rounded p-0.5"
               />
-              <div>
-                <h1 className="text-xl font-bold leading-tight">Faculty Home</h1>
-                <p className="text-sm text-white/70">
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold leading-tight truncate">Faculty Home</h1>
+                <p className="text-sm text-white/70 truncate">
                   {profile.full_name} · {profile.role.toUpperCase()}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2">
+            <nav aria-label="Faculty shortcuts" className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
               <Link
                 href="/resources"
-                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
+                className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
               >
                 Materials
               </Link>
               <Link
                 href="/emergencies"
-                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
+                className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
               >
                 Emergencies
               </Link>
               <Link
                 href="/schedule"
-                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
+                className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
               >
                 Schedule
               </Link>
@@ -86,7 +86,7 @@ export default async function AttendingHome() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="New Innovations (opens in a new tab)"
-                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors inline-flex items-center gap-1"
+                className="inline-flex min-h-[44px] items-center gap-1 px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
               >
                 New Innovations
                 <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -95,12 +95,12 @@ export default async function AttendingHome() {
               </a>
               <Link
                 href="/account"
-                className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
+                className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
               >
                 Password
               </Link>
               <SignOutButton variant="onDark" />
-            </div>
+            </nav>
           </div>
         </div>
       </header>

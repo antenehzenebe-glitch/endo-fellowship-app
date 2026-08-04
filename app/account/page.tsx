@@ -49,19 +49,21 @@ export default function AccountPage() {
       <header className="bg-primary text-white border-b-4 border-crimson">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="py-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <img
                 src="/logo.png"
                 alt=""
                 className="w-10 h-10 shrink-0 object-contain bg-white rounded p-0.5"
               />
-              <h1 className="text-xl font-bold leading-tight">Account</h1>
+              <h1 className="text-xl font-bold leading-tight truncate">Account</h1>
             </div>
+            {/* Home ("/") role-redirects — /dashboard is staff-only, so linking it
+                directly would bounce fellows/attendings. */}
             <Link
-              href="/dashboard"
-              className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
+              href="/"
+              className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors"
             >
-              Dashboard
+              Home
             </Link>
           </div>
         </div>
