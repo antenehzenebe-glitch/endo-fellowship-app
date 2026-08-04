@@ -1,162 +1,94 @@
 'use client'
 
-// app/schedule/ScheduleEditor.tsx
 // Staff-only editor for the program schedule. Body-only — the route owns the
 // page header and auth gate. Save calls the staff-only `saveSchedule` action,
-// which upserts program_schedule (id='current'); RLS blocks non-staff writes at
-// the database. De-identified PROGRAM data only — NO PHI.
-//
-// Three editable layers, mirroring the program's paper sheets:
-//   1. Weekly skeleton + Fellows + Rotation vocabulary
-//   2. Annual block grid — attending-of-the-month + each fellow's rotation/vacation
-//   3. Monthly didactic calendars — dated sessions + coverage footer
-//
-// Unsaved-work safety: while `isDirty`, a beforeunload handler makes the
-// browser warn on tab close/reload, and the dirty flag is broadcast via the
-// 'schedule-editor-dirty' window event so YearSwitcher can confirm before
-// navigating (which remounts this editor via key={academicYear}). Destructive
-// actions (generate year, clear all, remove month, remove fellow) use the
-// inline two-step ConfirmButton so they can't fire from a single stray tap.
-
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useTransition,
-  type CSSProperties,
-} from 'react'
-import { useRouter } from 'next/navigation'
+// which updates the program_schedule row for the selected academic_year (the
+// schema is multi-year — one row per academic year); RLS blocks non-staff
+// writes at the database. De-identified PROGRAM data only — NO PHI.
+import { useState, useTransition, type CSSProperties } from 'react'
 import { saveSchedule } from './actions'
 import { NAVY, CRIMSON } from '@/lib/tokens'
-import {
-  KIND_COLOR,
-  WEEKDAYS,
-  WEEKLY_KINDS,
-  emptyCoverage,
-  ymToLabel,
-  type CalendarSession,
-  type MonthCoverage,
-  type ScheduleBlock,
-  type ScheduleConfig,
-  type ScheduleFellow,
-  type ScheduleMonth,
-  type ScheduleWeekly,
-  type SchedulePayload,
-  type WeekendCoverage,
-  type WeeklyKind,
+import type {
+  ScheduleConfig,
+  SchedulePayload,
+  WeeklyRow,
+  WeeklyKind,
+  ScheduleFellow,
+  ScheduleBlock,
+  ScheduleMonth,
+  MonthSession,
+  WeekendCoverage,
 } from '@/lib/schedule'
+import { WEEKLY_KINDS, WEEKDAYS, newId, monthLabelFromYm } from '@/lib/schedule'
 
-const MONTHS = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+const inputCls =
+  'border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400'
 
-const uid = (p: string) => `${p}${Math.random().toString(36).slice(2, 7)}`
-const clone = <T,>(o: T): T => JSON.parse(JSON.stringify(o))
-const lastDayOfMonth = (y: number, mIdx0: number) => new Date(y, mIdx0 + 1, 0).getDate()
-
-type SaveState = 'idle' | 'saved' | 'error'
+// Normalize a weekly row that may predate the `kind` field.
+function normalizeRow(r: WeeklyRow): WeeklyRow {
+  return { kind: 'Activity', ...r }
+}
 
 export default function ScheduleEditor({ initial }: { initial: SchedulePayload }) {
-  const router = useRouter()
-  const [academicYear, setAcademicYear] = useState(initial.academic_year)
-  const [config, setConfig] = useState<ScheduleConfig>(() => clone(initial.config))
-  const [savedSnapshot, setSavedSnapshot] = useState<string>(() => JSON.stringify(initial))
-  const [saveState, setSaveState] = useState<SaveState>('idle')
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [newRotation, setNewRotation] = useState('')
+  const academicYear = initial.academic_year
+  const [config, setConfig] = useState<ScheduleConfig>(() => ({
+    ...initial.config,
+    weekly: initial.config.weekly.map(normalizeRow),
+  }))
+  const [selectedMonthId, setSelectedMonthId] = useState<string | null>(
+    initial.config.months[0]?.id ?? null
+  )
   const [newMonthYm, setNewMonthYm] = useState('')
   const [monthError, setMonthError] = useState<string | null>(null)
-  const [selectedMonthId, setSelectedMonthId] = useState<string>(
-    () => initial.config.months?.[0]?.id ?? ''
-  )
-  const [isPending, startTransition] = useTransition()
+  const [newRotation, setNewRotation] = useState('')
+  const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [pending, startTransition] = useTransition()
 
-  const payload = useMemo<SchedulePayload>(
-    () => ({ academic_year: academicYear, config }),
-    [academicYear, config]
-  )
-  const payloadJson = useMemo(() => JSON.stringify(payload), [payload])
-  const isDirty = payloadJson !== savedSnapshot
+  function mutate(fn: (c: ScheduleConfig) => ScheduleConfig) {
+    setStatus('idle')
+    setConfig((c) => fn(c))
+  }
 
-  // Warn on tab close / reload while there are unsaved edits, and broadcast
-  // the dirty flag so YearSwitcher can confirm before remounting this editor.
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent('schedule-editor-dirty', { detail: isDirty }))
-    if (!isDirty) return
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault()
-      e.returnValue = ''
-    }
-    window.addEventListener('beforeunload', onBeforeUnload)
-    return () => window.removeEventListener('beforeunload', onBeforeUnload)
-  }, [isDirty])
-
-  const handleSave = useCallback(() => {
-    const json = payloadJson
-    setErrorMsg(null)
-    startTransition(async () => {
-      const r = await saveSchedule(payload)
-      if (r.ok) {
-        setSavedSnapshot(json)
-        setSaveState('saved')
-        router.refresh()
-      } else {
-        setSaveState('error')
-        setErrorMsg(r.error)
-      }
-    })
-  }, [payload, payloadJson, router])
-
-  const revertChanges = useCallback(() => {
-    try {
-      const parsed = JSON.parse(savedSnapshot) as SchedulePayload
-      setConfig(clone(parsed.config))
-      setAcademicYear(parsed.academic_year)
-      setSelectedMonthId(parsed.config.months?.[0]?.id ?? '')
-      setSaveState('idle')
-      setErrorMsg(null)
-    } catch {
-      /* keep current state if the snapshot can't be parsed */
-    }
-  }, [savedSnapshot])
-
-  // ---- weekly skeleton ----
-  const setWeekly = (next: ScheduleWeekly[]) => setConfig((c) => ({ ...c, weekly: next }))
-  const updateRow = (id: string, patch: Partial<ScheduleWeekly>) =>
-    setConfig((c) => ({
+  // ---------- weekly ----------
+  function addRow(kind: WeeklyKind = 'Activity') {
+    mutate((c) => ({
+      ...c,
+      weekly: [...c.weekly, { id: newId(), kind, activity: '', days: [], start: '', end: '' }],
+    }))
+  }
+  function updateRow(id: string, patch: Partial<WeeklyRow>) {
+    mutate((c) => ({
       ...c,
       weekly: c.weekly.map((r) => (r.id === id ? { ...r, ...patch } : r)),
     }))
-  const toggleDay = (id: string, day: string) =>
-    setConfig((c) => ({
+  }
+  function removeRow(id: string) {
+    mutate((c) => ({ ...c, weekly: c.weekly.filter((r) => r.id !== id) }))
+  }
+  function toggleDay(id: string, day: string) {
+    mutate((c) => ({
       ...c,
-      weekly: c.weekly.map((r) => {
-        if (r.id !== id) return r
-        const has = r.days.includes(day)
-        const days = has ? r.days.filter((d) => d !== day) : [...r.days, day]
-        days.sort((a, b) => WEEKDAYS.indexOf(a) - WEEKDAYS.indexOf(b))
-        return { ...r, days }
-      }),
+      weekly: c.weekly.map((r) =>
+        r.id === id
+          ? { ...r, days: r.days.includes(day) ? r.days.filter((d) => d !== day) : [...r.days, day] }
+          : r
+      ),
     }))
-  const addRow = () =>
-    setWeekly([
-      ...config.weekly,
-      { id: uid('w'), activity: '', days: [], start: '08:00', end: '09:00', kind: 'other', note: '' },
-    ])
-  const removeRow = (id: string) => setWeekly(config.weekly.filter((r) => r.id !== id))
+  }
 
-  // ---- fellows ----
-  const addFellow = () =>
-    setConfig((c) => ({
-      ...c,
-      fellows: [...c.fellows, { id: uid('f'), name: '', pgy: 'PGY-4' }],
-    }))
-  const updateFellow = (id: string, patch: Partial<ScheduleFellow>) =>
-    setConfig((c) => ({
+  // ---------- fellows ----------
+  function addFellow() {
+    mutate((c) => ({ ...c, fellows: [...c.fellows, { id: newId(), name: '', pgy: '' }] }))
+  }
+  function updateFellow(id: string, patch: Partial<ScheduleFellow>) {
+    mutate((c) => ({
       ...c,
       fellows: c.fellows.map((f) => (f.id === id ? { ...f, ...patch } : f)),
     }))
-  const removeFellow = (id: string) =>
-    setConfig((c) => ({
+  }
+  function removeFellow(id: string) {
+    mutate((c) => ({
       ...c,
       fellows: c.fellows.filter((f) => f.id !== id),
       blocks: c.blocks.map((b) => {
@@ -165,319 +97,341 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
         return { ...b, assignments: a }
       }),
     }))
+  }
 
-  // ---- rotation vocabulary ----
-  const addRotation = () => {
+  // ---------- rotation suggestions ----------
+  function addRotation() {
     const v = newRotation.trim()
-    if (!v || config.rotations.includes(v)) return
-    setConfig((c) => ({ ...c, rotations: [...c.rotations, v] }))
+    if (!v) return
+    mutate((c) =>
+      c.rotations.includes(v) ? c : { ...c, rotations: [...c.rotations, v] }
+    )
     setNewRotation('')
   }
-  const removeRotation = (name: string) =>
-    setConfig((c) => ({ ...c, rotations: c.rotations.filter((r) => r !== name) }))
-
-  // ---- block grid ----
-  const setBlocks = (next: ScheduleBlock[]) => setConfig((c) => ({ ...c, blocks: next }))
-  const blankAssignments = (): Record<string, string> =>
-    Object.fromEntries(config.fellows.map((f) => [f.id, '']))
-  const generateYear = () => {
-    const [startYear] = academicYear.split('-').map(Number)
-    if (!startYear || Number.isNaN(startYear)) return
-    const blocks: ScheduleBlock[] = MONTHS.map((m, i) => {
-      const y = i <= 5 ? startYear : startYear + 1 // Jul–Dec year1, Jan–Jun year2
-      const mIdx0 = (6 + i) % 12 // Jul = month index 6
-      const mm = String(mIdx0 + 1).padStart(2, '0')
-      const end = lastDayOfMonth(y, mIdx0)
-      const fullName = new Date(Date.UTC(y, mIdx0, 1)).toLocaleString('en-US', {
-        month: 'long',
-        timeZone: 'UTC',
-      })
-      return {
-        id: uid('b'),
-        label: fullName,
-        start: `${y}-${mm}-01`,
-        end: `${y}-${mm}-${String(end).padStart(2, '0')}`,
-        attending: '',
-        assignments: blankAssignments(),
-      }
-    })
-    setBlocks(blocks)
+  function removeRotation(name: string) {
+    mutate((c) => ({ ...c, rotations: c.rotations.filter((r) => r !== name) }))
   }
-  const addBlock = () =>
-    setBlocks([
-      ...config.blocks,
-      {
-        id: uid('b'),
-        label: `Block ${config.blocks.length + 1}`,
-        start: '',
-        end: '',
-        attending: '',
-        assignments: blankAssignments(),
-      },
-    ])
-  const updateBlock = (id: string, patch: Partial<ScheduleBlock>) =>
-    setBlocks(config.blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)))
-  const setAssignment = (blockId: string, fellowId: string, value: string) =>
-    setBlocks(
-      config.blocks.map((b) =>
-        b.id === blockId ? { ...b, assignments: { ...b.assignments, [fellowId]: value } } : b
-      )
-    )
-  const removeBlock = (id: string) => setBlocks(config.blocks.filter((b) => b.id !== id))
 
-  // ---- monthly calendars ----
-  const setMonths = (next: ScheduleMonth[]) => setConfig((c) => ({ ...c, months: next }))
-  const addMonth = () => {
+  // ---------- blocks ----------
+  function addBlock() {
+    mutate((c) => ({
+      ...c,
+      blocks: [
+        ...c.blocks,
+        {
+          id: newId(),
+          label: `Block ${c.blocks.length + 1}`,
+          start: '',
+          end: '',
+          attending: '',
+          assignments: {},
+        },
+      ],
+    }))
+  }
+  function updateBlock(id: string, patch: Partial<ScheduleBlock>) {
+    mutate((c) => ({
+      ...c,
+      blocks: c.blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)),
+    }))
+  }
+  function removeBlock(id: string) {
+    mutate((c) => ({ ...c, blocks: c.blocks.filter((b) => b.id !== id) }))
+  }
+  function setAssignment(blockId: string, fellowId: string, value: string) {
+    mutate((c) => ({
+      ...c,
+      blocks: c.blocks.map((b) =>
+        b.id === blockId
+          ? { ...b, assignments: { ...b.assignments, [fellowId]: value } }
+          : b
+      ),
+    }))
+  }
+
+  // ---------- months ----------
+  const selectedMonth = config.months.find((m) => m.id === selectedMonthId) ?? null
+
+  function addMonth() {
     const ym = newMonthYm.trim()
     if (!/^\d{4}-\d{2}$/.test(ym)) {
-      // Safari on macOS renders <input type="month"> as a plain text box, so
-      // typed values like "July 2026" land here — explain the expected format
-      // instead of failing silently.
-      setMonthError('Enter the month as YYYY-MM (for example 2026-07), then press “+ Add month”.')
+      setMonthError('Pick a month (format YYYY-MM).')
       return
     }
-    setMonthError(null)
-    if (config.months.some((mo) => mo.ym === ym)) {
-      setSelectedMonthId(config.months.find((mo) => mo.ym === ym)?.id ?? '')
-      setNewMonthYm('')
+    if (config.months.some((m) => m.ym === ym)) {
+      setMonthError('That month already exists.')
       return
     }
-    const id = uid('m')
-    const next = [...config.months, { id, ym, label: ymToLabel(ym), sessions: [], coverage: emptyCoverage() }]
-    next.sort((a, b) => a.ym.localeCompare(b.ym))
-    setMonths(next)
+    const id = newId()
+    mutate((c) => ({
+      ...c,
+      months: [
+        ...c.months,
+        {
+          id,
+          ym,
+          label: monthLabelFromYm(ym),
+          sessions: [],
+          coverage: { consultAttending: '', consultFellows: '', procedureFellow: '', weekend: [] },
+        },
+      ].sort((a, b) => a.ym.localeCompare(b.ym)),
+    }))
     setSelectedMonthId(id)
     setNewMonthYm('')
+    setMonthError(null)
   }
-  const updateMonth = (id: string, patch: Partial<ScheduleMonth>) =>
-    setMonths(config.months.map((mo) => (mo.id === id ? { ...mo, ...patch } : mo)))
-  const removeMonth = (id: string) => {
-    const next = config.months.filter((mo) => mo.id !== id)
-    setMonths(next)
-    if (selectedMonthId === id) setSelectedMonthId(next[0]?.id ?? '')
+
+  function updateMonth(id: string, patch: Partial<ScheduleMonth>) {
+    mutate((c) => ({
+      ...c,
+      months: c.months.map((m) => (m.id === id ? { ...m, ...patch } : m)),
+    }))
   }
-  const updateCoverage = (id: string, patch: Partial<MonthCoverage>) =>
-    setMonths(
-      config.months.map((mo) => (mo.id === id ? { ...mo, coverage: { ...mo.coverage, ...patch } } : mo))
-    )
-  const addSession = (monthId: string) =>
-    setMonths(
-      config.months.map((mo) =>
-        mo.id === monthId
-          ? { ...mo, sessions: [...mo.sessions, { id: uid('s'), date: '', title: '' }] }
-          : mo
-      )
-    )
-  const updateSession = (monthId: string, sid: string, patch: Partial<CalendarSession>) =>
-    setMonths(
-      config.months.map((mo) =>
-        mo.id === monthId
-          ? { ...mo, sessions: mo.sessions.map((s) => (s.id === sid ? { ...s, ...patch } : s)) }
-          : mo
-      )
-    )
-  const removeSession = (monthId: string, sid: string) =>
-    setMonths(
-      config.months.map((mo) =>
-        mo.id === monthId ? { ...mo, sessions: mo.sessions.filter((s) => s.id !== sid) } : mo
-      )
-    )
-  const addWeekend = (monthId: string) =>
-    setMonths(
-      config.months.map((mo) =>
-        mo.id === monthId
+
+  function removeMonth(id: string) {
+    mutate((c) => ({ ...c, months: c.months.filter((m) => m.id !== id) }))
+    if (selectedMonthId === id) setSelectedMonthId(null)
+  }
+
+  function addSession(monthId: string) {
+    mutate((c) => ({
+      ...c,
+      months: c.months.map((m) =>
+        m.id === monthId
+          ? { ...m, sessions: [...m.sessions, { id: newId(), date: '', title: '', badge: '' }] }
+          : m
+      ),
+    }))
+  }
+
+  function updateSession(monthId: string, sessionId: string, patch: Partial<MonthSession>) {
+    mutate((c) => ({
+      ...c,
+      months: c.months.map((m) =>
+        m.id === monthId
           ? {
-              ...mo,
+              ...m,
+              sessions: m.sessions.map((s) => (s.id === sessionId ? { ...s, ...patch } : s)),
+            }
+          : m
+      ),
+    }))
+  }
+
+  function removeSession(monthId: string, sessionId: string) {
+    mutate((c) => ({
+      ...c,
+      months: c.months.map((m) =>
+        m.id === monthId
+          ? { ...m, sessions: m.sessions.filter((s) => s.id !== sessionId) }
+          : m
+      ),
+    }))
+  }
+
+  function updateCoverage(
+    monthId: string,
+    patch: Partial<ScheduleMonth['coverage']>
+  ) {
+    mutate((c) => ({
+      ...c,
+      months: c.months.map((m) =>
+        m.id === monthId ? { ...m, coverage: { ...m.coverage, ...patch } } : m
+      ),
+    }))
+  }
+
+  function addWeekend(monthId: string) {
+    mutate((c) => ({
+      ...c,
+      months: c.months.map((m) =>
+        m.id === monthId
+          ? {
+              ...m,
               coverage: {
-                ...mo.coverage,
-                weekend: [...mo.coverage.weekend, { id: uid('wk'), who: '', dates: '' }],
+                ...m.coverage,
+                weekend: [...m.coverage.weekend, { id: newId(), who: '', dates: '' }],
               },
             }
-          : mo
-      )
-    )
-  const updateWeekend = (monthId: string, wid: string, patch: Partial<WeekendCoverage>) =>
-    setMonths(
-      config.months.map((mo) =>
-        mo.id === monthId
+          : m
+      ),
+    }))
+  }
+
+  function updateWeekend(
+    monthId: string,
+    rowId: string,
+    patch: Partial<WeekendCoverage>
+  ) {
+    mutate((c) => ({
+      ...c,
+      months: c.months.map((m) =>
+        m.id === monthId
           ? {
-              ...mo,
+              ...m,
               coverage: {
-                ...mo.coverage,
-                weekend: mo.coverage.weekend.map((w) => (w.id === wid ? { ...w, ...patch } : w)),
+                ...m.coverage,
+                weekend: m.coverage.weekend.map((w) => (w.id === rowId ? { ...w, ...patch } : w)),
               },
             }
-          : mo
-      )
-    )
-  const removeWeekend = (monthId: string, wid: string) =>
-    setMonths(
-      config.months.map((mo) =>
-        mo.id === monthId
+          : m
+      ),
+    }))
+  }
+
+  function removeWeekend(monthId: string, rowId: string) {
+    mutate((c) => ({
+      ...c,
+      months: c.months.map((m) =>
+        m.id === monthId
           ? {
-              ...mo,
-              coverage: { ...mo.coverage, weekend: mo.coverage.weekend.filter((w) => w.id !== wid) },
+              ...m,
+              coverage: {
+                ...m.coverage,
+                weekend: m.coverage.weekend.filter((w) => w.id !== rowId),
+              },
             }
-          : mo
-      )
-    )
+          : m
+      ),
+    }))
+  }
 
-  const selectedMonth = config.months.find((mo) => mo.id === selectedMonthId) ?? null
-
-  const saveLabel = isPending
-    ? 'Saving…'
-    : isDirty
-      ? 'Save changes'
-      : saveState === 'saved'
-        ? 'Saved ✓'
-        : 'Save'
+  // ---------- save ----------
+  function save() {
+    startTransition(async () => {
+      const res = await saveSchedule({ academic_year: academicYear, config })
+      if (res.ok) {
+        setStatus('saved')
+        setErrorMsg('')
+      } else {
+        setStatus('error')
+        setErrorMsg(res.error ?? 'Save failed')
+      }
+    })
+  }
 
   return (
-    <div className="space-y-6">
-      {/* body header */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <h2 className="text-lg font-bold text-slate-900">Schedule editor</h2>
-        <span
-          style={{ background: CRIMSON }}
-          className="text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded text-white"
+    <div className="space-y-8">
+      {/* save bar */}
+      <div className="sticky top-0 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-gray-50/95 backdrop-blur border-b border-gray-200 flex items-center gap-3 flex-wrap">
+        <button
+          onClick={save}
+          disabled={pending}
+          aria-busy={pending}
+          className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-semibold text-white min-h-[44px] disabled:opacity-60"
+          style={{ background: NAVY }}
         >
-          Staff
+          {pending ? 'Saving…' : 'Save schedule'}
+        </button>
+        <span aria-live="polite" className="text-sm">
+          {status === 'saved' && <span className="text-green-700 font-medium">Saved ✓</span>}
+          {status === 'error' && <span className="text-red-600 font-medium">{errorMsg}</span>}
+        </span>
+        <span className="ml-auto text-xs text-slate-400">
+          Academic year {academicYear}
         </span>
       </div>
 
-      {/* sticky save bar */}
-      <div className="sticky top-0 z-30 border border-slate-200 rounded-lg bg-white/95 backdrop-blur">
-        <div className="px-4 py-2.5 flex items-center gap-3 flex-wrap">
-          <label className="text-sm font-medium text-slate-600">Academic year</label>
-          <span className="text-sm font-semibold text-slate-900 bg-slate-100 rounded px-2 py-1">
-            {academicYear}
-          </span>
-          <span className="text-xs text-slate-400">(switch years above)</span>
-          <div className="flex-1" />
-          {isDirty && <span className="text-xs font-medium text-amber-600">Unsaved changes</span>}
-          {isDirty && (
-            <button
-              onClick={revertChanges}
-              className="text-sm font-medium px-3 py-1.5 rounded border border-slate-300 text-slate-700 hover:bg-slate-50"
-            >
-              Revert
-            </button>
-          )}
-          <button
-            onClick={handleSave}
-            disabled={isPending || !isDirty}
-            className="text-sm font-semibold px-4 py-1.5 rounded text-white disabled:opacity-50"
-            style={{ background: isDirty ? CRIMSON : NAVY }}
-          >
-            {saveLabel}
-          </button>
-        </div>
-        {errorMsg && (
-          <div className="px-4 pb-2.5 -mt-1">
-            <p className="text-sm text-red-600">{errorMsg}</p>
-          </div>
-        )}
-      </div>
-
-      {/* shared rotation suggestions for the block grid */}
-      <datalist id="rotation-suggestions">
-        {config.rotations.map((r) => (
-          <option key={r} value={r} />
-        ))}
-      </datalist>
-
-      {/* ============ 1. WEEKLY SKELETON ============ */}
+      {/* ============ 1. WEEKLY ANCHORS ============ */}
       <section>
         <SectionHead
           n="1"
-          title="Weekly Skeleton"
-          hint="Recurring weekly activities (clinic, didactics). The specific Wed/Fri didactic sessions live in the monthly calendar below."
+          title="Weekly Schedule"
+          hint="Recurring weekly rhythm — continuity clinics, didactics, standing meetings."
         />
         <div className="space-y-3">
           {config.weekly.map((row) => (
-            <div key={row.id} className="bg-white border border-slate-200 rounded-lg p-3 sm:p-4">
-              <div className="flex gap-3 items-start">
-                <span
-                  className="mt-2 w-1.5 h-8 rounded shrink-0"
-                  style={{ background: KIND_COLOR[row.kind] || '#475569' }}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap gap-2 items-center">
-                    <input
-                      value={row.activity}
-                      onChange={(e) => updateRow(row.id, { activity: e.target.value })}
-                      placeholder="Activity name"
-                      className="flex-1 min-w-[180px] font-semibold text-slate-900 border-b border-transparent hover:border-slate-200 focus:border-slate-400 focus:outline-none py-0.5"
-                    />
-                    <select
-                      value={row.kind}
-                      onChange={(e) => updateRow(row.id, { kind: e.target.value as WeeklyKind })}
-                      className="text-xs font-medium border border-slate-300 rounded px-2 py-1 text-slate-700 bg-white"
-                    >
-                      {WEEKLY_KINDS.map((k) => (
-                        <option key={k} value={k}>
-                          {k}
-                        </option>
-                      ))}
-                    </select>
+            <div key={row.id} className="bg-white border border-slate-200 rounded-lg p-3.5">
+              <div className="flex flex-wrap gap-2 items-center">
+                <label className="flex-1 min-w-[180px] flex items-center gap-2">
+                  <span className="text-xs font-medium text-slate-500 shrink-0">Activity</span>
+                  <input
+                    value={row.activity}
+                    onChange={(e) => updateRow(row.id, { activity: e.target.value })}
+                    placeholder="Activity name"
+                    className="flex-1 min-w-0 font-semibold text-slate-900 border-b border-transparent hover:border-slate-200 focus:border-slate-400 focus:outline-none py-0.5"
+                  />
+                </label>
+                <select
+                  value={row.kind}
+                  onChange={(e) => updateRow(row.id, { kind: e.target.value as WeeklyKind })}
+                  aria-label="Activity kind"
+                  className="text-xs font-medium border border-slate-300 rounded px-2 py-1 text-slate-700 bg-white"
+                >
+                  {WEEKLY_KINDS.map((k) => (
+                    <option key={k} value={k}>
+                      {k}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => removeRow(row.id)}
+                  className="text-slate-400 hover:text-red-600 text-sm px-1"
+                  title="Remove"
+                  aria-label={`Remove ${row.activity || 'activity'}`}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="flex gap-1.5 mt-2 flex-wrap">
+                {WEEKDAYS.map((d) => {
+                  const on = row.days.includes(d)
+                  return (
                     <button
-                      onClick={() => removeRow(row.id)}
-                      className="text-slate-400 hover:text-red-600 text-sm px-1"
-                      title="Remove"
+                      key={d}
+                      onClick={() => toggleDay(row.id, d)}
+                      aria-pressed={on}
+                      className="text-xs font-medium rounded px-2.5 py-1 border transition-colors"
+                      style={
+                        on
+                          ? { background: NAVY, color: 'white', borderColor: NAVY }
+                          : { background: 'white', color: '#64748b', borderColor: '#cbd5e1' }
+                      }
                     >
-                      ✕
+                      {d}
                     </button>
-                  </div>
-                  <div className="flex gap-1.5 mt-2 flex-wrap">
-                    {WEEKDAYS.map((d) => {
-                      const on = row.days.includes(d)
-                      return (
-                        <button
-                          key={d}
-                          onClick={() => toggleDay(row.id, d)}
-                          className="text-xs font-medium rounded px-2.5 py-1 border transition-colors"
-                          style={
-                            on
-                              ? { background: NAVY, color: 'white', borderColor: NAVY }
-                              : { background: 'white', color: '#64748b', borderColor: '#cbd5e1' }
-                          }
-                        >
-                          {d}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  <div className="flex gap-3 mt-2.5 items-center flex-wrap">
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        type="time"
-                        value={row.start}
-                        onChange={(e) => updateRow(row.id, { start: e.target.value })}
-                        className="text-sm border border-slate-300 rounded px-2 py-1"
-                      />
-                      <span className="text-slate-400 text-sm">–</span>
-                      <input
-                        type="time"
-                        value={row.end}
-                        onChange={(e) => updateRow(row.id, { end: e.target.value })}
-                        className="text-sm border border-slate-300 rounded px-2 py-1"
-                      />
-                    </div>
+                  )
+                })}
+              </div>
+              <div className="flex gap-3 mt-2.5 items-center flex-wrap">
+                <div className="flex items-center gap-1.5">
+                  <label className="flex items-center gap-1 text-xs text-slate-500">
+                    Start
                     <input
-                      value={row.note || ''}
-                      onChange={(e) => updateRow(row.id, { note: e.target.value })}
-                      placeholder="Note (optional)"
-                      className="flex-1 min-w-[160px] text-sm text-slate-600 border-b border-transparent hover:border-slate-200 focus:border-slate-400 focus:outline-none py-0.5"
+                      type="time"
+                      value={row.start}
+                      onChange={(e) => updateRow(row.id, { start: e.target.value })}
+                      className="text-sm text-slate-700 border border-slate-300 rounded px-2 py-1"
                     />
-                  </div>
+                  </label>
+                  <span className="text-slate-400 text-sm">–</span>
+                  <label className="flex items-center gap-1 text-xs text-slate-500">
+                    End
+                    <input
+                      type="time"
+                      value={row.end}
+                      onChange={(e) => updateRow(row.id, { end: e.target.value })}
+                      className="text-sm text-slate-700 border border-slate-300 rounded px-2 py-1"
+                    />
+                  </label>
                 </div>
+                <input
+                  value={row.note || ''}
+                  onChange={(e) => updateRow(row.id, { note: e.target.value })}
+                  placeholder="Note (optional)"
+                  aria-label="Note (optional)"
+                  className="flex-1 min-w-[160px] text-sm text-slate-600 border-b border-transparent hover:border-slate-200 focus:border-slate-400 focus:outline-none py-0.5"
+                />
               </div>
             </div>
           ))}
+          <button
+            onClick={() => addRow()}
+            className="text-sm font-medium px-3 py-2 rounded-lg border border-dashed border-slate-300 text-slate-600 hover:border-slate-400 hover:text-slate-800 w-full"
+          >
+            + Add weekly row
+          </button>
         </div>
-        <button onClick={addRow} className="mt-3 text-sm font-medium" style={{ color: NAVY }}>
-          + Add weekly activity
-        </button>
       </section>
 
       {/* ============ 2. FELLOWS ============ */}
@@ -485,91 +439,91 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
         <SectionHead
           n="2"
           title="Fellows"
-          hint="The fellows shown as columns in the block grid. Update names/PGY here to roll the grid forward to a new class."
+          hint="Names shown on the schedule grid. These are display names for the
+            rotation grid — accounts are managed separately on the dashboard."
         />
         <div className="space-y-2">
           {config.fellows.map((f) => (
-            <div key={f.id} className="flex items-center gap-2 flex-wrap bg-white border border-slate-200 rounded-lg p-2.5">
+            <div key={f.id} className="flex gap-2 items-center flex-wrap">
               <input
                 value={f.name}
                 onChange={(e) => updateFellow(f.id, { name: e.target.value })}
                 placeholder="Dr. Name"
+                aria-label="Fellow name"
                 className="flex-1 min-w-[160px] text-sm font-medium border border-slate-300 rounded px-2 py-1.5"
               />
               <input
                 value={f.pgy}
                 onChange={(e) => updateFellow(f.id, { pgy: e.target.value })}
                 placeholder="PGY-4"
+                aria-label="PGY level"
                 className="w-24 text-sm border border-slate-300 rounded px-2 py-1.5"
               />
               <ConfirmButton
                 label="✕"
                 title="Remove fellow"
-                confirmText={`Remove ${f.name || 'this fellow'}? They will be removed from every block.`}
+                confirmText={`Remove ${f.name || 'this fellow'}? Their grid assignments clear too.`}
                 onConfirm={() => removeFellow(f.id)}
-                buttonClassName="text-slate-400 hover:text-red-600 px-1"
+                buttonClassName="text-slate-400 hover:text-red-600 text-sm px-1"
               />
             </div>
           ))}
-          {config.fellows.length === 0 && (
-            <p className="text-sm text-slate-400">No fellows yet — add one below.</p>
-          )}
+          <button
+            onClick={addFellow}
+            className="text-sm font-medium"
+            style={{ color: NAVY }}
+          >
+            + Add fellow
+          </button>
         </div>
-        <button onClick={addFellow} className="mt-3 text-sm font-medium" style={{ color: NAVY }}>
-          + Add fellow
-        </button>
       </section>
 
-      {/* ============ 3. ROTATION VOCABULARY ============ */}
+      {/* ============ 3. ROTATION SUGGESTIONS ============ */}
       <section>
         <SectionHead
           n="3"
           title="Rotation Suggestions"
-          hint="Quick-pick values offered while typing block-grid cells. Cells accept free text too (e.g. “Vacation (19-30)”)."
+          hint="Autocomplete options for assignment cells below — staff can always type anything."
         />
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex flex-wrap gap-2">
-            {config.rotations.map((r) => (
-              <span
-                key={r}
-                className="inline-flex items-center gap-1.5 text-sm rounded-full pl-3 pr-2 py-1 border"
-                style={{ borderColor: '#cbd5e1', background: '#f8fafc' }}
-              >
-                {r}
-                <button
-                  onClick={() => removeRotation(r)}
-                  className="text-slate-400 hover:text-red-600"
-                  title="Remove"
-                >
-                  ✕
-                </button>
-              </span>
-            ))}
-            {config.rotations.length === 0 && (
-              <span className="text-sm text-slate-400">No suggestions yet.</span>
-            )}
-          </div>
-          <div className="flex gap-2 mt-3">
-            <input
-              value={newRotation}
-              onChange={(e) => setNewRotation(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  addRotation()
-                }
-              }}
-              placeholder="Add a rotation…"
-              className="flex-1 text-sm border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:ring-2"
-            />
-            <button
-              onClick={addRotation}
-              className="text-sm font-medium px-3 py-1.5 rounded text-white"
-              style={{ background: NAVY }}
+        <div className="flex flex-wrap gap-2 mb-2">
+          {config.rotations.map((r) => (
+            <span
+              key={r}
+              className="inline-flex items-center gap-1.5 text-sm bg-slate-100 text-slate-700 rounded-full pl-3 pr-1.5 py-1"
             >
-              Add
-            </button>
-          </div>
+              {r}
+              <button
+                onClick={() => removeRotation(r)}
+                className="text-slate-400 hover:text-red-600"
+                title="Remove"
+                aria-label={`Remove ${r}`}
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <input
+            value={newRotation}
+            onChange={(e) => setNewRotation(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addRotation()
+              }
+            }}
+            placeholder="Add a rotation…"
+            aria-label="New rotation suggestion"
+            className="flex-1 text-sm border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:ring-2"
+          />
+          <button
+            onClick={addRotation}
+            className="text-sm font-medium px-3 py-1.5 rounded text-white"
+            style={{ background: NAVY }}
+          >
+            Add
+          </button>
         </div>
       </section>
 
@@ -577,74 +531,40 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
       <section>
         <SectionHead
           n="4"
-          title="Annual Block Grid"
-          hint="Attending-of-the-month plus each fellow's rotation per month. Generate a standard Jul–Jun set, or add blocks manually."
+          title="Rotation Block Grid"
+          hint="13 four-week blocks. Attending per block on the first row; one row per fellow."
         />
-        <div className="flex gap-2 flex-wrap mb-3 items-center">
-          <ConfirmButton
-            label={`Generate monthly blocks (${academicYear})`}
-            confirmText="Regenerate the whole block grid? All attending and assignment entries will be replaced."
-            onConfirm={generateYear}
-            buttonClassName="text-sm font-medium px-3 py-1.5 rounded text-white"
-            buttonStyle={{ background: CRIMSON }}
-          />
-          <button
-            onClick={addBlock}
-            className="text-sm font-medium px-3 py-1.5 rounded border border-slate-300 text-slate-700 hover:bg-slate-50"
-          >
-            + Add block
-          </button>
-          {config.blocks.length > 0 && (
-            <ConfirmButton
-              label="Clear all"
-              confirmText="Clear all blocks? The entire block grid will be emptied."
-              onConfirm={() => setBlocks([])}
-              buttonClassName="text-sm font-medium px-3 py-1.5 rounded text-slate-500 hover:text-red-600"
-            />
-          )}
-        </div>
+        <datalist id="rotation-suggestions">
+          {config.rotations.map((r) => (
+            <option key={r} value={r} />
+          ))}
+        </datalist>
 
-        {config.blocks.length === 0 ? (
-          <div className="bg-white border border-dashed border-slate-300 rounded-lg p-8 text-center text-sm text-slate-500">
-            No blocks yet. Generate a standard year or add one manually.
-          </div>
+        {config.blocks.length === 0 && config.fellows.length === 0 ? (
+          <p className="text-sm text-slate-500 bg-white border border-dashed border-slate-300 rounded-lg p-4">
+            Add fellows (section 2) and blocks below to build the grid.
+          </p>
         ) : (
-          <div className="overflow-x-auto bg-white border border-slate-200 rounded-lg">
-            <table className="w-full border-collapse text-sm">
+          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+            <table className="w-full text-sm border-collapse bg-white">
               <thead>
-                <tr style={{ background: NAVY }} className="text-white text-left">
-                  <th
-                    className="px-3 py-2.5 font-semibold sticky left-0 z-10"
-                    style={{ background: NAVY, minWidth: 140 }}
-                  >
+                <tr>
+                  <th className="sticky left-0 bg-white z-10 text-left text-xs font-bold text-slate-500 uppercase tracking-wide p-2 border border-slate-200 min-w-[140px]">
                     Block
-                  </th>
-                  <th className="px-3 py-2.5 font-semibold whitespace-nowrap" style={{ minWidth: 150 }}>
-                    Attending
-                  </th>
-                  {config.fellows.map((f) => (
-                    <th
-                      key={f.id}
-                      className="px-3 py-2.5 font-semibold whitespace-nowrap"
-                      style={{ minWidth: 150 }}
+                    <button
+                      onClick={addBlock}
+                      className="block mt-1 text-[11px] font-semibold normal-case tracking-normal"
+                      style={{ color: NAVY }}
                     >
-                      {f.name || 'Fellow'}
-                      <span className="block text-[11px] font-normal text-blue-200">{f.pgy}</span>
-                    </th>
-                  ))}
-                  <th className="px-2 py-2.5" />
-                </tr>
-              </thead>
-              <tbody>
-                {config.blocks.map((b, i) => (
-                  <tr key={b.id} className={i % 2 ? 'bg-slate-50/60' : 'bg-white'}>
-                    <td
-                      className="px-3 py-2 align-top sticky left-0 z-10"
-                      style={{ background: i % 2 ? '#f8fafc' : 'white', minWidth: 140 }}
-                    >
+                      + Add block
+                    </button>
+                  </th>
+                  {config.blocks.map((b) => (
+                    <th key={b.id} className="align-top p-2 border border-slate-200 min-w-[150px] bg-slate-50">
                       <input
                         value={b.label}
                         onChange={(e) => updateBlock(b.id, { label: e.target.value })}
+                        aria-label="Block label"
                         className="font-semibold text-slate-900 w-full border-b border-transparent hover:border-slate-200 focus:border-slate-400 focus:outline-none"
                       />
                       <div className="flex gap-1 mt-1">
@@ -652,47 +572,75 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                           type="date"
                           value={b.start}
                           onChange={(e) => updateBlock(b.id, { start: e.target.value })}
+                          aria-label={`${b.label || 'Block'} start date`}
                           className="text-[11px] border border-slate-200 rounded px-1 py-0.5 text-slate-600 w-[112px]"
                         />
                         <input
                           type="date"
                           value={b.end}
                           onChange={(e) => updateBlock(b.id, { end: e.target.value })}
+                          aria-label={`${b.label || 'Block'} end date`}
                           className="text-[11px] border border-slate-200 rounded px-1 py-0.5 text-slate-600 w-[112px]"
                         />
                       </div>
-                    </td>
-                    <td className="px-3 py-2 align-top">
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="sticky left-0 bg-white z-10 p-2 border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wide">
+                    Attending
+                  </td>
+                  {config.blocks.map((b) => (
+                    <td key={b.id} className="p-1.5 border border-slate-200">
                       <input
                         value={b.attending}
                         onChange={(e) => updateBlock(b.id, { attending: e.target.value })}
                         placeholder="—"
+                        aria-label={`Attending for ${b.label || 'block'}`}
                         className="w-full text-sm border border-slate-300 rounded px-2 py-1.5"
                       />
                     </td>
-                    {config.fellows.map((f) => (
-                      <td key={f.id} className="px-3 py-2 align-top">
+                  ))}
+                </tr>
+                {config.fellows.map((f) => (
+                  <tr key={f.id}>
+                    <td className="sticky left-0 bg-white z-10 p-2 border border-slate-200 font-medium text-slate-800">
+                      {f.name || '—'}
+                      <span className="block text-[11px] font-normal text-slate-400">{f.pgy}</span>
+                    </td>
+                    {config.blocks.map((b) => (
+                      <td key={b.id} className="p-1.5 border border-slate-200">
                         <input
                           list="rotation-suggestions"
                           value={b.assignments[f.id] || ''}
                           onChange={(e) => setAssignment(b.id, f.id, e.target.value)}
                           placeholder="—"
+                          aria-label={`${f.name || 'Fellow'} assignment for ${b.label || 'block'}`}
                           className="w-full text-sm border border-slate-300 rounded px-2 py-1.5"
                           style={b.assignments[f.id] ? { borderLeft: `3px solid ${NAVY}` } : undefined}
                         />
                       </td>
                     ))}
-                    <td className="px-2 py-2 align-top text-center">
+                  </tr>
+                ))}
+                {/* remove-block row */}
+                <tr>
+                  <td className="sticky left-0 bg-white z-10 p-2 border border-slate-200" />
+                  {config.blocks.map((b) => (
+                    <td key={b.id} className="p-1.5 border border-slate-200 text-center">
                       <button
                         onClick={() => removeBlock(b.id)}
                         className="text-slate-400 hover:text-red-600"
                         title="Remove block"
+                        aria-label={`Remove block${b.label ? ` ${b.label}` : ''}`}
                       >
                         ✕
                       </button>
                     </td>
-                  </tr>
-                ))}
+                  ))}
+                </tr>
               </tbody>
             </table>
           </div>
@@ -712,6 +660,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
             <button
               key={mo.id}
               onClick={() => setSelectedMonthId(mo.id)}
+              aria-pressed={mo.id === selectedMonthId}
               className="text-sm font-medium px-3 py-1.5 rounded border"
               style={
                 mo.id === selectedMonthId
@@ -727,6 +676,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
               type="month"
               value={newMonthYm}
               placeholder="2026-07"
+              aria-label="New month"
               onChange={(e) => {
                 setNewMonthYm(e.target.value)
                 setMonthError(null)
@@ -753,6 +703,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                 value={selectedMonth.label}
                 onChange={(e) => updateMonth(selectedMonth.id, { label: e.target.value })}
                 placeholder="June 2026"
+                aria-label="Month label"
                 className="text-base font-bold text-slate-900 border-b border-transparent hover:border-slate-200 focus:border-slate-400 focus:outline-none py-0.5"
               />
               <span className="text-xs text-slate-400">({selectedMonth.ym})</span>
@@ -768,6 +719,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
               value={selectedMonth.subtitle || ''}
               onChange={(e) => updateMonth(selectedMonth.id, { subtitle: e.target.value })}
               placeholder="Subtitle (optional) — e.g. Images, Genetics and Transplant Medicine"
+              aria-label="Month subtitle (optional)"
               className="w-full text-sm text-slate-600 border border-slate-200 rounded px-2 py-1.5"
             />
 
@@ -783,24 +735,28 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                       min={`${selectedMonth.ym}-01`}
                       max={`${selectedMonth.ym}-31`}
                       onChange={(e) => updateSession(selectedMonth.id, s.id, { date: e.target.value })}
+                      aria-label="Session date"
                       className="text-sm border border-slate-300 rounded px-2 py-1.5 w-[150px]"
                     />
                     <input
                       value={s.title}
                       onChange={(e) => updateSession(selectedMonth.id, s.id, { title: e.target.value })}
                       placeholder="Session title (e.g. Grand Rounds)"
+                      aria-label="Session title"
                       className="flex-1 min-w-[180px] text-sm border border-slate-300 rounded px-2 py-1.5"
                     />
                     <input
                       value={s.badge || ''}
                       onChange={(e) => updateSession(selectedMonth.id, s.id, { badge: e.target.value })}
                       placeholder="🎓"
+                      aria-label="Session badge (optional)"
                       className="w-16 text-sm border border-slate-300 rounded px-2 py-1.5 text-center"
                     />
                     <button
                       onClick={() => removeSession(selectedMonth.id, s.id)}
                       className="text-slate-400 hover:text-red-600 px-1"
                       title="Remove session"
+                      aria-label={`Remove session${s.title ? ` ${s.title}` : ''}`}
                     >
                       ✕
                     </button>
@@ -858,18 +814,21 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                         value={w.who}
                         onChange={(e) => updateWeekend(selectedMonth.id, w.id, { who: e.target.value })}
                         placeholder="Dr. Name"
+                        aria-label="Weekend coverage — who"
                         className="w-[160px] text-sm border border-slate-300 rounded px-2 py-1.5"
                       />
                       <input
                         value={w.dates}
                         onChange={(e) => updateWeekend(selectedMonth.id, w.id, { dates: e.target.value })}
                         placeholder="June 13-14, 27-28"
+                        aria-label="Weekend coverage — dates"
                         className="flex-1 min-w-[160px] text-sm border border-slate-300 rounded px-2 py-1.5"
                       />
                       <button
                         onClick={() => removeWeekend(selectedMonth.id, w.id)}
                         className="text-slate-400 hover:text-red-600 px-1"
                         title="Remove"
+                        aria-label={`Remove weekend row${w.who ? ` for ${w.who}` : ''}`}
                       >
                         ✕
                       </button>
