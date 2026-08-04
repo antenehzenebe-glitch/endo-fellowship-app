@@ -32,6 +32,11 @@ const iconWarning = (
     <path d="M10.3 3.9 1.8 18A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 )
+const iconBolt = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+    <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z" strokeLinejoin="round" />
+  </svg>
+)
 
 /* --------------------------------------------------------- section block -- */
 function Section({ heading, items, accent }: { heading: string; items: string[]; accent?: boolean }) {
@@ -132,6 +137,22 @@ function EmergencyCard({
 
       {open ? (
         <div id={panelId} role="region" aria-labelledby={btnId} className="border-t border-gray-100 px-4 pb-4 pt-3 space-y-4">
+          {e.firstActions.length > 0 ? (
+            <div className="rounded-lg border border-red-200 border-l-4 border-l-crimson bg-red-50 p-3">
+              <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-crimson mb-1.5">
+                <span aria-hidden="true">{iconBolt}</span>
+                First 10 minutes
+              </h4>
+              <ol className="space-y-1.5">
+                {e.firstActions.map((a, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-gray-900 leading-snug">
+                    <span aria-hidden="true" className="shrink-0 font-bold text-crimson">{i + 1}.</span>
+                    <span>{a}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
           <Section heading="Clinical features" items={e.features} />
           <Section heading="Diagnosis / key labs" items={e.diagnosis} />
           {e.tables?.map((t, i) => (
@@ -150,6 +171,29 @@ function EmergencyCard({
                   </li>
                 ))}
               </ul>
+            </div>
+          ) : null}
+          {e.references.length > 0 ? (
+            <div className="border-t border-gray-100 pt-3">
+              <h4 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">Guidelines &amp; references</h4>
+              <ul>
+                {e.references.map((r, i) => (
+                  <li key={i}>
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-start gap-1.5 -mx-1 rounded px-1 py-2 text-sm text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                      <span className="min-w-0">
+                        {r.source} {r.year} — {r.label}
+                      </span>
+                      <span aria-hidden="true" className="mt-0.5 shrink-0 text-gray-400">↗</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-1 text-xs text-gray-500">Reviewed {e.lastReviewed}</p>
             </div>
           ) : null}
         </div>
@@ -179,11 +223,13 @@ export default function EmergencyGuide() {
         e.name,
         e.summary,
         EMERGENCY_CATEGORIES[e.category].label,
+        ...e.firstActions,
         ...e.features,
         ...e.diagnosis,
         ...e.management,
         ...e.followUp,
         ...e.pearls,
+        ...e.references.flatMap((r) => [r.label, r.source, r.year]),
         ...(e.tables ?? []).flatMap((t) => [t.title, t.note ?? '', ...t.columns, ...t.rows.flat()]),
       ]
         .join(' ')
@@ -299,11 +345,16 @@ export default function EmergencyGuide() {
           No emergencies match your search. Try a different term or clear the filter.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 items-start">
+        // h2 keeps the outline h1 → h2 → card h3 → section h4 (visually hidden;
+        // the result count above is the visible label for this region).
+        <>
+          <h2 className="sr-only">Emergency topics</h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 items-start">
           {filtered.map((e) => (
             <EmergencyCard key={e.id} e={e} open={openIds.has(e.id)} onToggle={() => toggle(e.id)} />
           ))}
-        </div>
+          </div>
+        </>
       )}
     </div>
   )
