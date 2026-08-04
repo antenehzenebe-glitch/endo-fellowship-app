@@ -308,7 +308,14 @@ export default function ThyroidQuiz({
     <div>
       {/* progress */}
       <div className="flex items-center gap-3 mb-4">
-        <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+        <div
+          className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden"
+          role="progressbar"
+          aria-label={`Quiz progress: question ${idx + 1} of ${total}`}
+          aria-valuenow={idx}
+          aria-valuemin={0}
+          aria-valuemax={total}
+        >
           <div
             className="h-full bg-crimson rounded-full transition-all"
             style={{ width: `${(idx / total) * 100}%` }}
