@@ -106,7 +106,7 @@ function ModuleCard({ mod, canAttest }: { mod: ModuleCompletion; canAttest: bool
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[11px] font-bold uppercase tracking-wider text-muted">Module</p>
-            <h3 className="mt-1 truncate text-lg font-semibold leading-tight text-gray-900">{mod.title}</h3>
+            <h3 title={mod.title} className="mt-1 truncate text-lg font-semibold leading-tight text-gray-900">{mod.title}</h3>
           </div>
           <div className="shrink-0 text-right">
             <p className="text-3xl font-bold leading-none tabular-nums text-primary">
