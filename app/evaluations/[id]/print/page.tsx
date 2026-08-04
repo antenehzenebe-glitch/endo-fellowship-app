@@ -63,11 +63,11 @@ export default async function EvalPrintPage({
       <style
         dangerouslySetInnerHTML={{
           __html: `
+        @page { size: portrait; margin: 18mm; }
         @media print {
           .no-print { display: none !important; }
           body { background: #fff !important; }
           .sheet { box-shadow: none !important; margin: 0 !important; border: none !important; }
-          @page { size: portrait; margin: 18mm; }
           * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
       `,
@@ -93,7 +93,7 @@ export default async function EvalPrintPage({
             <p className="text-base font-semibold text-slate-900 mt-3">Fellow Evaluation</p>
           </div>
 
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm mb-6">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm mb-6">
             <div>
               <dt className="text-slate-500">Fellow</dt>
               <dd className="font-semibold text-slate-900">
@@ -126,7 +126,7 @@ export default async function EvalPrintPage({
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-6 pt-8 mt-8 border-t border-slate-200 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-8 mt-8 border-t border-slate-200 text-sm">
             <div>
               <div className="h-10 border-b border-slate-400" />
               <p className="text-slate-600 mt-1">

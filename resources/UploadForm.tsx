@@ -119,12 +119,12 @@ export default function UploadForm() {
       </div>
 
       <div className="flex gap-2 mb-4">
-        <button type="button" onClick={() => setMode('file')}
-          className={`px-3 py-2 text-sm font-medium rounded-lg border ${mode === 'file' ? 'border-primary text-primary bg-[#eef2f6]' : 'border-gray-300 text-gray-600'}`}>
+        <button type="button" onClick={() => setMode('file')} aria-pressed={mode === 'file'}
+          className={`px-3 py-2 text-sm font-medium rounded-lg border ${mode === 'file' ? 'border-primary text-primary bg-primary-50' : 'border-gray-300 text-gray-600'}`}>
           Upload a file
         </button>
-        <button type="button" onClick={() => setMode('link')}
-          className={`px-3 py-2 text-sm font-medium rounded-lg border ${mode === 'link' ? 'border-primary text-primary bg-[#eef2f6]' : 'border-gray-300 text-gray-600'}`}>
+        <button type="button" onClick={() => setMode('link')} aria-pressed={mode === 'link'}
+          className={`px-3 py-2 text-sm font-medium rounded-lg border ${mode === 'link' ? 'border-primary text-primary bg-primary-50' : 'border-gray-300 text-gray-600'}`}>
           Link out
         </button>
       </div>
@@ -173,7 +173,7 @@ export default function UploadForm() {
           <label htmlFor="m-desc" className={labelCls}>Description (optional)</label>
           <textarea id="m-desc" rows={2} className={fieldCls} value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
-        <label className="flex items-center gap-2 text-sm text-gray-700">
+        <label className="flex items-center gap-2 py-2.5 text-sm text-gray-700">
           <input type="checkbox" checked={requiresAck} onChange={(e) => setRequiresAck(e.target.checked)} />
           Require fellows to acknowledge this
         </label>
