@@ -102,7 +102,7 @@ function PersonForm({
         <input id={`${idPrefix}-photo`} type="file" accept="image/*" className={fieldCls}
           onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
       </div>
-      <label className="flex items-center gap-2 text-sm text-gray-700">
+      <label className="flex items-center gap-2 py-2.5 text-sm text-gray-700">
         <input type="checkbox" checked={draft.is_published}
           onChange={(e) => setDraft({ ...draft, is_published: e.target.checked })} />
         Published (visible on the public site)
@@ -140,6 +140,10 @@ export default function RosterManager({ initialPeople }: { initialPeople: Person
   const [editFile, setEditFile] = useState<File | null>(null)
   const [editBusy, setEditBusy] = useState(false)
   const [editErr, setEditErr] = useState('')
+
+  // Row-level actions (publish toggle / remove) surface failures here — honest
+  // errors instead of silently doing nothing when Supabase rejects the write.
+  const [actionErr, setActionErr] = useState('')
 
   function publicUrl(path: string | null): string | null {
     if (!path) return null
@@ -210,21 +214,27 @@ export default function RosterManager({ initialPeople }: { initialPeople: Person
   }
 
   async function togglePublish(p: Person) {
+    setActionErr('')
     const { data, error } = await supabase.from('people')
       .update({ is_published: !p.is_published }).eq('id', p.id).select('*').single()
-    if (!error && data) {
-      setPeople((prev) => prev.map((x) => (x.id === p.id ? (data as Person) : x)))
-      router.refresh()
+    if (error || !data) {
+      setActionErr(`Couldn't ${p.is_published ? 'unpublish' : 'publish'} ${p.full_name}: ${error?.message ?? 'no row returned'}`)
+      return
     }
+    setPeople((prev) => prev.map((x) => (x.id === p.id ? (data as Person) : x)))
+    router.refresh()
   }
 
   async function remove(p: Person) {
     if (!confirm(`Remove ${p.full_name} from the directory? This cannot be undone.`)) return
+    setActionErr('')
     const { error } = await supabase.from('people').delete().eq('id', p.id)
-    if (!error) {
-      setPeople((prev) => prev.filter((x) => x.id !== p.id))
-      router.refresh()
+    if (error) {
+      setActionErr(`Couldn't remove ${p.full_name}: ${error.message}`)
+      return
     }
+    setPeople((prev) => prev.filter((x) => x.id !== p.id))
+    router.refresh()
   }
 
   const groups: PersonCategory[] = ['faculty', 'fellow', 'staff']
@@ -242,6 +252,10 @@ export default function RosterManager({ initialPeople }: { initialPeople: Person
           </button>
         ) : null}
       </div>
+
+      {actionErr ? (
+        <div role="alert" className="p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700">{actionErr}</div>
+      ) : null}
 
       {adding ? (
         <PersonForm idPrefix="add" draft={addDraft} setDraft={setAddDraft} setFile={setAddFile}
@@ -265,10 +279,10 @@ export default function RosterManager({ initialPeople }: { initialPeople: Person
                   ) : (
                     <div className="flex items-start gap-4">
                       {publicUrl(p.photo_path) ? (
-                        <img src={publicUrl(p.photo_path) as string} alt=""
+                        <img src={publicUrl(p.photo_path) as string} alt={p.full_name}
                           className="w-16 h-16 rounded-full object-cover border border-gray-200 shrink-0" />
                       ) : (
-                        <div className="w-16 h-16 rounded-full bg-[#eef2f6] text-primary grid place-items-center font-bold shrink-0">
+                        <div className="w-16 h-16 rounded-full bg-primary-50 text-primary grid place-items-center font-bold shrink-0">
                           {p.full_name.split(' ').map((s) => s[0]).slice(0, 2).join('')}
                         </div>
                       )}
@@ -287,7 +301,7 @@ export default function RosterManager({ initialPeople }: { initialPeople: Person
                           <button onClick={() => startEdit(p)}
                             className="px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 min-h-[44px]">Edit</button>
                           <button onClick={() => togglePublish(p)}
-                            className="px-3 py-2 text-sm font-medium rounded-lg border border-primary text-primary hover:bg-[#eef2f6] min-h-[44px]">
+                            className="px-3 py-2 text-sm font-medium rounded-lg border border-primary text-primary hover:bg-primary-50 min-h-[44px]">
                             {p.is_published ? 'Unpublish' : 'Publish'}
                           </button>
                           <button onClick={() => remove(p)}

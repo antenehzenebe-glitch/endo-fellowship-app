@@ -77,7 +77,7 @@ export default function StaffOnboardingTabs({
                 'group relative flex-1 min-w-[150px] rounded-xl px-4 py-3 text-left transition-all',
                 'ring-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson',
                 isActive
-                  ? 'bg-gradient-to-b from-[#0a4f86] to-primary text-white ring-primary shadow-md -translate-y-px'
+                  ? 'bg-gradient-to-b from-primary-500 to-primary text-white ring-primary shadow-md -translate-y-px'
                   : 'bg-gradient-to-b from-white to-gray-100 text-gray-700 ring-gray-200 shadow-sm hover:to-gray-50',
               ].join(' ')}
             >

@@ -63,11 +63,14 @@ const PRINT_CSS = `
 .pr-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
 .pr-sheet { margin: 0 auto 28px; max-width: 1040px; }
 .pr-band { background:${NAVY}; color:#fff; border-radius:8px 8px 0 0; padding:14px 18px; border-bottom:4px solid ${CRIMSON}; }
-.pr-band h1 { margin:0; font-size:20px; font-weight:800; letter-spacing:.2px; }
+.pr-band h1, .pr-band h2 { margin:0; font-size:20px; font-weight:800; letter-spacing:.2px; }
 .pr-band p { margin:2px 0 0; font-size:12px; color:#cbd9e6; }
 .pr-body { border:1px solid #cbd5e1; border-top:none; border-radius:0 0 8px 8px; padding:16px; }
 
-table.pr-grid { width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed; }
+/* Screen: sheets keep a readable minimum width and scroll sideways on phones;
+   print: overflow is visible so the sheet fits the page as before. */
+.pr-scroll { overflow-x:auto; }
+table.pr-grid { width:100%; min-width:900px; border-collapse:collapse; font-size:11px; table-layout:fixed; }
 table.pr-grid th, table.pr-grid td { border:1px solid #94a3b8; padding:5px 4px; text-align:center; vertical-align:middle; word-wrap:break-word; }
 table.pr-grid thead th { background:${NAVY}; color:#fff; font-weight:700; }
 table.pr-grid .pr-rowhead { background:#eef2f7; font-weight:700; text-align:left; width:104px; }
@@ -76,7 +79,7 @@ table.pr-grid .pr-attend td, table.pr-grid .pr-attend .pr-rowhead { font-weight:
 .pr-cur { outline:2px solid ${CRIMSON}; outline-offset:-2px; }
 .pr-curhead { background:${CRIMSON} !important; color:#fff !important; }
 
-table.pr-cal { width:100%; border-collapse:collapse; table-layout:fixed; }
+table.pr-cal { width:100%; min-width:900px; border-collapse:collapse; table-layout:fixed; }
 table.pr-cal th { background:${NAVY}; color:#fff; border:1px solid #94a3b8; padding:6px 4px; text-align:left; font-size:12px; width:20%; }
 table.pr-cal th .sub { font-size:9px; font-weight:400; color:#cbd9e6; margin-top:2px; }
 table.pr-cal td { border:1px solid #cbd5e1; padding:5px; vertical-align:top; height:78px; font-size:10px; }
@@ -88,7 +91,10 @@ table.pr-cal .ses { margin-top:3px; background:#eef2f7; border-radius:3px; paddi
 
 .pr-cov { margin-top:14px; border:1px solid #cbd5e1; border-radius:6px; padding:12px 14px; font-size:12px; }
 .pr-cov h3 { margin:0 0 8px; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:#64748b; }
-.pr-cov dl { margin:0; display:grid; grid-template-columns: 190px 1fr; row-gap:5px; column-gap:10px; }
+.pr-cov dl { margin:0; display:grid; grid-template-columns: 1fr; row-gap:5px; column-gap:10px; }
+@media (min-width: 640px) {
+  .pr-cov dl { grid-template-columns: 190px 1fr; }
+}
 .pr-cov dt { font-weight:700; color:#334155; }
 .pr-cov dd { margin:0; color:#1e293b; }
 .pr-foot { margin-top:12px; font-size:10px; color:#64748b; text-align:center; }
@@ -98,7 +104,8 @@ table.pr-cal .ses { margin-top:3px; background:#eef2f7; border-radius:3px; paddi
   .no-print { display:none !important; }
   .pr-sheet { page-break-after: always; max-width:none; }
   .pr-sheet:last-of-type { page-break-after: auto; }
-  table.pr-grid, table.pr-cal { page-break-inside: auto; }
+  .pr-scroll { overflow: visible; }
+  table.pr-grid, table.pr-cal { min-width:0; page-break-inside: auto; }
   tr, td, th { page-break-inside: avoid; }
   .pr { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
@@ -175,6 +182,7 @@ export default async function SchedulePrintPage({
           {config.blocks.length === 0 ? (
             <div className="pr-empty">No block grid has been set up yet.</div>
           ) : (
+            <div className="pr-scroll">
             <table className="pr-grid">
               <thead>
                 <tr>
@@ -207,6 +215,7 @@ export default async function SchedulePrintPage({
                 ))}
               </tbody>
             </table>
+            </div>
           )}
           <div className="pr-foot">Generated {prettyDate()} · Educational schedule (de-identified)</div>
         </div>
@@ -216,13 +225,14 @@ export default async function SchedulePrintPage({
       {month && (
         <section className="pr-sheet">
           <div className="pr-band">
-            <h1>{month.label || month.ym}</h1>
+            <h2>{month.label || month.ym}</h2>
             <p>
               Howard University Hospital · Department of Endocrinology
               {month.subtitle ? ` · ${month.subtitle}` : ''}
             </p>
           </div>
           <div className="pr-body">
+            <div className="pr-scroll">
             <table className="pr-cal">
               <thead>
                 <tr>
@@ -257,6 +267,7 @@ export default async function SchedulePrintPage({
                 ))}
               </tbody>
             </table>
+            </div>
 
             {hasCoverage && cov && (
               <div className="pr-cov">

@@ -13,6 +13,7 @@ import Link from 'next/link'
 import { requireProfile, isStaff } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import SignOutButton from '@/components/SignOutButton'
+import FellowNav from '@/components/FellowNav'
 import OnboardingChecklist, { type OnboardingTask } from './OnboardingChecklist'
 import StaffOnboardingTabs from './StaffOnboardingTabs'
 
@@ -82,16 +83,16 @@ export default async function OnboardingPage() {
       <div className="min-h-screen bg-gray-50">
         <header className="bg-primary text-white border-b-4 border-crimson">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
-            <div className="py-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
+            <div className="py-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <img src="/logo.png" alt="" className="w-10 h-10 shrink-0 object-contain bg-white rounded p-0.5" />
-                <div>
-                  <h1 className="text-xl font-bold leading-tight">Fellow Onboarding</h1>
-                  <p className="text-sm text-white/70">{profile.full_name} · {profile.role.toUpperCase()}</p>
+                <div className="min-w-0">
+                  <h1 className="text-xl font-bold leading-tight truncate">Fellow Onboarding</h1>
+                  <p className="text-sm text-white/70 truncate">{profile.full_name} · {profile.role.toUpperCase()}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1 sm:gap-2">
-                <Link href="/dashboard" className="px-3 py-2 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors">Dashboard</Link>
+              <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+                <Link href="/dashboard" className="inline-flex min-h-[44px] items-center px-3 text-sm font-medium rounded-md text-white/90 hover:bg-white/10 transition-colors">Dashboard</Link>
                 <SignOutButton variant="onDark" />
               </div>
             </div>
@@ -125,18 +126,18 @@ export default async function OnboardingPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <img src="/logo.png" alt="" className="w-10 h-10 shrink-0 object-contain" />
-            <div>
-              <h1 className="text-lg font-bold text-gray-900 leading-tight">My Checklist</h1>
-              <p className="text-sm text-gray-500">Hi, {firstName}</p>
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold text-gray-900 leading-tight truncate">My Checklist</h1>
+              <p className="text-sm text-gray-500 truncate">Hi, {firstName}</p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
-            <Link href="/log" className="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors">Logger</Link>
+          <div className="flex shrink-0 items-center gap-1">
             <SignOutButton />
           </div>
         </div>
+        <FellowNav />
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">

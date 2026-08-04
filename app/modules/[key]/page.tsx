@@ -184,6 +184,9 @@ export default async function ModulePage({
                   <h3 className="font-bold text-primary leading-snug">{v.title}</h3>
                   {v.description && <p className="mt-1 text-sm text-muted">{v.description}</p>}
                   {src ? (
+                    // TODO(a11y): no caption track (<track kind="captions">) is
+                    // available for these recordings yet — add one when the
+                    // program produces transcripts (WCAG 2.1 AA 1.2.2).
                     <video
                       controls
                       preload="metadata"

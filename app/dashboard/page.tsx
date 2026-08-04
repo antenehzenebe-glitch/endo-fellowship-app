@@ -54,7 +54,7 @@ const SITE_LINKS: { href: string; label: string; external?: boolean }[] = [
   { href: '/schedule', label: 'Schedule' },
   { href: '/admin/roster', label: 'Roster' },
   { href: NEW_INNOVATIONS_URL, label: 'New Innovations', external: true },
-  { href: '/account', label: 'Password' },
+  { href: '/account', label: 'Account' },
 ]
 
 const SITE_PILL_CLASS =

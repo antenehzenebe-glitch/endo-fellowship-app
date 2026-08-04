@@ -77,7 +77,7 @@ export default async function LoggerPage() {
 
   const Header = (
     <header>
-      <div className="bg-gradient-to-r from-primary to-[#001f34] text-white border-b-4 border-crimson">
+      <div className="bg-gradient-to-r from-primary to-primary-800 text-white border-b-4 border-crimson">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <img
@@ -176,7 +176,7 @@ export default async function LoggerPage() {
 
           {/* Side rail: snapshot + the two "need-it-fast" destinations */}
           <aside className="space-y-4">
-            <div className="rounded-2xl bg-gradient-to-br from-primary to-[#06243b] p-5 text-white shadow-sm">
+            <div className="rounded-2xl bg-gradient-to-br from-primary to-primary-700 p-5 text-white shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wide text-white/70">At a glance</p>
               <div className="mt-2 flex items-end gap-2">
                 <span className="text-4xl font-bold leading-none">{totalLogged}</span>
@@ -190,7 +190,14 @@ export default async function LoggerPage() {
                       {metCount}/{minTotal}
                     </span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-white/20">
+                  <div
+                    className="h-2 overflow-hidden rounded-full bg-white/20"
+                    role="progressbar"
+                    aria-label={`Minimums met: ${metCount} of ${minTotal}`}
+                    aria-valuenow={metCount}
+                    aria-valuemin={0}
+                    aria-valuemax={minTotal}
+                  >
                     <div
                       className="h-full rounded-full bg-emerald-400"
                       style={{ width: `${metPct}%` }}
@@ -203,8 +210,7 @@ export default async function LoggerPage() {
             <div className="grid grid-cols-2 gap-3">
               <Link
                 href="/schedule"
-                className="flex flex-col items-start gap-2 rounded-2xl p-4 text-white shadow-sm transition-transform active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                style={{ background: '#0f766e' }}
+                className="flex flex-col items-start gap-2 rounded-2xl bg-teal-700 p-4 text-white shadow-sm transition-transform active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               >
                 <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
@@ -214,8 +220,7 @@ export default async function LoggerPage() {
               </Link>
               <Link
                 href="/emergencies"
-                className="flex flex-col items-start gap-2 rounded-2xl p-4 text-white shadow-sm transition-transform active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                style={{ background: '#b91c1c' }}
+                className="flex flex-col items-start gap-2 rounded-2xl bg-red-700 p-4 text-white shadow-sm transition-transform active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               >
                 <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M12 4l9 16H3z" />
@@ -262,7 +267,7 @@ export default async function LoggerPage() {
                     <h3 className="mt-1 font-bold text-primary leading-snug">{m.title}</h3>
                     {m.subtitle && <p className="mt-1 text-sm text-muted">{m.subtitle}</p>}
                     {awaitingAttestation && (
-                      <p className="mt-2 text-xs font-medium text-[#b45309]">
+                      <p className="mt-2 text-xs font-medium text-amber-700">
                         Awaiting faculty attestation
                       </p>
                     )}

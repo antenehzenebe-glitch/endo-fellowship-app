@@ -3,8 +3,9 @@
 // app/schedule/ScheduleEditor.tsx
 // Staff-only editor for the program schedule. Body-only — the route owns the
 // page header and auth gate. Save calls the staff-only `saveSchedule` action,
-// which upserts program_schedule (id='current'); RLS blocks non-staff writes at
-// the database. De-identified PROGRAM data only — NO PHI.
+// which updates the program_schedule row for the selected academic_year (the
+// schema is multi-year — one row per academic year); RLS blocks non-staff
+// writes at the database. De-identified PROGRAM data only — NO PHI.
 //
 // Three editable layers, mirroring the program's paper sheets:
 //   1. Weekly skeleton + Fellows + Rotation vocabulary
@@ -403,15 +404,19 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap gap-2 items-center">
-                    <input
-                      value={row.activity}
-                      onChange={(e) => updateRow(row.id, { activity: e.target.value })}
-                      placeholder="Activity name"
-                      className="flex-1 min-w-[180px] font-semibold text-slate-900 border-b border-transparent hover:border-slate-200 focus:border-slate-400 focus:outline-none py-0.5"
-                    />
+                    <label className="flex-1 min-w-[180px] flex items-center gap-2">
+                      <span className="text-xs font-medium text-slate-500 shrink-0">Activity</span>
+                      <input
+                        value={row.activity}
+                        onChange={(e) => updateRow(row.id, { activity: e.target.value })}
+                        placeholder="Activity name"
+                        className="flex-1 min-w-0 font-semibold text-slate-900 border-b border-transparent hover:border-slate-200 focus:border-slate-400 focus:outline-none py-0.5"
+                      />
+                    </label>
                     <select
                       value={row.kind}
                       onChange={(e) => updateRow(row.id, { kind: e.target.value as WeeklyKind })}
+                      aria-label="Activity kind"
                       className="text-xs font-medium border border-slate-300 rounded px-2 py-1 text-slate-700 bg-white"
                     >
                       {WEEKLY_KINDS.map((k) => (
@@ -424,6 +429,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                       onClick={() => removeRow(row.id)}
                       className="text-slate-400 hover:text-red-600 text-sm px-1"
                       title="Remove"
+                      aria-label={`Remove ${row.activity || 'activity'}`}
                     >
                       ✕
                     </button>
@@ -435,6 +441,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                         <button
                           key={d}
                           onClick={() => toggleDay(row.id, d)}
+                          aria-pressed={on}
                           className="text-xs font-medium rounded px-2.5 py-1 border transition-colors"
                           style={
                             on
@@ -449,24 +456,31 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                   </div>
                   <div className="flex gap-3 mt-2.5 items-center flex-wrap">
                     <div className="flex items-center gap-1.5">
-                      <input
-                        type="time"
-                        value={row.start}
-                        onChange={(e) => updateRow(row.id, { start: e.target.value })}
-                        className="text-sm border border-slate-300 rounded px-2 py-1"
-                      />
+                      <label className="flex items-center gap-1 text-xs text-slate-500">
+                        Start
+                        <input
+                          type="time"
+                          value={row.start}
+                          onChange={(e) => updateRow(row.id, { start: e.target.value })}
+                          className="text-sm text-slate-700 border border-slate-300 rounded px-2 py-1"
+                        />
+                      </label>
                       <span className="text-slate-400 text-sm">–</span>
-                      <input
-                        type="time"
-                        value={row.end}
-                        onChange={(e) => updateRow(row.id, { end: e.target.value })}
-                        className="text-sm border border-slate-300 rounded px-2 py-1"
-                      />
+                      <label className="flex items-center gap-1 text-xs text-slate-500">
+                        End
+                        <input
+                          type="time"
+                          value={row.end}
+                          onChange={(e) => updateRow(row.id, { end: e.target.value })}
+                          className="text-sm text-slate-700 border border-slate-300 rounded px-2 py-1"
+                        />
+                      </label>
                     </div>
                     <input
                       value={row.note || ''}
                       onChange={(e) => updateRow(row.id, { note: e.target.value })}
                       placeholder="Note (optional)"
+                      aria-label="Note (optional)"
                       className="flex-1 min-w-[160px] text-sm text-slate-600 border-b border-transparent hover:border-slate-200 focus:border-slate-400 focus:outline-none py-0.5"
                     />
                   </div>
@@ -494,12 +508,14 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                 value={f.name}
                 onChange={(e) => updateFellow(f.id, { name: e.target.value })}
                 placeholder="Dr. Name"
+                aria-label="Fellow name"
                 className="flex-1 min-w-[160px] text-sm font-medium border border-slate-300 rounded px-2 py-1.5"
               />
               <input
                 value={f.pgy}
                 onChange={(e) => updateFellow(f.id, { pgy: e.target.value })}
                 placeholder="PGY-4"
+                aria-label="PGY level"
                 className="w-24 text-sm border border-slate-300 rounded px-2 py-1.5"
               />
               <ConfirmButton
@@ -540,6 +556,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                   onClick={() => removeRotation(r)}
                   className="text-slate-400 hover:text-red-600"
                   title="Remove"
+                  aria-label={`Remove ${r}`}
                 >
                   ✕
                 </button>
@@ -560,6 +577,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                 }
               }}
               placeholder="Add a rotation…"
+              aria-label="New rotation suggestion"
               className="flex-1 text-sm border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:ring-2"
             />
             <button
@@ -645,6 +663,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                       <input
                         value={b.label}
                         onChange={(e) => updateBlock(b.id, { label: e.target.value })}
+                        aria-label="Block label"
                         className="font-semibold text-slate-900 w-full border-b border-transparent hover:border-slate-200 focus:border-slate-400 focus:outline-none"
                       />
                       <div className="flex gap-1 mt-1">
@@ -652,12 +671,14 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                           type="date"
                           value={b.start}
                           onChange={(e) => updateBlock(b.id, { start: e.target.value })}
+                          aria-label={`${b.label || 'Block'} start date`}
                           className="text-[11px] border border-slate-200 rounded px-1 py-0.5 text-slate-600 w-[112px]"
                         />
                         <input
                           type="date"
                           value={b.end}
                           onChange={(e) => updateBlock(b.id, { end: e.target.value })}
+                          aria-label={`${b.label || 'Block'} end date`}
                           className="text-[11px] border border-slate-200 rounded px-1 py-0.5 text-slate-600 w-[112px]"
                         />
                       </div>
@@ -667,6 +688,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                         value={b.attending}
                         onChange={(e) => updateBlock(b.id, { attending: e.target.value })}
                         placeholder="—"
+                        aria-label={`Attending for ${b.label || 'block'}`}
                         className="w-full text-sm border border-slate-300 rounded px-2 py-1.5"
                       />
                     </td>
@@ -677,6 +699,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                           value={b.assignments[f.id] || ''}
                           onChange={(e) => setAssignment(b.id, f.id, e.target.value)}
                           placeholder="—"
+                          aria-label={`${f.name || 'Fellow'} assignment for ${b.label || 'block'}`}
                           className="w-full text-sm border border-slate-300 rounded px-2 py-1.5"
                           style={b.assignments[f.id] ? { borderLeft: `3px solid ${NAVY}` } : undefined}
                         />
@@ -687,6 +710,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                         onClick={() => removeBlock(b.id)}
                         className="text-slate-400 hover:text-red-600"
                         title="Remove block"
+                        aria-label={`Remove block${b.label ? ` ${b.label}` : ''}`}
                       >
                         ✕
                       </button>
@@ -712,6 +736,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
             <button
               key={mo.id}
               onClick={() => setSelectedMonthId(mo.id)}
+              aria-pressed={mo.id === selectedMonthId}
               className="text-sm font-medium px-3 py-1.5 rounded border"
               style={
                 mo.id === selectedMonthId
@@ -727,6 +752,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
               type="month"
               value={newMonthYm}
               placeholder="2026-07"
+              aria-label="New month"
               onChange={(e) => {
                 setNewMonthYm(e.target.value)
                 setMonthError(null)
@@ -753,6 +779,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                 value={selectedMonth.label}
                 onChange={(e) => updateMonth(selectedMonth.id, { label: e.target.value })}
                 placeholder="June 2026"
+                aria-label="Month label"
                 className="text-base font-bold text-slate-900 border-b border-transparent hover:border-slate-200 focus:border-slate-400 focus:outline-none py-0.5"
               />
               <span className="text-xs text-slate-400">({selectedMonth.ym})</span>
@@ -768,6 +795,7 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
               value={selectedMonth.subtitle || ''}
               onChange={(e) => updateMonth(selectedMonth.id, { subtitle: e.target.value })}
               placeholder="Subtitle (optional) — e.g. Images, Genetics and Transplant Medicine"
+              aria-label="Month subtitle (optional)"
               className="w-full text-sm text-slate-600 border border-slate-200 rounded px-2 py-1.5"
             />
 
@@ -783,24 +811,28 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                       min={`${selectedMonth.ym}-01`}
                       max={`${selectedMonth.ym}-31`}
                       onChange={(e) => updateSession(selectedMonth.id, s.id, { date: e.target.value })}
+                      aria-label="Session date"
                       className="text-sm border border-slate-300 rounded px-2 py-1.5 w-[150px]"
                     />
                     <input
                       value={s.title}
                       onChange={(e) => updateSession(selectedMonth.id, s.id, { title: e.target.value })}
                       placeholder="Session title (e.g. Grand Rounds)"
+                      aria-label="Session title"
                       className="flex-1 min-w-[180px] text-sm border border-slate-300 rounded px-2 py-1.5"
                     />
                     <input
                       value={s.badge || ''}
                       onChange={(e) => updateSession(selectedMonth.id, s.id, { badge: e.target.value })}
                       placeholder="🎓"
+                      aria-label="Session badge (optional)"
                       className="w-16 text-sm border border-slate-300 rounded px-2 py-1.5 text-center"
                     />
                     <button
                       onClick={() => removeSession(selectedMonth.id, s.id)}
                       className="text-slate-400 hover:text-red-600 px-1"
                       title="Remove session"
+                      aria-label={`Remove session${s.title ? ` ${s.title}` : ''}`}
                     >
                       ✕
                     </button>
@@ -858,18 +890,21 @@ export default function ScheduleEditor({ initial }: { initial: SchedulePayload }
                         value={w.who}
                         onChange={(e) => updateWeekend(selectedMonth.id, w.id, { who: e.target.value })}
                         placeholder="Dr. Name"
+                        aria-label="Weekend coverage — who"
                         className="w-[160px] text-sm border border-slate-300 rounded px-2 py-1.5"
                       />
                       <input
                         value={w.dates}
                         onChange={(e) => updateWeekend(selectedMonth.id, w.id, { dates: e.target.value })}
                         placeholder="June 13-14, 27-28"
+                        aria-label="Weekend coverage — dates"
                         className="flex-1 min-w-[160px] text-sm border border-slate-300 rounded px-2 py-1.5"
                       />
                       <button
                         onClick={() => removeWeekend(selectedMonth.id, w.id)}
                         className="text-slate-400 hover:text-red-600 px-1"
                         title="Remove"
+                        aria-label={`Remove weekend row${w.who ? ` for ${w.who}` : ''}`}
                       >
                         ✕
                       </button>
