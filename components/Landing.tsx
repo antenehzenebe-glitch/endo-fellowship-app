@@ -27,12 +27,17 @@ import type { DirectoryGroups, DirectoryPerson } from '@/lib/people';
 const ERAS =
   'https://students-residents.aamc.org/applying-fellowships-eras/apply-fellowships-eras-system';
 
-// Hosted image URLs. To self-host: drop the files into public/landing/ and
-// change these to '/landing/hero-main.jpg' etc.
+// Program images live in the public `landing-images` Supabase Storage bucket
+// (stable URLs — the previous hot-linked signed URLs expired and broke the
+// hero; never reintroduce expiring URLs). Master copies of the JPGs should
+// also be kept in public/landing/ in the repo as backup.
 const LANDING_IMAGES = {
-  heroMain: 'https://www.kimi.com/apiv2-files/sign-obj/kimi-fs%2Ffiles%2Fblob%2F8c24a8f60deb65fa74bca11906f747bb114993e9360b4134e31b425aafb64d30?filename=hero-main.jpg&sig=Dl6tdR2cfMAYdlcHzrR-eOMAJ-JAXcEWFlAUkVRv3y4=&t=o',
-  heroColumns: 'https://www.kimi.com/apiv2-files/sign-obj/kimi-fs%2Ffiles%2Fblob%2Fe792d33e2444d5136b839116d2b46e56ac44b5480cdcf3adef8bf3a160519fba?filename=hero-columns.jpg&sig=zKFClQjxJ8nVGPUM1zGKkKTrh7LNZz5Hq1ZRs3XiwHE=&t=o',
-  constellation: 'https://www.kimi.com/apiv2-files/sign-obj/kimi-fs%2Ffiles%2Fblob%2F2e27a9c5f6a2cd208a6446b731cca5349167b2332618c2e15609b9bca405338c?filename=endocrine-constellation.jpg&sig=faooXEZLjVhElIT8HNnuibYfDn6reRh4jhM2TfpRTdw=&t=o',
+  heroMain:
+    'https://xousmzkftledlkwtpavb.supabase.co/storage/v1/object/public/landing-images/hero-main.jpg',
+  heroColumns:
+    'https://xousmzkftledlkwtpavb.supabase.co/storage/v1/object/public/landing-images/hero-columns.jpg',
+  constellation:
+    'https://xousmzkftledlkwtpavb.supabase.co/storage/v1/object/public/landing-images/endocrine-constellation.jpg',
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
