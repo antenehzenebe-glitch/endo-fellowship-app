@@ -10,6 +10,7 @@
 
 export type EmergencyCategory =
   | 'glucose'
+  | 'inpatient'
   | 'adrenal'
   | 'thyroid'
   | 'calcium'
@@ -59,6 +60,7 @@ export const EMERGENCY_CATEGORIES: Record<
   { label: string; chip: string; bar: string }
 > = {
   glucose: { label: 'Glucose', chip: 'bg-amber-100 text-amber-900 border-amber-200', bar: 'bg-amber-500' },
+  inpatient: { label: 'Inpatient DM', chip: 'bg-emerald-100 text-emerald-900 border-emerald-200', bar: 'bg-emerald-500' },
   adrenal: { label: 'Adrenal', chip: 'bg-rose-100 text-rose-900 border-rose-200', bar: 'bg-rose-500' },
   thyroid: { label: 'Thyroid', chip: 'bg-violet-100 text-violet-900 border-violet-200', bar: 'bg-violet-500' },
   calcium: { label: 'Calcium', chip: 'bg-teal-100 text-teal-900 border-teal-200', bar: 'bg-teal-500' },
