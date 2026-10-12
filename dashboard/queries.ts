@@ -107,6 +107,14 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
   const scholarly = scholarlyRes.data ?? []
   const onboarding = onboardingRes.data ?? []
 
+  const onboardingCounts = new Map<string, { total: number; done: number }>()
+  for (const o of onboarding) {
+    const counts = onboardingCounts.get(o.fellow_id) ?? { total: 0, done: 0 }
+    counts.total += 1
+    if (o.status === 'completed') counts.done += 1
+    onboardingCounts.set(o.fellow_id, counts)
+  }
+
   const minByType = new Map<string, number>(
     targets.map((t) => [t.procedure_type, t.min_total]),
   )
@@ -167,9 +175,9 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
     ).length
 
     // Onboarding checklist.
-    const fellowTasks = onboarding.filter((o) => o.fellow_id === fellow.id)
-    const onboardingTotal = fellowTasks.length
-    const onboardingDone = fellowTasks.filter((o) => o.status === 'completed').length
+    const obCounts = onboardingCounts.get(fellow.id) ?? { total: 0, done: 0 }
+    const onboardingTotal = obCounts.total
+    const onboardingDone = obCounts.done
     const onboardingIncomplete =
       onboardingTotal > 0 && onboardingDone < onboardingTotal
 
@@ -278,14 +286,22 @@ export async function getCoordinatorWorklist(): Promise<CoordinatorWorklist> {
 
   const activeFellows = profiles.filter((p) => p.role === 'fellow' && p.is_active)
 
+  const onboardingWorklistCounts = new Map<string, { total: number; pending: number }>()
+  for (const o of onboarding) {
+    const counts = onboardingWorklistCounts.get(o.fellow_id) ?? { total: 0, pending: 0 }
+    counts.total += 1
+    if (o.status !== 'completed') counts.pending += 1
+    onboardingWorklistCounts.set(o.fellow_id, counts)
+  }
+
   const onboardingProgress: OnboardingProgress[] = activeFellows.map((f) => {
-    const tasks = onboarding.filter((o) => o.fellow_id === f.id)
+    const counts = onboardingWorklistCounts.get(f.id) ?? { total: 0, pending: 0 }
     return {
       fellowId: f.id,
       fellowName: f.full_name,
       pgyLevel: f.pgy_level,
-      pending: tasks.filter((o) => o.status !== 'completed').length,
-      total: tasks.length,
+      pending: counts.pending,
+      total: counts.total,
     }
   })
 
