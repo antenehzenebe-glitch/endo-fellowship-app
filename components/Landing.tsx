@@ -166,7 +166,7 @@ export default function Landing({
 
   return (
     <div className="hu-land bg-gold-50 font-body text-ink antialiased">
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <style>{CSS}</style>
 
       {/* ── 1 · HERO — full-bleed photograph, navy scrim, editorial headline ── */}
       <div id="top" className="relative flex min-h-svh flex-col bg-primary-900">
