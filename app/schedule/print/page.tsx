@@ -155,7 +155,7 @@ export default async function SchedulePrintPage({
 
   return (
     <div className="pr min-h-screen bg-white px-4 py-6">
-      <style dangerouslySetInnerHTML={{ __html: PRINT_CSS }} />
+      <style>{PRINT_CSS}</style>
 
       <div className="pr-toolbar">
         <Link
