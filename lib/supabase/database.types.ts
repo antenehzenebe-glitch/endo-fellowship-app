@@ -766,6 +766,7 @@ export type Database = {
       }
       program_videos: {
         Row: {
+          captions_path: string | null
           created_at: string
           description: string | null
           duration_seconds: number | null
@@ -780,6 +781,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          captions_path?: string | null
           created_at?: string
           description?: string | null
           duration_seconds?: number | null
@@ -794,6 +796,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          captions_path?: string | null
           created_at?: string
           description?: string | null
           duration_seconds?: number | null

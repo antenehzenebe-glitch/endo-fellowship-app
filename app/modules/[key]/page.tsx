@@ -65,14 +65,23 @@ export default async function ModulePage({
     }
   }
 
-  // Signed URLs for video + poster storage paths (private bucket)
+  // Signed URLs for video + poster + captions storage paths (private bucket)
   const videoPaths = videos.map((v) => v.storage_path).filter((p): p is string => Boolean(p))
   const posterPaths = videos.map((v) => v.poster_path).filter((p): p is string => Boolean(p))
+  const captionsPaths = videos.map((v) => v.captions_path).filter((p): p is string => Boolean(p))
   const signedByPath = new Map<string, string>()
   if (videoPaths.length) {
     const { data: s } = await supabase.storage
       .from('program-videos')
       .createSignedUrls(videoPaths, VIDEO_URL_TTL)
+    s?.forEach((x) => {
+      if (x.path && x.signedUrl) signedByPath.set(x.path, x.signedUrl)
+    })
+  }
+  if (captionsPaths.length) {
+    const { data: s } = await supabase.storage
+      .from('program-videos')
+      .createSignedUrls(captionsPaths, VIDEO_URL_TTL)
     s?.forEach((x) => {
       if (x.path && x.signedUrl) signedByPath.set(x.path, x.signedUrl)
     })
@@ -179,14 +188,12 @@ export default async function ModulePage({
             {videos.map((v) => {
               const src = v.storage_path ? signedByPath.get(v.storage_path) : v.external_url ?? undefined
               const poster = v.poster_path ? signedByPath.get(v.poster_path) : undefined
+              const captionsSrc = v.captions_path ? signedByPath.get(v.captions_path) : undefined
               return (
                 <div key={v.id} className="bg-white border border-gray-200 rounded-xl p-5">
                   <h3 className="font-bold text-primary leading-snug">{v.title}</h3>
                   {v.description && <p className="mt-1 text-sm text-muted">{v.description}</p>}
                   {src ? (
-                    // TODO(a11y): no caption track (<track kind="captions">) is
-                    // available for these recordings yet — add one when the
-                    // program produces transcripts (WCAG 2.1 AA 1.2.2).
                     <video
                       controls
                       preload="metadata"
@@ -194,6 +201,9 @@ export default async function ModulePage({
                       className="w-full rounded-lg mt-3 bg-black"
                     >
                       <source src={src} />
+                      {captionsSrc && (
+                        <track kind="captions" src={captionsSrc} srcLang="en" label="English" />
+                      )}
                       Your browser does not support embedded video.
                     </video>
                   ) : (
