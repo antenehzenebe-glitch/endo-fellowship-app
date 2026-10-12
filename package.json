@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "check:no-hex": "! grep -rniE '#(003a63|04263f|c8102e|a50e26|a60d26|a50d26|1b2733|5c6b7a|16a34a|15803d)' app components dashboard procedures modules resources people --include='*.tsx' --include='*.ts' | grep -v 'endocrine-emergencies.ts' | grep -v 'lib/tokens'"
+    "check:no-hex": "! grep -rniE '#(003a63|04263f|c8102e|a50e26|a60d26|a50d26|1b2733|5c6b7a|16a34a|15803d)' app components dashboard procedures modules resources people --include='*.tsx' --include='*.ts' | grep -v 'endocrine-emergencies.ts' | grep -v 'lib/tokens'",
+    "test": "tsx --test"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.0",
@@ -26,6 +27,7 @@
     "eslint-config-next": "^15.3.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }
