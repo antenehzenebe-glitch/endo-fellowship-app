@@ -278,14 +278,28 @@ export async function getCoordinatorWorklist(): Promise<CoordinatorWorklist> {
 
   const activeFellows = profiles.filter((p) => p.role === 'fellow' && p.is_active)
 
+  const onboardingByFellow = new Map<string, { total: number; pending: number }>()
+  for (const o of onboarding) {
+    if (!o.fellow_id) continue
+    let counts = onboardingByFellow.get(o.fellow_id)
+    if (!counts) {
+      counts = { total: 0, pending: 0 }
+      onboardingByFellow.set(o.fellow_id, counts)
+    }
+    counts.total += 1
+    if (o.status !== 'completed') {
+      counts.pending += 1
+    }
+  }
+
   const onboardingProgress: OnboardingProgress[] = activeFellows.map((f) => {
-    const tasks = onboarding.filter((o) => o.fellow_id === f.id)
+    const counts = onboardingByFellow.get(f.id) ?? { total: 0, pending: 0 }
     return {
       fellowId: f.id,
       fellowName: f.full_name,
       pgyLevel: f.pgy_level,
-      pending: tasks.filter((o) => o.status !== 'completed').length,
-      total: tasks.length,
+      pending: counts.pending,
+      total: counts.total,
     }
   })
 
