@@ -74,10 +74,22 @@ export async function getEvalSummary(): Promise<EvalSummaryData> {
   const fellows = fellowsRes.data ?? []
   const evals = evalsRes.data ?? []
 
+  // Pre-group evaluations by fellow_id to avoid O(Fellows * Evals) filtering
+  const evalsByFellow = new Map<string, typeof evals>()
+  for (const e of evals) {
+    const fellowEvals = evalsByFellow.get(e.fellow_id)
+    if (fellowEvals) {
+      fellowEvals.push(e)
+    } else {
+      evalsByFellow.set(e.fellow_id, [e])
+    }
+  }
+
   // A period is "completed" if any finalized summary exists for it; otherwise
   // "in_progress" if a draft exists; otherwise null (nothing written yet).
   function cellFor(fellowId: string, which: 'mid_year' | 'end_of_year'): EvalCell {
-    const rows = evals.filter((e) => e.fellow_id === fellowId && e.period === which)
+    const fellowEvals = evalsByFellow.get(fellowId) || []
+    const rows = fellowEvals.filter((e) => e.period === which)
     if (rows.length === 0) return null
     const finalized = rows.find((r) => r.status === 'final')
     if (finalized) {
