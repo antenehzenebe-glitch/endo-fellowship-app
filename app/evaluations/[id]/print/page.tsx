@@ -60,9 +60,7 @@ export default async function EvalPrintPage({
 
   return (
     <div className="min-h-screen bg-slate-100">
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
+      <style>{`
         @page { size: portrait; margin: 18mm; }
         @media print {
           .no-print { display: none !important; }
@@ -70,9 +68,7 @@ export default async function EvalPrintPage({
           .sheet { box-shadow: none !important; margin: 0 !important; border: none !important; }
           * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
-      `,
-        }}
-      />
+      `}</style>
 
       <div className="no-print sticky top-0 bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
         <Link href="/evaluations" className="text-sm text-slate-600 hover:text-slate-900">
