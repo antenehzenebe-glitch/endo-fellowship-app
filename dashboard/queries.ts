@@ -118,15 +118,26 @@ export async function getReadinessOverview(): Promise<ReadinessOverview> {
     min: minByType.get(t.code) ?? 0,
   }))
 
+  const logCounts = new Map<string, Map<string, number>>()
+  for (const l of logs) {
+    if (!logCounts.has(l.fellow_id)) {
+      logCounts.set(l.fellow_id, new Map<string, number>())
+    }
+    const fellowCounts = logCounts.get(l.fellow_id)!
+    fellowCounts.set(
+      l.procedure_type,
+      (fellowCounts.get(l.procedure_type) ?? 0) + 1,
+    )
+  }
+
   const fellowReadiness: FellowReadiness[] = fellows.map((fellow) => {
     // Procedures: count every logged procedure of each type (a logged attempt
     // counts as procedural experience toward the minimum).
+    const fellowLogCounts = logCounts.get(fellow.id)
     const procedures: ProcedureProgress[] = types.map((t) => ({
       code: t.code,
       label: t.label,
-      done: logs.filter(
-        (l) => l.fellow_id === fellow.id && l.procedure_type === t.code,
-      ).length,
+      done: fellowLogCounts?.get(t.code) ?? 0,
       min: minByType.get(t.code) ?? 0,
     }))
     // Pace readiness to the fellow's year: graduating fellows (PGY-5) are held
