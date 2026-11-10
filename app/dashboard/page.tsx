@@ -27,7 +27,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { requireStaff } from '@/lib/auth'
 import type { UserRole } from '@/lib/auth'
-import { getCoordinatorWorklist, getReadinessOverview } from '@/dashboard/queries'
+import { getOperationsWorklist, getReadinessOverview } from '@/dashboard/queries'
 import { getEvalSummary } from '@/dashboard/evaluationSummary'
 import { getFellowAddenda } from '@/dashboard/fellowAddenda'
 import { getModuleCompletion } from '@/dashboard/moduleCompletion'
@@ -133,7 +133,7 @@ export default async function DashboardPage({
   let body: ReactNode
   try {
     if (view === 'operations') {
-      const worklist = await getCoordinatorWorklist()
+      const worklist = await getOperationsWorklist()
       body = <CoordinatorCenter worklist={worklist} />
     } else if (view === 'program') {
       const overview = await getReadinessOverview()

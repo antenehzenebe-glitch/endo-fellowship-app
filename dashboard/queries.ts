@@ -239,7 +239,7 @@ export type CoordinatorWorklist = {
   totalFellows: number
 }
 
-export async function getCoordinatorWorklist(): Promise<CoordinatorWorklist> {
+export async function getOperationsWorklist(): Promise<CoordinatorWorklist> {
   const supabase = await createClient()
 
   const [
